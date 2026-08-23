@@ -330,15 +330,15 @@ class Balco260(BluettiDevice):
         device_class=DeviceClass.ENERGY,
     )
     ac_o_switch = field(
-        t=FieldType.BOOL,
+        t=FieldType.UINT16,
         address=57001,
     )
     g_i_switch = field(
-        t=FieldType.BOOL,
+        t=FieldType.UINT16,
         address=57009,
     )
     g_o_switch = field(
-        t=FieldType.BOOL,
+        t=FieldType.UINT16,
         address=57010,
     )
     b_soc_low = field(

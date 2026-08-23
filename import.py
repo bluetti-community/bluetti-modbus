@@ -1,6 +1,6 @@
 import requests
 
-tag = "0.0.19"
+tag = "0.0.20"
 url = f"https://github.com/Patrick762/bluetti-registers/releases/download/{tag}/modbus-tcp.json"
 
 output = "bluetti_modbus_lib/devices/"
@@ -16,6 +16,9 @@ def to_camel_case(snake_str):
 
 def get_type(t: str, name: str):
     upper = t.upper()
+
+    if upper == "BOOL":
+        return "UINT16"
 
     if upper != "UINT" and upper != "INT":
         return upper
