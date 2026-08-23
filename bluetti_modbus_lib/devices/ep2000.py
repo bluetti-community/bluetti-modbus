@@ -236,7 +236,6 @@ class EP2000(BluettiDevice):
         t=FieldType.INT16,
         address=51224,
         unit="°C",
-        scale=0.1,
         state_class=FieldStateClass.MEASUREMENT,
         device_class=DeviceClass.TEMPERATURE,
     )
