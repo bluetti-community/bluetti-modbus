@@ -1,6 +1,6 @@
 import requests
 
-tag = "0.0.17"
+tag = "0.0.18"
 url = f"https://github.com/Patrick762/bluetti-registers/releases/download/{tag}/modbus-tcp.json"
 
 output = "bluetti_modbus_lib/devices/"
@@ -37,7 +37,7 @@ for d in schema:
     for f in d["fields"]:
         fields += f"""
     {f["name"]} = field(
-        t=FieldType.{get_type(str(f["content"]), name)},
+        t=FieldType.{get_type(str(f["content"]), f["name"])},
         address={f["address"]},"""
 
         if "unit" in f:

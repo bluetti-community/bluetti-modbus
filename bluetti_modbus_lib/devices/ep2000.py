@@ -253,7 +253,7 @@ class EP2000(BluettiDevice):
     b_i_e = field(
         t=FieldType.UINT32,
         address=51236,
-        unit="kWh",
+        unit="Wh",
         category=FieldCategory.DIAGNOSTIC,
         state_class=FieldStateClass.TOTAL_INCREASING,
         device_class=DeviceClass.ENERGY,
@@ -261,7 +261,7 @@ class EP2000(BluettiDevice):
     b_o_e = field(
         t=FieldType.UINT32,
         address=51238,
-        unit="kWh",
+        unit="Wh",
         category=FieldCategory.DIAGNOSTIC,
         state_class=FieldStateClass.TOTAL_INCREASING,
         device_class=DeviceClass.ENERGY,
