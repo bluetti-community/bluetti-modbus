@@ -53,6 +53,7 @@ class EP2000(BluettiDevice):
         address=50012,
         unit="kWh",
         scale=0.1,
+        category=FieldCategory.DIAGNOSTIC,
         state_class=FieldStateClass.TOTAL_INCREASING,
         device_class=DeviceClass.ENERGY,
     )
@@ -61,6 +62,7 @@ class EP2000(BluettiDevice):
         address=50014,
         unit="kWh",
         scale=0.1,
+        category=FieldCategory.DIAGNOSTIC,
         state_class=FieldStateClass.TOTAL_INCREASING,
         device_class=DeviceClass.ENERGY,
     )
@@ -69,6 +71,7 @@ class EP2000(BluettiDevice):
         address=50020,
         unit="kWh",
         scale=0.1,
+        category=FieldCategory.DIAGNOSTIC,
         state_class=FieldStateClass.TOTAL_INCREASING,
         device_class=DeviceClass.ENERGY,
     )
@@ -152,32 +155,6 @@ class EP2000(BluettiDevice):
         state_class=FieldStateClass.MEASUREMENT,
         device_class=DeviceClass.CURRENT,
     )
-    ac_o_switch = field(
-        t=FieldType.UINT16,
-        address=57001,
-    )
-    g_i_switch = field(
-        t=FieldType.UINT16,
-        address=57009,
-        category=FieldCategory.DIAGNOSTIC,
-    )
-    g_o_switch = field(
-        t=FieldType.UINT16,
-        address=57010,
-        category=FieldCategory.DIAGNOSTIC,
-    )
-    b_soc_low = field(
-        t=FieldType.UINT16,
-        address=57016,
-        unit="%",
-        category=FieldCategory.DIAGNOSTIC,
-    )
-    b_soc_high = field(
-        t=FieldType.UINT16,
-        address=57017,
-        unit="%",
-        category=FieldCategory.DIAGNOSTIC,
-    )
     d_num_battery_packs = field(
         t=FieldType.UINT16,
         address=51001,
@@ -247,6 +224,7 @@ class EP2000(BluettiDevice):
         address=51222,
         unit="%",
         category=FieldCategory.DIAGNOSTIC,
+        state_class=FieldStateClass.MEASUREMENT,
     )
     b_cycle_count = field(
         t=FieldType.UINT16,
@@ -258,7 +236,7 @@ class EP2000(BluettiDevice):
         t=FieldType.INT16,
         address=51224,
         unit="°C",
-        category=FieldCategory.DIAGNOSTIC,
+        scale=0.1,
         state_class=FieldStateClass.MEASUREMENT,
         device_class=DeviceClass.TEMPERATURE,
     )
@@ -275,14 +253,40 @@ class EP2000(BluettiDevice):
     b_i_e = field(
         t=FieldType.UINT32,
         address=51236,
-        unit="Wh",
+        unit="kWh",
+        category=FieldCategory.DIAGNOSTIC,
         state_class=FieldStateClass.TOTAL_INCREASING,
         device_class=DeviceClass.ENERGY,
     )
     b_o_e = field(
         t=FieldType.UINT32,
         address=51238,
-        unit="Wh",
+        unit="kWh",
+        category=FieldCategory.DIAGNOSTIC,
         state_class=FieldStateClass.TOTAL_INCREASING,
         device_class=DeviceClass.ENERGY,
+    )
+    ac_o_switch = field(
+        t=FieldType.BOOL,
+        address=57001,
+    )
+    g_i_switch = field(
+        t=FieldType.BOOL,
+        address=57009,
+    )
+    g_o_switch = field(
+        t=FieldType.BOOL,
+        address=57010,
+    )
+    b_soc_low = field(
+        t=FieldType.UINT16,
+        address=57016,
+        unit="%",
+        category=FieldCategory.CONFIG,
+    )
+    b_soc_high = field(
+        t=FieldType.UINT16,
+        address=57017,
+        unit="%",
+        category=FieldCategory.CONFIG,
     )

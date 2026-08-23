@@ -1,6 +1,6 @@
 import requests
 
-tag = "0.0.15"
+tag = "0.0.17"
 url = f"https://github.com/Patrick762/bluetti-registers/releases/download/{tag}/modbus-tcp.json"
 
 output = "bluetti_modbus_lib/devices/"
@@ -14,6 +14,21 @@ def to_camel_case(snake_str):
     return "".join(x.capitalize() for x in snake_str.lower().split("_"))
 
 
+def get_type(t: str, name: str):
+    upper = t.upper()
+
+    if upper != "UINT" and upper != "INT":
+        return upper
+
+    if upper == "INT":
+        return "INT16"
+
+    if name in ["b_i_e", "b_o_e"]:
+        return "UINT32"
+
+    return "UINT16"
+
+
 for d in schema:
     name = d["name"]
     file_name = str(name).lower() + ".py"
@@ -22,7 +37,7 @@ for d in schema:
     for f in d["fields"]:
         fields += f"""
     {f["name"]} = field(
-        t=FieldType.{str(f["content"]).upper()},
+        t=FieldType.{get_type(str(f["content"]), name)},
         address={f["address"]},"""
 
         if "unit" in f:
