@@ -24,6 +24,7 @@ setup(
     long_description=long_description,
     url="https://github.com/bluetti-community/bluetti-modbus-lib",
     packages=find_packages(),
+    package_data={"bluetti_modbus_lib": ["py.typed"]},
     install_requires=[
         "async_timeout",
         "asyncio",
