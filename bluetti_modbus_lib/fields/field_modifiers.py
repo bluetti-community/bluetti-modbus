@@ -1,6 +1,6 @@
 from modbus_connection.model import RegisterField
 
-from .field_extras import FieldCategory, FieldStateClass, DeviceClass
+from .field_extras import DeviceClass, FieldCategory, FieldStateClass
 
 _FIELD_CATEGORIES: dict[int, FieldCategory | None] = {}
 _FIELD_STATE_CLASSES: dict[int, FieldStateClass | None] = {}
