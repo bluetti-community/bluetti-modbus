@@ -57,16 +57,23 @@ Example:
 bluetti-modread -c 10.2.1.60 -p 502 -t balco260
 ```
 
-Example output (illustrative - the actual values depend on your device):
+Example output, captured from a real Balco260 (truncated - `bluetti-modread` prints one line per field):
 
 ```bash
 d_num_inverters: 1   (category: FieldCategory.DIAGNOSTIC) (state_class: n/a) (device_class: n/a)
-ac_o_p_total: 350 W (category: n/a) (state_class: FieldStateClass.MEASUREMENT) (device_class: DeviceClass.POWER)
-pv_i_p_total: 420 W (category: n/a) (state_class: FieldStateClass.MEASUREMENT) (device_class: DeviceClass.POWER)
-g_i_p_total: 0 W (category: n/a) (state_class: FieldStateClass.MEASUREMENT) (device_class: DeviceClass.POWER)
-b_soc: 62 % (category: n/a) (state_class: FieldStateClass.MEASUREMENT) (device_class: DeviceClass.BATTERY)
-b_soh: 100 % (category: FieldCategory.DIAGNOSTIC) (state_class: FieldStateClass.MEASUREMENT) (device_class: n/a)
+ac_o_p_total: 84 W (category: n/a) (state_class: FieldStateClass.MEASUREMENT) (device_class: DeviceClass.POWER)
+pv_i_p_total: 0 W (category: n/a) (state_class: FieldStateClass.MEASUREMENT) (device_class: DeviceClass.POWER)
+ac_o_e_total: 64.7 kWh (category: FieldCategory.DIAGNOSTIC) (state_class: FieldStateClass.TOTAL_INCREASING) (device_class: DeviceClass.ENERGY)
+d_inverter_status: InverterStatus.GridConnectedOperation   (category: FieldCategory.DIAGNOSTIC) (state_class: n/a) (device_class: n/a)
+g_i_f: 50.0 Hz (category: n/a) (state_class: FieldStateClass.MEASUREMENT) (device_class: DeviceClass.FREQUENCY)
+b_v: 27.1 V (category: n/a) (state_class: FieldStateClass.MEASUREMENT) (device_class: DeviceClass.VOLTAGE)
+b_soc: 100 % (category: n/a) (state_class: FieldStateClass.MEASUREMENT) (device_class: DeviceClass.BATTERY)
+b_cycle_count: 8   (category: FieldCategory.DIAGNOSTIC) (state_class: FieldStateClass.MEASUREMENT) (device_class: n/a)
+b_t_avg: 0 °C (category: n/a) (state_class: FieldStateClass.MEASUREMENT) (device_class: DeviceClass.TEMPERATURE)
+b_i_e: 23420 Wh (category: FieldCategory.DIAGNOSTIC) (state_class: FieldStateClass.TOTAL_INCREASING) (device_class: DeviceClass.ENERGY)
 ```
+
+Note the two energy fields above: most cumulative energy fields (`ac_o_e_total`, etc.) are reported in kWh, but the battery charge/discharge ones (`b_i_e`, `b_o_e`) are in Wh - both correct as reported by the device, just worth knowing if you're comparing values across fields.
 
 Field names follow the naming convention documented in
 [bluetti-registers](https://github.com/Patrick762/bluetti-registers#naming-convention-for-field-names).

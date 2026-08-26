@@ -86,5 +86,5 @@ class {name}(BluettiDevice):
 {fields}
 """
 
-    with open(output + file_name, "w") as f:
+    with open(output + file_name, "w", encoding="utf-8") as f:
         f.write(content)
