@@ -26,7 +26,7 @@ pip install bluetti-modbus-lib
 
 ## Sponsoring
 
-If you want to support this project, you can use the sponsor button on GitHub.
+If you want to support this project, you can sponsor [Patrick762 on GitHub](https://github.com/sponsors/Patrick762), the original author.
 
 ## Commands for testing
 
