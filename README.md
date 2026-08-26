@@ -1,5 +1,5 @@
 # bluetti-modbus-lib
-Inofficial Library for basic communication to bluetti powerstations via Modbus.
+Unofficial library for basic communication to Bluetti Power Stations via Modbus.
 
 Based on official documentation https://github.com/bluetti-official/bluetti-modbus-tcp-slave
 
@@ -10,7 +10,13 @@ This library is provided without any warranty or support by Bluetti. I do not ta
 
 ## Supported devices and data
 
-TBD
+- Balco260
+- EP2000
+
+Field names, units, and Modbus registers come from
+[bluetti-registers](https://github.com/Patrick762/bluetti-registers) -
+`devices/balco260.py` and `devices/ep2000.py` in this repo are generated
+from it by `import.py`, not written by hand.
 
 ## Installation
 
@@ -20,7 +26,7 @@ pip install bluetti-modbus-lib
 
 ## Sponsoring and Affiliate links (Anzeige / Ad)
 
-If you want to support this project and buy a bluetti device, you can use the sponsors button on github:
+If you want to support this project and buy a Bluetti device, you can use the sponsors button on github:
 
 > [!NOTE]
 > DE: Bei diesem Link handelt es sich um einen Affiliate-Link. Wenn du darüber kaufst, erhalte ich eine kleine Provision. Für dich entstehen keine Zusatzkosten.
@@ -51,47 +57,16 @@ Example:
 bluetti-modread -c 10.2.1.60 -p 502 -t balco260
 ```
 
-Example output:
+Example output (illustrative - the actual values depend on your device):
 
 ```bash
-num_inverters: 1 pcs
-ac_load_power_total: 0 W
-pv_power_total: 0 W
-grid_power_total: 0 W
-inverter_out_power_total: 0 W
-pv_to_ac_power: 0 W
-ac_load_energy_total: 0.1 kWh
-pv_to_ac_load_energy_total: 0.1 kWh
-pc_charging_energy_total: 0.0 kWh
-grid_charging_energy_total: 0.0 kWh
-grid_export_energy_total: 0.0 kWh
-input_power_pv1: 0 W
-input_voltage_pv1: 0.0 V
-input_current_pv1: 0.0 A
-input_power_pv2: 0 W
-input_voltage_pv2: 0.0 V
-input_current_pv2: 0.0 A
-input_power_pv3: 0 W
-input_voltage_pv3: 0.0 V
-input_current_pv3: 0.0 A
-input_power_pv4: 0 W
-input_voltage_pv4: 0.0 V
-input_current_pv4: 0.0 A
-num_packs: 0 pcs
-total_bat_voltage: 25.900000000000002 V
-total_bat_current: 0.7000000000000001 A
-total_bat_soc: 0 %
-total_bat_soh: 0 %
-total_bat_charge_time: 0 Min
-total_bat_discharge_time: 0 Min
-pack_voltage: 25.900000000000002 V
-pack_current: 2999.3 A
-pack_soc: 36 %
-pack_soh: 100 %
-pack_cycles: 0 times
-pack_temp_avg: 0 °C
-pack_cell_count: 8 pcs
-pack_ntc_count: 4 pcs
-pack_energy_charged: 2580 Wh
-pack_energy_discharged: 2500 Wh
+d_num_inverters: 1   (category: FieldCategory.DIAGNOSTIC) (state_class: n/a) (device_class: n/a)
+ac_o_p_total: 350 W (category: n/a) (state_class: FieldStateClass.MEASUREMENT) (device_class: DeviceClass.POWER)
+pv_i_p_total: 420 W (category: n/a) (state_class: FieldStateClass.MEASUREMENT) (device_class: DeviceClass.POWER)
+g_i_p_total: 0 W (category: n/a) (state_class: FieldStateClass.MEASUREMENT) (device_class: DeviceClass.POWER)
+b_soc: 62 % (category: n/a) (state_class: FieldStateClass.MEASUREMENT) (device_class: DeviceClass.BATTERY)
+b_soh: 100 % (category: FieldCategory.DIAGNOSTIC) (state_class: FieldStateClass.MEASUREMENT) (device_class: n/a)
 ```
+
+Field names follow the naming convention documented in
+[bluetti-registers](https://github.com/Patrick762/bluetti-registers#naming-convention-for-field-names).
