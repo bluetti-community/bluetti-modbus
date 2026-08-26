@@ -268,14 +268,6 @@ class Balco260(BluettiDevice):
         state_class=FieldStateClass.MEASUREMENT,
         device_class=DeviceClass.VOLTAGE,
     )
-    b_c = field(
-        t=FieldType.UINT16,
-        address=51220,
-        unit="A",
-        scale=0.1,
-        state_class=FieldStateClass.MEASUREMENT,
-        device_class=DeviceClass.CURRENT,
-    )
     b_soc = field(
         t=FieldType.UINT16,
         address=51221,
