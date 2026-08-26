@@ -41,11 +41,12 @@ async def test_read_reports_category_state_class_and_device_class():
 
 
 @pytest.mark.asyncio
-async def test_read_closes_the_connection_even_on_timeout():
+async def test_read_closes_the_connection_and_raises_on_timeout():
     client, mock_conn = _client()
     mock_conn.for_unit(1).fail_requests(TimeoutError("simulated timeout"))
 
-    await client.read()
+    with pytest.raises(TimeoutError):
+        await client.read()
 
     assert mock_conn.connected is False
 
