@@ -1,9 +1,8 @@
 import logging
+from dataclasses import dataclass
 from typing import Any
 
 import async_timeout
-from dataclasses import dataclass
-
 from modbus_connection.pymodbus import ModbusConnection, ModbusTcpParams
 
 from ..devices import get_device

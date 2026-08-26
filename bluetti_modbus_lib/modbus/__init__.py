@@ -1,1 +1,1 @@
-from .client import BluettiModbusClient
+from .client import BluettiModbusClient as BluettiModbusClient

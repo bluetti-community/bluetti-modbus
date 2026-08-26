@@ -4,8 +4,8 @@ from typing import Any
 from modbus_connection.model import RegisterField, WriteValidator, enum, uint32
 from modbus_connection.model.fields import NumberField, StringField
 
-from .field_modifiers import set_category, set_state_class, set_device_class
-from .field_extras import FieldCategory, FieldStateClass, DeviceClass
+from .field_extras import DeviceClass, FieldCategory, FieldStateClass
+from .field_modifiers import set_category, set_device_class, set_state_class
 
 
 class BluettiStringField(StringField):
