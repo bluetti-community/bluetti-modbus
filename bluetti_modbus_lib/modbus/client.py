@@ -41,9 +41,6 @@ class BluettiModbusClient:
                 LOGGER.debug("Reading device data")
 
                 await self.device.async_update()
-
-        except TimeoutError:
-            LOGGER.error("Timeout")
         finally:
             await self.conn.close()
 
