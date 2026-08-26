@@ -11,8 +11,8 @@ on:
 permissions: {}
 
 jobs:
-  smoke-import:
-    name: Package imports
+  test:
+    name: Run test suite
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -23,9 +23,11 @@ jobs:
         with:
           python-version: "3.13"
 
-      - run: pip install -r requirements.txt
+      - run: pip install -r requirements.txt -r requirements_test.txt
 
-      - run: python -c "import bluetti_modbus_lib"
+      - run: LIB_VERSION=0.0.0-dev pip install --no-deps -e .
+
+      - run: python -m pytest tests/ -v --cov=bluetti_modbus_lib --cov-report=term-missing --cov-fail-under=100
 
   ruff:
     name: Ruff
