@@ -1,6 +1,6 @@
 from enum import Enum, unique
 
-from modbus_connection.model.fields import NumberField, StringField
+from modbus_connection.model.fields import FloatField, NumberField, StringField
 
 from bluetti_modbus_lib.fields.custom_fields import BluettiStringField, FieldType, field
 from bluetti_modbus_lib.fields.field_extras import (
@@ -45,6 +45,13 @@ def test_field_uint32():
     reg = field(FieldType.UINT32, 12, scale=0.1)
 
     assert isinstance(reg, NumberField)
+    assert reg.count == 2
+
+
+def test_field_float32():
+    reg = field(FieldType.FLOAT32, 13)
+
+    assert isinstance(reg, FloatField)
     assert reg.count == 2
 
 

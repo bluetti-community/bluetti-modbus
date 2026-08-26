@@ -1,4 +1,4 @@
-from bluetti_modbus_lib.devices import EP2000, Balco260
+from bluetti_modbus_lib.devices import EP2000, Balco260, SMeter
 from bluetti_modbus_lib.devices.getter import get_device
 
 
@@ -8,6 +8,10 @@ def test_get_device_balco260():
 
 def test_get_device_ep2000():
     assert isinstance(get_device("ep2000"), EP2000)
+
+
+def test_get_device_smeter():
+    assert isinstance(get_device("smeter"), SMeter)
 
 
 def test_get_device_unknown_type_returns_none():

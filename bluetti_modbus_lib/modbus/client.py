@@ -6,7 +6,7 @@ import async_timeout
 from modbus_connection import ModbusTcpParams
 from modbus_connection.pymodbus import ModbusConnection
 
-from ..devices import EP2000, Balco260, get_device
+from ..devices import EP2000, Balco260, SMeter, get_device
 from ..fields.field_extras import DeviceClass, FieldCategory, FieldStateClass
 
 LOGGER = logging.getLogger(__name__)
@@ -31,7 +31,7 @@ class BluettiModbusClient:
         device = get_device(device_type, self.conn.for_unit(1))
         if device is None:
             raise ValueError(f"Unsupported device type: {device_type!r}")
-        self.device: Balco260 | EP2000 = device
+        self.device: Balco260 | EP2000 | SMeter = device
 
     async def read(self) -> list[ClientReturnValue]:
         try:

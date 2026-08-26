@@ -12,11 +12,12 @@ This library is provided without any warranty or support by Bluetti. I do not ta
 
 - Balco260
 - EP2000
+- SMeter (Bluetti's AC meter/CT device - untested against real hardware so far)
 
 Field names, units, and Modbus registers come from
 [bluetti-registers](https://github.com/bluetti-community/bluetti-registers) -
-`devices/balco260.py` and `devices/ep2000.py` in this repo are generated
-from it by `import.py`, not written by hand.
+`devices/balco260.py`, `devices/ep2000.py`, and `devices/smeter.py` in this
+repo are generated from it by `import.py`, not written by hand.
 
 ## Installation
 
