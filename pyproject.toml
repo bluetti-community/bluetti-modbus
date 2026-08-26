@@ -8,3 +8,10 @@ exclude = [
     "bluetti_modbus_lib/devices/balco260.py",
     "bluetti_modbus_lib/devices/ep2000.py",
 ]
+
+[tool.coverage.run]
+omit = [
+    # The bluetti-modread CLI - README.md: "Commands included in this
+    # library should only be used for testing." Not library logic.
+    "bluetti_modbus_lib/scripts/*",
+]
