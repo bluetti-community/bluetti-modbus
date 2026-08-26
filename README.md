@@ -24,14 +24,9 @@ from it by `import.py`, not written by hand.
 pip install bluetti-modbus-lib
 ```
 
-## Sponsoring and Affiliate links (Anzeige / Ad)
+## Sponsoring
 
-If you want to support this project and buy a Bluetti device, you can use the sponsors button on github:
-
-> [!NOTE]
-> DE: Bei diesem Link handelt es sich um einen Affiliate-Link. Wenn du darüber kaufst, erhalte ich eine kleine Provision. Für dich entstehen keine Zusatzkosten.
->
-> EN: This is an affiliate link. If you make a purchase through it, I may earn a small commission at no extra cost to you.
+If you want to support this project, you can use the sponsor button on GitHub.
 
 ## Commands for testing
 
