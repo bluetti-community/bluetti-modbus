@@ -1,7 +1,7 @@
 from ..base_devices import BluettiDevice
-from ..fields import field, FieldType
-from ..fields.field_extras import FieldCategory, FieldStateClass, DeviceClass
 from ..enums import *
+from ..fields import FieldType, field
+from ..fields.field_extras import DeviceClass, FieldCategory, FieldStateClass
 
 # GENERATED FILE! DO NOT EDIT!
 

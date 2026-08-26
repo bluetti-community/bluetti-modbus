@@ -1,0 +1,46 @@
+name: Sync generated device files
+
+# devices/balco260.py and devices/ep2000.py are generated from
+# bluetti-registers' latest tagged release by import.py. Previously this only
+# ran inside python-publish.yml, at PyPI-release build time - so main could
+# silently drift from what was actually published (the regenerated files were
+# never committed back). This runs it independently and commits any diff, so
+# main always reflects the same device definitions the next release will
+# ship, and drift is visible in a normal PR-less commit rather than hidden
+# inside a release artifact.
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 6 * * 1" # weekly, Monday morning UTC
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
+        with:
+          python-version: "3.13"
+
+      - run: pip install requests
+
+      - run: python import.py
+
+      - name: Commit and push, if anything changed
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- bluetti_modbus_lib/devices/; then
+            echo "Generated device files already match bluetti-registers' latest release; nothing to commit."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add bluetti_modbus_lib/devices/
+          git commit -m "chore: sync generated device files from bluetti-registers"
+          git push
