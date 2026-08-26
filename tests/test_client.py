@@ -56,8 +56,8 @@ def test_client_return_value_str_includes_all_fields():
         unit="W",
         value=100,
         category=None,
-        state_class="measurement",
-        device_class="power",
+        state_class=FieldStateClass.MEASUREMENT,
+        device_class=DeviceClass.POWER,
     )
 
     text = str(value)
@@ -65,3 +65,8 @@ def test_client_return_value_str_includes_all_fields():
     assert "pv_i_p_total" in text
     assert "100" in text
     assert "n/a" in text  # category is None
+
+
+def test_client_raises_for_an_unsupported_device_type():
+    with pytest.raises(ValueError, match="not-a-real-device"):
+        _client(device_type="not-a-real-device")

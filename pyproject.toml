@@ -9,6 +9,10 @@ exclude = [
     "bluetti_modbus_lib/devices/ep2000.py",
 ]
 
+[tool.mypy]
+strict = true
+packages = ["bluetti_modbus_lib"]
+
 [tool.coverage.run]
 omit = [
     # The bluetti-modread CLI - README.md: "Commands included in this

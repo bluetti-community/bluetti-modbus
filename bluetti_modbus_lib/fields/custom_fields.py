@@ -26,7 +26,7 @@ def uint16(
     scale: float = 1.0,
     writable: bool | WriteValidator = False,
     unit: str | None = None,
-):
+) -> NumberField[Any]:
     return NumberField(
         address,
         scale=scale,
@@ -43,7 +43,7 @@ def int16(
     scale: float = 1.0,
     writable: bool | WriteValidator = False,
     unit: str | None = None,
-):
+) -> NumberField[Any]:
     return NumberField(
         address,
         scale=scale,
@@ -57,7 +57,7 @@ def int16(
 def bluetti_string(
     address: int,
     length: int,
-):
+) -> BluettiStringField:
     return BluettiStringField(
         address,
         count=length,
@@ -85,12 +85,12 @@ def field(
     unit: str | None = None,
     length: int = 1,
     count: int = 1,
-    enum_type: Enum | None = None,
+    enum_type: type[Enum] | None = None,
     category: FieldCategory | None = None,
     state_class: FieldStateClass | None = None,
     device_class: DeviceClass | None = None,
-) -> RegisterField:
-    reg: RegisterField | None = None
+) -> RegisterField[Any]:
+    reg: RegisterField[Any] | None = None
 
     match t:
         case FieldType.INT16:
@@ -104,6 +104,10 @@ def field(
         case FieldType.STRING:
             reg = bluetti_string(address, length)
         case FieldType.ENUM:
+            # Every real caller (balco260.py, ep2000.py) passes enum_type
+            # for FieldType.ENUM - the None default only exists because the
+            # other FieldTypes don't use this parameter at all.
+            assert enum_type is not None, "FieldType.ENUM requires enum_type"
             reg = enum(address, enum_type, count=count, word_order="little")
 
     # handle extras
