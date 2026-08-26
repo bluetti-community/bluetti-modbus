@@ -321,10 +321,6 @@ class Balco260(BluettiDevice):
         state_class=FieldStateClass.TOTAL_INCREASING,
         device_class=DeviceClass.ENERGY,
     )
-    ac_o_switch = field(
-        t=FieldType.UINT16,
-        address=57001,
-    )
     g_i_switch = field(
         t=FieldType.UINT16,
         address=57009,
