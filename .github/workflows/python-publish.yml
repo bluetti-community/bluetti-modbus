@@ -1,10 +1,6 @@
-# This workflow will upload a Python Package using Twine when a release is created
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python#publishing-to-package-registries
-
-# This workflow uses actions that are not certified by GitHub.
-# They are provided by a third-party and are governed by
-# separate terms of service, privacy policy, and support
-# documentation.
+# This workflow will upload a Python Package using PyPI Trusted Publishing
+# (OIDC) when a release is created.
+# For more information see: https://docs.pypi.org/trusted-publishers/
 
 name: Upload Python Package
 
@@ -17,27 +13,28 @@ permissions:
 
 jobs:
   deploy:
-
     runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python
-      uses: actions/setup-python@v3
-      with:
-        python-version: '3.x'
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install build
-    - name: Import latest registers
-      run: pip install requests black && python import.py && ./format.sh
-    - name: Build package
-      env:
-        LIB_VERSION: ${{ github.event.release.tag_name }}
-      run: python -m build
-    - name: Publish package
-      uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
-      with:
-        user: __token__
-        password: ${{ secrets.PYPI_TOKEN }}
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
+        with:
+          python-version: "3.13"
+
+      - run: python -m pip install --upgrade pip build
+
+      # devices/balco260.py and devices/ep2000.py are no longer regenerated
+      # here - sync-devices.yml keeps them up to date on main independently,
+      # so what gets released is always exactly what's on main, not a
+      # variant only ever seen inside a release build.
+      - name: Build package
+        env:
+          LIB_VERSION: ${{ github.event.release.tag_name }}
+        run: python -m build
+
+      - name: Publish package
+        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
