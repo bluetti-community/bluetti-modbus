@@ -14,7 +14,7 @@ This library is provided without any warranty or support by Bluetti. I do not ta
 - EP2000
 
 Field names, units, and Modbus registers come from
-[bluetti-registers](https://github.com/Patrick762/bluetti-registers) -
+[bluetti-registers](https://github.com/bluetti-community/bluetti-registers) -
 `devices/balco260.py` and `devices/ep2000.py` in this repo are generated
 from it by `import.py`, not written by hand.
 
@@ -71,4 +71,4 @@ b_i_e: 23420 Wh (category: FieldCategory.DIAGNOSTIC) (state_class: FieldStateCla
 Note the two energy fields above: most cumulative energy fields (`ac_o_e_total`, etc.) are reported in kWh, but the battery charge/discharge ones (`b_i_e`, `b_o_e`) are in Wh - both correct as reported by the device, just worth knowing if you're comparing values across fields.
 
 Field names follow the naming convention documented in
-[bluetti-registers](https://github.com/Patrick762/bluetti-registers#naming-convention-for-field-names).
+[bluetti-registers](https://github.com/bluetti-community/bluetti-registers#naming-convention-for-field-names).
