@@ -4,6 +4,7 @@ from typing import Any
 
 import async_timeout
 from modbus_connection import ModbusTcpParams
+from modbus_connection.exceptions import AcknowledgeError, ServerDeviceBusyError
 from modbus_connection.pymodbus import ModbusConnection
 
 from ..devices import EP2000, Balco260, SMeter, get_device
@@ -45,10 +46,16 @@ class BluettiModbusClient:
         # the past. Call aclose() when actually done with this client.
         await self.conn.connect()
 
-        async with async_timeout.timeout(10):
-            LOGGER.debug("Reading device data")
-
-            await self.device.async_update()
+        try:
+            await self._update_with_timeout()
+        except (AcknowledgeError, ServerDeviceBusyError):
+            # Codes 5/6: the device accepted the request but wants more time,
+            # or is momentarily busy - both are explicitly meant to be retried,
+            # not treated as a hard failure. Seen in practice on registers that
+            # otherwise read fine, so it's transient device behavior, not a
+            # permanently bad address. Retry exactly once.
+            LOGGER.debug("Device asked for a retry, trying once more")
+            await self._update_with_timeout()
 
         results = []
         for name, value in self.device._values.items():
@@ -65,3 +72,9 @@ class BluettiModbusClient:
                 )
             )
         return results
+
+    async def _update_with_timeout(self) -> None:
+        async with async_timeout.timeout(10):
+            LOGGER.debug("Reading device data")
+
+            await self.device.async_update()
