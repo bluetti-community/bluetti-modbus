@@ -12,7 +12,10 @@ async def async_read(host: str, port: int, type: str) -> None:
 
     client = BluettiModbusClient(host, port, type)
 
-    result = await client.read()
+    try:
+        result = await client.read()
+    finally:
+        await client.aclose()
 
     for r in result:
         print(r)
