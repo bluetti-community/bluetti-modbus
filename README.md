@@ -19,10 +19,35 @@ Field names, units, and Modbus registers come from
 `devices/balco260.py`, `devices/ep2000.py`, and `devices/smeter.py` in this
 repo are generated from it by `import.py`, not written by hand.
 
+## Architecture
+
+This library does not create or own a Modbus transport itself. It's built on
+[modbus-connection](https://pypi.org/project/modbus-connection/)'s
+device-modelling framework: `Balco260`, `EP2000`, and `SMeter`
+(`bluetti_modbus_lib.devices`) each take a `ModbusUnit` supplied by the
+caller, built from whichever backend and connection the caller already
+manages. That's the integration surface for embedding this library into
+another application (a Home Assistant integration, for example).
+
+`BluettiModbusClient` (`bluetti_modbus_lib.modbus.client`) is different: it
+owns and manages its own connection. It exists for the `bluetti-modread` CLI
+below and standalone/manual use, not as something another application should
+build on - doing so would open a second, competing connection to the device
+instead of sharing one.
+
 ## Installation
 
 ```bash
 pip install bluetti-modbus-lib
+```
+
+Installing `bluetti-modbus-lib` alone only pulls in `modbus-connection`'s
+backend-neutral interface - enough to use the device classes directly against
+a `ModbusUnit` you already have. The `bluetti-modread` CLI needs a concrete
+backend, installed via the `cli` extra:
+
+```bash
+pip install "bluetti-modbus-lib[cli]"
 ```
 
 ## Sponsoring

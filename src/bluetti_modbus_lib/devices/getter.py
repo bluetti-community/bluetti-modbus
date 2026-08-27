@@ -7,7 +7,9 @@ from .ep2000 import EP2000
 from .smeter import SMeter
 
 
-def get_device(d: str, unit: ModbusUnit | None = None) -> Balco260 | EP2000 | SMeter | None:
+def get_device(
+    d: str, unit: ModbusUnit | None = None
+) -> Balco260 | EP2000 | SMeter | None:
     # unit=None is a real, supported call (e.g. sensor.py inspects a
     # device's fields without a live connection) - Component.__init__ only
     # stores the reference, it doesn't dereference it, so this is safe even

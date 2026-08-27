@@ -1,8 +1,8 @@
+import asyncio
 import logging
 from dataclasses import dataclass
 from typing import Any
 
-import async_timeout
 from modbus_connection import ModbusTcpParams
 from modbus_connection.exceptions import AcknowledgeError, ServerDeviceBusyError
 from modbus_connection.pymodbus import ModbusConnection
@@ -23,7 +23,7 @@ class ClientReturnValue:
     device_class: DeviceClass | None
 
     def __str__(self) -> str:
-        return f"{self.name}: {self.value} {self.unit or " "} (category: {self.category or "n/a"}) (state_class: {self.state_class or "n/a"}) (device_class: {self.device_class or "n/a"})"
+        return f"{self.name}: {self.value} {self.unit or ' '} (category: {self.category or 'n/a'}) (state_class: {self.state_class or 'n/a'}) (device_class: {self.device_class or 'n/a'})"
 
 
 class BluettiModbusClient:
@@ -60,7 +60,9 @@ class BluettiModbusClient:
         results = []
         for name, value in self.device._values.items():
             field = self.device.get_field(name)
-            assert field is not None, f"{name} is in _values, so it must be a registered field"
+            assert field is not None, (
+                f"{name} is in _values, so it must be a registered field"
+            )
             results.append(
                 ClientReturnValue(
                     name=name,
@@ -74,7 +76,7 @@ class BluettiModbusClient:
         return results
 
     async def _update_with_timeout(self) -> None:
-        async with async_timeout.timeout(10):
+        async with asyncio.timeout(10):
             LOGGER.debug("Reading device data")
 
             await self.device.async_update()

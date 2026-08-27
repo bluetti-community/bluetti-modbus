@@ -23,9 +23,7 @@ jobs:
         with:
           python-version: "3.13"
 
-      - run: pip install -r requirements.txt -r requirements_test.txt
-
-      - run: LIB_VERSION=0.0.0-dev pip install --no-deps -e .
+      - run: pip install -e ".[cli]" pytest pytest-asyncio pytest-cov
 
       - run: python -m pytest tests/ -v --cov=bluetti_modbus_lib --cov-report=term-missing --cov-fail-under=100
 
@@ -39,6 +37,10 @@ jobs:
 
       - uses: astral-sh/ruff-action@4919ec5cf1f49eff0871dbcea0da843445b837e6 # v3.6.1
 
+      - uses: astral-sh/ruff-action@4919ec5cf1f49eff0871dbcea0da843445b837e6 # v3.6.1
+        with:
+          args: "format --check"
+
   mypy:
     name: mypy --strict
     runs-on: ubuntu-latest
@@ -51,8 +53,6 @@ jobs:
         with:
           python-version: "3.13"
 
-      - run: pip install -r requirements.txt mypy
-
-      - run: LIB_VERSION=0.0.0-dev pip install --no-deps -e .
+      - run: pip install -e ".[cli]" mypy
 
       - run: mypy
