@@ -63,7 +63,18 @@ class BluettiModbusClient:
         return results
 
     async def _update_with_timeout(self) -> None:
-        async with asyncio.timeout(10):
+        # One async_update() call reads several register blocks sequentially
+        # (see modbus_connection's ReadPlan.execute), each already bounded by
+        # ModbusConnection's own per-request timeout above. This timeout
+        # budgets the whole sequence, not one request - it must be large
+        # enough to cover every block being slow, not just one, or a single
+        # sluggish block (this device's Modbus TCP stack is known to become
+        # unresponsive under load) starves the ones after it: the connection
+        # gets cancelled mid-read, which modbus_connection reports as
+        # "Request cancelled outside library" for whatever block was in
+        # flight at that moment - a confusing symptom that looks like a
+        # register-specific fault but is really this budget being too tight.
+        async with asyncio.timeout(30):
             LOGGER.debug("Reading device data")
 
             await self.device.async_update()

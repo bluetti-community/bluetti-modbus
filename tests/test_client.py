@@ -1,3 +1,4 @@
+import asyncio
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -117,6 +118,25 @@ async def test_read_does_not_retry_a_non_transient_modbus_error():
         await client.read()
 
     assert client.device.async_update.await_count == 1
+
+
+@pytest.mark.asyncio
+async def test_read_survives_a_slow_update_within_the_overall_budget():
+    # Regression test: the update-wide timeout must be large enough to cover
+    # a single slow register block, not just fail immediately - a real
+    # production symptom ("Request cancelled outside library") was traced to
+    # this budget being too tight for how long one block can legitimately
+    # take on this device's Modbus TCP stack under load.
+    client, _ = _client()
+
+    async def slow_update() -> None:
+        await asyncio.sleep(15)
+
+    client.device.async_update = AsyncMock(side_effect=slow_update)  # type: ignore[method-assign]
+
+    await client.read()
+
+    client.device.async_update.assert_awaited_once()
 
 
 @pytest.mark.asyncio
