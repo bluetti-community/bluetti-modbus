@@ -5,6 +5,21 @@ Based on official documentation https://github.com/bluetti-official/bluetti-modb
 
 You have to enable Modbus TCP in the webinterface of your device first.
 
+## Relationship to Patrick762's `bluetti-modbus-lib`
+
+This repository started as a fork of
+[Patrick762/bluetti-modbus-lib](https://github.com/Patrick762/bluetti-modbus-lib)
+and has since diverged significantly (packaging, testing, retry handling,
+device coverage). Patrick762 is still actively maintaining his own version
+independently and was asked directly whether he'd like to fold this work
+back into his project or join `bluetti-community` - he's not in a position
+to commit the time to that right now, which is completely fine.
+
+Since the PyPI name `bluetti-modbus-lib` is his and still actively used,
+this project is published on PyPI under a different name, **`bluetti-modbus`**,
+to avoid any ambiguity between the two. The GitHub repository itself keeps
+its original name.
+
 ## Disclaimer
 This library is provided without any warranty or support by Bluetti. I do not take responsibility for any problems it may cause in all cases. Use it at your own risk.
 
@@ -45,16 +60,16 @@ library, not in the library.
 ## Installation
 
 ```bash
-pip install bluetti-modbus-lib
+pip install bluetti-modbus
 ```
 
-Installing `bluetti-modbus-lib` alone only pulls in `modbus-connection`'s
+Installing `bluetti-modbus` alone only pulls in `modbus-connection`'s
 backend-neutral interface - enough to use the device classes directly against
 a `ModbusUnit` you already have. The `bluetti-modread` CLI needs a concrete
 backend, installed via the `cli` extra:
 
 ```bash
-pip install "bluetti-modbus-lib[cli]"
+pip install "bluetti-modbus[cli]"
 ```
 
 ## Sponsoring
