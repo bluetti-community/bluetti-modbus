@@ -3,11 +3,6 @@ from enum import Enum, unique
 from modbus_connection.model.fields import FloatField, NumberField, StringField
 
 from bluetti_modbus_lib.fields.custom_fields import BluettiStringField, FieldType, field
-from bluetti_modbus_lib.fields.field_extras import (
-    DeviceClass,
-    FieldCategory,
-    FieldStateClass,
-)
 
 
 @unique
@@ -67,25 +62,3 @@ def test_field_enum_decodes_the_raw_register_value():
 
     assert isinstance(reg, NumberField)
     assert reg.decode([1]) is _FakeStatus.FAULT
-
-
-def test_field_attaches_extras_when_provided():
-    reg = field(
-        FieldType.UINT16,
-        40,
-        category=FieldCategory.DIAGNOSTIC,
-        state_class=FieldStateClass.MEASUREMENT,
-        device_class=DeviceClass.VOLTAGE,
-    )
-
-    assert reg.category is FieldCategory.DIAGNOSTIC
-    assert reg.state_class is FieldStateClass.MEASUREMENT
-    assert reg.device_class is DeviceClass.VOLTAGE
-
-
-def test_field_without_extras_leaves_them_unset():
-    reg = field(FieldType.UINT16, 41)
-
-    assert getattr(reg, "category", None) is None
-    assert getattr(reg, "state_class", None) is None
-    assert getattr(reg, "device_class", None) is None

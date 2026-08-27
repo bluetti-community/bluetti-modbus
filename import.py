@@ -49,16 +49,11 @@ for d in schema:
         if "scale" in f:
             fields += f"\n        scale={f['scale']},"
 
-        if "category" in f:
-            fields += f"\n        category=FieldCategory.{str(f['category']).upper()},"
-
-        if "state_class" in f:
-            fields += f"\n        state_class=FieldStateClass.{str(f['state_class']).upper()},"
-
-        if "device_class" in f:
-            fields += (
-                f"\n        device_class=DeviceClass.{str(f['device_class']).upper()},"
-            )
+        # bluetti-registers' schema also carries "category"/"state_class"/
+        # "device_class" per field, but this library deliberately doesn't
+        # surface them: those are Home Assistant entity concepts, not
+        # Modbus/protocol ones, and belong in whichever integration
+        # consumes this library, not in the library itself.
 
         if "length" in f and f["content"] == "string":
             fields += f"\n        length={f['length']},"
@@ -75,7 +70,6 @@ for d in schema:
     content = f"""from ..base_devices import BluettiDevice
 from ..enums import *
 from ..fields import FieldType, field
-from ..fields.field_extras import DeviceClass, FieldCategory, FieldStateClass
 
 # GENERATED FILE! DO NOT EDIT!
 

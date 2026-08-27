@@ -4,7 +4,6 @@ import pytest
 from modbus_connection.exceptions import AcknowledgeError, IllegalDataAddressError
 from modbus_connection.mock import MockModbusConnection
 
-from bluetti_modbus_lib.fields.field_extras import DeviceClass, FieldStateClass
 from bluetti_modbus_lib.modbus.client import BluettiModbusClient, ClientReturnValue
 
 
@@ -31,9 +30,9 @@ async def test_read_returns_decoded_values_from_the_device():
 
 
 @pytest.mark.asyncio
-async def test_read_reports_category_state_class_and_device_class():
+async def test_read_reports_the_field_unit():
     client, mock_conn = _client()
-    mock_conn.for_unit(1).holding[50002] = 100  # ac_o_p_total (power, measurement)
+    mock_conn.for_unit(1).holding[50002] = 100  # ac_o_p_total
 
     results = await client.read()
 
@@ -41,8 +40,6 @@ async def test_read_reports_category_state_class_and_device_class():
     power = by_name["ac_o_p_total"]
     assert power.value == 100
     assert power.unit == "W"
-    assert power.device_class == DeviceClass.POWER
-    assert power.state_class == FieldStateClass.MEASUREMENT
 
 
 @pytest.mark.asyncio
@@ -134,20 +131,13 @@ async def test_aclose_closes_the_connection():
 
 
 def test_client_return_value_str_includes_all_fields():
-    value = ClientReturnValue(
-        name="pv_i_p_total",
-        unit="W",
-        value=100,
-        category=None,
-        state_class=FieldStateClass.MEASUREMENT,
-        device_class=DeviceClass.POWER,
-    )
+    value = ClientReturnValue(name="pv_i_p_total", unit="W", value=100)
 
     text = str(value)
 
     assert "pv_i_p_total" in text
     assert "100" in text
-    assert "n/a" in text  # category is None
+    assert "W" in text
 
 
 def test_client_raises_for_an_unsupported_device_type():
