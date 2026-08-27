@@ -1,6 +1,7 @@
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
+from modbus_connection.exceptions import AcknowledgeError, IllegalDataAddressError
 from modbus_connection.mock import MockModbusConnection
 
 from bluetti_modbus_lib.fields.field_extras import DeviceClass, FieldStateClass
@@ -77,6 +78,44 @@ async def test_read_reconnects_transparently_after_a_dropped_link():
 
     by_name = {r.name: r for r in results}
     assert by_name["d_num_inverters"].value == 2
+
+
+@pytest.mark.asyncio
+async def test_read_retries_once_after_an_acknowledge_response():
+    client, _ = _client()
+    client.device.async_update = AsyncMock(  # type: ignore[method-assign]
+        side_effect=[AcknowledgeError(5), None]
+    )
+
+    await client.read()
+
+    assert client.device.async_update.await_count == 2
+
+
+@pytest.mark.asyncio
+async def test_read_gives_up_after_a_second_acknowledge_response():
+    client, _ = _client()
+    client.device.async_update = AsyncMock(  # type: ignore[method-assign]
+        side_effect=[AcknowledgeError(5), AcknowledgeError(5)]
+    )
+
+    with pytest.raises(AcknowledgeError):
+        await client.read()
+
+    assert client.device.async_update.await_count == 2
+
+
+@pytest.mark.asyncio
+async def test_read_does_not_retry_a_non_transient_modbus_error():
+    client, _ = _client()
+    client.device.async_update = AsyncMock(  # type: ignore[method-assign]
+        side_effect=IllegalDataAddressError(2)
+    )
+
+    with pytest.raises(IllegalDataAddressError):
+        await client.read()
+
+    assert client.device.async_update.await_count == 1
 
 
 @pytest.mark.asyncio
