@@ -33,16 +33,22 @@ class BluettiModbusClient:
             raise ValueError(f"Unsupported device type: {device_type!r}")
         self.device: Balco260 | EP2000 | SMeter = device
 
+    async def aclose(self) -> None:
+        """Close the connection permanently. Call when actually done with this client."""
+        await self.conn.close()
+
     async def read(self) -> list[ClientReturnValue]:
-        try:
-            await self.conn.connect()
+        # Connection is intentionally left open between calls - modbus_connection
+        # keeps it usable across reads, reconnecting on demand if it drops. A
+        # fresh connection on every read is exactly the pattern that has caused
+        # this device's Modbus TCP stack to become unresponsive under load in
+        # the past. Call aclose() when actually done with this client.
+        await self.conn.connect()
 
-            async with async_timeout.timeout(10):
-                LOGGER.debug("Reading device data")
+        async with async_timeout.timeout(10):
+            LOGGER.debug("Reading device data")
 
-                await self.device.async_update()
-        finally:
-            await self.conn.close()
+            await self.device.async_update()
 
         results = []
         for name, value in self.device._values.items():

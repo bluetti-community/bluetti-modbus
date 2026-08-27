@@ -41,12 +41,51 @@ async def test_read_reports_category_state_class_and_device_class():
 
 
 @pytest.mark.asyncio
-async def test_read_closes_the_connection_and_raises_on_timeout():
+async def test_read_raises_on_timeout_without_closing_the_connection():
     client, mock_conn = _client()
     mock_conn.for_unit(1).fail_requests(TimeoutError("simulated timeout"))
 
     with pytest.raises(TimeoutError):
         await client.read()
+
+    # A failed read must not tear the connection down - opening a fresh one on
+    # every read/retry is exactly what makes this device's Modbus TCP stack
+    # unresponsive under load. The link stays usable for the next read.
+    assert mock_conn.connected is True
+
+
+@pytest.mark.asyncio
+async def test_consecutive_reads_reuse_the_same_connection():
+    client, mock_conn = _client()
+    mock_conn.for_unit(1).holding[50001] = 2  # d_num_inverters
+
+    await client.read()
+    assert mock_conn.connected is True
+    await client.read()
+
+    assert mock_conn.connected is True
+
+
+@pytest.mark.asyncio
+async def test_read_reconnects_transparently_after_a_dropped_link():
+    client, mock_conn = _client()
+    mock_conn.for_unit(1).holding[50001] = 2  # d_num_inverters
+
+    await client.read()
+    mock_conn.simulate_connection_lost()
+    results = await client.read()
+
+    by_name = {r.name: r for r in results}
+    assert by_name["d_num_inverters"].value == 2
+
+
+@pytest.mark.asyncio
+async def test_aclose_closes_the_connection():
+    client, mock_conn = _client()
+    mock_conn.for_unit(1).holding[50001] = 2  # d_num_inverters
+    await client.read()
+
+    await client.aclose()
 
     assert mock_conn.connected is False
 
