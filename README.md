@@ -35,6 +35,13 @@ below and standalone/manual use, not as something another application should
 build on - doing so would open a second, competing connection to the device
 instead of sharing one.
 
+Field metadata is deliberately limited to what's true at the Modbus/protocol
+level - address, type, scale, unit, whether it's writable. It does not carry
+Home Assistant concepts like entity category, state class, or device class:
+those describe how a value should be presented in an HA UI, not anything
+about the register itself, and belong in whichever integration consumes this
+library, not in the library.
+
 ## Installation
 
 ```bash
@@ -81,17 +88,17 @@ bluetti-modread -c 10.2.1.60 -p 502 -t balco260
 Example output, captured from a real Balco260 (truncated - `bluetti-modread` prints one line per field):
 
 ```bash
-d_num_inverters: 1   (category: FieldCategory.DIAGNOSTIC) (state_class: n/a) (device_class: n/a)
-ac_o_p_total: 84 W (category: n/a) (state_class: FieldStateClass.MEASUREMENT) (device_class: DeviceClass.POWER)
-pv_i_p_total: 0 W (category: n/a) (state_class: FieldStateClass.MEASUREMENT) (device_class: DeviceClass.POWER)
-ac_o_e_total: 64.7 kWh (category: FieldCategory.DIAGNOSTIC) (state_class: FieldStateClass.TOTAL_INCREASING) (device_class: DeviceClass.ENERGY)
-d_inverter_status: InverterStatus.GridConnectedOperation   (category: FieldCategory.DIAGNOSTIC) (state_class: n/a) (device_class: n/a)
-g_i_f: 50.0 Hz (category: n/a) (state_class: FieldStateClass.MEASUREMENT) (device_class: DeviceClass.FREQUENCY)
-b_v: 27.1 V (category: n/a) (state_class: FieldStateClass.MEASUREMENT) (device_class: DeviceClass.VOLTAGE)
-b_soc: 100 % (category: n/a) (state_class: FieldStateClass.MEASUREMENT) (device_class: DeviceClass.BATTERY)
-b_cycle_count: 8   (category: FieldCategory.DIAGNOSTIC) (state_class: FieldStateClass.MEASUREMENT) (device_class: n/a)
-b_t_avg: 0 °C (category: n/a) (state_class: FieldStateClass.MEASUREMENT) (device_class: DeviceClass.TEMPERATURE)
-b_i_e: 23420 Wh (category: FieldCategory.DIAGNOSTIC) (state_class: FieldStateClass.TOTAL_INCREASING) (device_class: DeviceClass.ENERGY)
+d_num_inverters: 1
+ac_o_p_total: 84 W
+pv_i_p_total: 0 W
+ac_o_e_total: 64.7 kWh
+d_inverter_status: InverterStatus.GridConnectedOperation
+g_i_f: 50.0 Hz
+b_v: 27.1 V
+b_soc: 100 %
+b_cycle_count: 8
+b_t_avg: 0 °C
+b_i_e: 23420 Wh
 ```
 
 Note the two energy fields above: most cumulative energy fields (`ac_o_e_total`, etc.) are reported in kWh, but the battery charge/discharge ones (`b_i_e`, `b_o_e`) are in Wh - both correct as reported by the device, just worth knowing if you're comparing values across fields.
