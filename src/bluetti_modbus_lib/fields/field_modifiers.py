@@ -12,7 +12,9 @@ def set_category(reg: RegisterField[Any], category: FieldCategory | None) -> Non
     setattr(reg, "category", category)  # noqa: B010
 
 
-def set_state_class(reg: RegisterField[Any], state_class: FieldStateClass | None) -> None:
+def set_state_class(
+    reg: RegisterField[Any], state_class: FieldStateClass | None
+) -> None:
     setattr(reg, "state_class", state_class)  # noqa: B010
 
 

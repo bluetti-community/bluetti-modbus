@@ -8,9 +8,13 @@ from bluetti_modbus_lib.fields.field_extras import DeviceClass, FieldStateClass
 from bluetti_modbus_lib.modbus.client import BluettiModbusClient, ClientReturnValue
 
 
-def _client(device_type: str = "balco260") -> tuple[BluettiModbusClient, MockModbusConnection]:
+def _client(
+    device_type: str = "balco260",
+) -> tuple[BluettiModbusClient, MockModbusConnection]:
     mock_conn = MockModbusConnection()
-    with patch("bluetti_modbus_lib.modbus.client.ModbusConnection", return_value=mock_conn):
+    with patch(
+        "bluetti_modbus_lib.modbus.client.ModbusConnection", return_value=mock_conn
+    ):
         client = BluettiModbusClient("10.0.0.1", 502, device_type)
     return client, mock_conn
 

@@ -6,8 +6,7 @@ from ..fields.field_extras import DeviceClass, FieldCategory, FieldStateClass
 # GENERATED FILE! DO NOT EDIT!
 
 
-class EP2000(BluettiDevice):
-
+class Balco260(BluettiDevice):
     d_num_inverters = field(
         t=FieldType.UINT16,
         address=50001,
@@ -60,6 +59,24 @@ class EP2000(BluettiDevice):
     pv_i_e_total = field(
         t=FieldType.UINT16,
         address=50014,
+        unit="kWh",
+        scale=0.1,
+        category=FieldCategory.DIAGNOSTIC,
+        state_class=FieldStateClass.TOTAL_INCREASING,
+        device_class=DeviceClass.ENERGY,
+    )
+    g_i_e_total = field(
+        t=FieldType.UINT16,
+        address=50016,
+        unit="kWh",
+        scale=0.1,
+        category=FieldCategory.DIAGNOSTIC,
+        state_class=FieldStateClass.TOTAL_INCREASING,
+        device_class=DeviceClass.ENERGY,
+    )
+    g_o_e_total = field(
+        t=FieldType.UINT16,
+        address=50018,
         unit="kWh",
         scale=0.1,
         category=FieldCategory.DIAGNOSTIC,
@@ -155,6 +172,52 @@ class EP2000(BluettiDevice):
         state_class=FieldStateClass.MEASUREMENT,
         device_class=DeviceClass.CURRENT,
     )
+    pv_3_i_p = field(
+        t=FieldType.UINT16,
+        address=50277,
+        unit="W",
+        state_class=FieldStateClass.MEASUREMENT,
+        device_class=DeviceClass.POWER,
+    )
+    pv_3_i_v = field(
+        t=FieldType.UINT16,
+        address=50278,
+        unit="V",
+        scale=0.1,
+        state_class=FieldStateClass.MEASUREMENT,
+        device_class=DeviceClass.VOLTAGE,
+    )
+    pv_3_i_c = field(
+        t=FieldType.UINT16,
+        address=50279,
+        unit="A",
+        scale=0.1,
+        state_class=FieldStateClass.MEASUREMENT,
+        device_class=DeviceClass.CURRENT,
+    )
+    pv_4_i_p = field(
+        t=FieldType.UINT16,
+        address=50281,
+        unit="W",
+        state_class=FieldStateClass.MEASUREMENT,
+        device_class=DeviceClass.POWER,
+    )
+    pv_4_i_v = field(
+        t=FieldType.UINT16,
+        address=50282,
+        unit="V",
+        scale=0.1,
+        state_class=FieldStateClass.MEASUREMENT,
+        device_class=DeviceClass.VOLTAGE,
+    )
+    pv_4_i_c = field(
+        t=FieldType.UINT16,
+        address=50283,
+        unit="A",
+        scale=0.1,
+        state_class=FieldStateClass.MEASUREMENT,
+        device_class=DeviceClass.CURRENT,
+    )
     d_num_battery_packs = field(
         t=FieldType.UINT16,
         address=51001,
@@ -203,14 +266,6 @@ class EP2000(BluettiDevice):
         scale=0.1,
         state_class=FieldStateClass.MEASUREMENT,
         device_class=DeviceClass.VOLTAGE,
-    )
-    b_c = field(
-        t=FieldType.UINT16,
-        address=51220,
-        unit="A",
-        scale=0.1,
-        state_class=FieldStateClass.MEASUREMENT,
-        device_class=DeviceClass.CURRENT,
     )
     b_soc = field(
         t=FieldType.UINT16,

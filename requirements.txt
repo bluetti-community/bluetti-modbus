@@ -1,4 +1,0 @@
-async_timeout
-asyncio
-modbus-connection[pymodbus]
-logging

@@ -7,7 +7,6 @@ from ..fields.field_extras import DeviceClass, FieldCategory, FieldStateClass
 
 
 class SMeter(BluettiDevice):
-
     d_status = field(
         t=FieldType.UINT16,
         address=55111,
