@@ -19,3 +19,18 @@ def test_get_field_returns_none_for_unknown_field():
     device = Balco260(None)
 
     assert device.get_field("not_a_real_field") is None
+
+
+def test_values_is_empty_before_any_update():
+    device = Balco260(None)
+
+    assert device.values == {}
+
+
+def test_values_returns_a_copy_not_a_live_reference():
+    device = Balco260(None)
+
+    values = device.values
+    values["injected"] = 1
+
+    assert "injected" not in device.values

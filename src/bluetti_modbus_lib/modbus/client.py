@@ -54,10 +54,10 @@ class BluettiModbusClient:
             await self._update_with_timeout()
 
         results = []
-        for name, value in self.device._values.items():
+        for name, value in self.device.values.items():
             field = self.device.get_field(name)
             assert field is not None, (
-                f"{name} is in _values, so it must be a registered field"
+                f"{name} is in values, so it must be a registered field"
             )
             results.append(ClientReturnValue(name=name, unit=field.unit, value=value))
         return results

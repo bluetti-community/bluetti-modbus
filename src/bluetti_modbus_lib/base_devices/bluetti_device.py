@@ -16,3 +16,8 @@ class BluettiDevice(Component):
 
     def get_sensors(self) -> KeysView[str]:
         return self.field_names()
+
+    @property
+    def values(self) -> dict[str, Any]:
+        """A copy of all field values decoded on the last update."""
+        return dict(self._values)
