@@ -20,6 +20,16 @@ def get_type(t: str, name: str):
     if upper == "BOOL":
         return "UINT16"
 
+    # A firmware/protocol version, always a plain little-endian uint32 - see
+    # the confirmed examples in https://github.com/bluetti-community/bluetti-registers/pull/11.
+    if upper == "VERSION":
+        return "UINT32"
+
+    # A device serial number, spanning 4 registers as a little-endian uint64
+    # - same PR as above.
+    if upper == "SERIAL":
+        return "UINT64"
+
     if upper != "UINT" and upper != "INT":
         return upper
 

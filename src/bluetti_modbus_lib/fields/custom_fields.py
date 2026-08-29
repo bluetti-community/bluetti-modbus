@@ -85,11 +85,28 @@ def reference_offset_current(
     )
 
 
+def uint64(
+    address: int,
+    *,
+    writable: bool | WriteValidator = False,
+    unit: str | None = None,
+) -> NumberField[Any]:
+    return NumberField(
+        address,
+        count=4,
+        word_order="little",
+        signed=False,
+        writable=writable,
+        unit=unit,
+    )
+
+
 @unique
 class FieldType(Enum):
     INT16 = "int16"
     UINT16 = "uint16"
     UINT32 = "uint32"
+    UINT64 = "uint64"
     FLOAT32 = "float32"
     STRING = "str"
     ENUM = "enum"
@@ -115,6 +132,8 @@ def field(
             return uint32(
                 address, scale=scale, writable=writable, unit=unit, word_order="little"
             )
+        case FieldType.UINT64:
+            return uint64(address, writable=writable, unit=unit)
         case FieldType.FLOAT32:
             return float32(
                 address, scale=scale, writable=writable, unit=unit, word_order="little"

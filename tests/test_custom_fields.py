@@ -49,6 +49,16 @@ def test_field_uint32():
     assert reg.count == 2
 
 
+def test_field_uint64_decodes_a_real_serial_number():
+    reg = field(FieldType.UINT64, 50206)
+
+    assert isinstance(reg, NumberField)
+    assert reg.count == 4
+    # Confirmed by BLUETTI support: registers 50206-50209 combine, little
+    # endian, into the serial number's numeric part.
+    assert reg.decode([0x39FD, 0xF249, 0x025F, 0x0000]) == 2611110033917
+
+
 def test_field_float32():
     reg = field(FieldType.FLOAT32, 13)
 
