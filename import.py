@@ -32,12 +32,26 @@ def get_type(t: str, name: str):
     return "UINT16"
 
 
+# Fields whose real decode is not a plain scaled register and are built by
+# name below instead of through the generic field(t=..., ...) call - see
+# reference_offset_current()'s own docstring for why b_c needs this.
+REFERENCE_OFFSET_CURRENT_FIELDS = {"b_c": 30000}
+
 for d in schema:
     name = d["name"]
     file_name = str(name).lower() + ".py"
     fields = ""
+    uses_reference_offset_current = False
 
     for f in d["fields"]:
+        if f["name"] in REFERENCE_OFFSET_CURRENT_FIELDS:
+            uses_reference_offset_current = True
+            reference = REFERENCE_OFFSET_CURRENT_FIELDS[f["name"]]
+            fields += f"""
+    {f["name"]} = reference_offset_current({f["address"]}, reference={reference})
+"""
+            continue
+
         fields += f"""
     {f["name"]} = field(
         t=FieldType.{get_type(str(f["content"]), f["name"])},
@@ -67,9 +81,13 @@ for d in schema:
 
         fields += "\n    )"
 
+    fields_import = (
+        "field, reference_offset_current" if uses_reference_offset_current else "field"
+    )
+
     content = f"""from ..base_devices import BluettiDevice
 from ..enums import *
-from ..fields import FieldType, field
+from ..fields import FieldType, {fields_import}
 
 # GENERATED FILE! DO NOT EDIT!
 

@@ -1,8 +1,14 @@
 from enum import Enum, unique
 
+import pytest
 from modbus_connection.model.fields import FloatField, NumberField, StringField
 
-from bluetti_modbus_lib.fields.custom_fields import BluettiStringField, FieldType, field
+from bluetti_modbus_lib.fields.custom_fields import (
+    BluettiStringField,
+    FieldType,
+    field,
+    reference_offset_current,
+)
 
 
 @unique
@@ -62,3 +68,16 @@ def test_field_enum_decodes_the_raw_register_value():
 
     assert isinstance(reg, NumberField)
     assert reg.decode([1]) is _FakeStatus.FAULT
+
+
+def test_reference_offset_current_decodes_magnitude_around_the_reference():
+    # Raw values captured from a real device (issue #8): while charging at
+    # ~1000W solar in, b_c read 30335 and b_c_total (already correct) read
+    # 33.4A at the same moment - the fixed formula should land close to that.
+    reg = reference_offset_current(51220, reference=30000)
+
+    assert isinstance(reg, NumberField)
+    assert reg.decode([30335]) == pytest.approx(33.5)
+    # Below the reference (discharging) decodes to the same kind of magnitude.
+    assert reg.decode([29500]) == pytest.approx(50.0)
+    assert reg.decode([30000]) == 0

@@ -64,6 +64,27 @@ def bluetti_string(
     )
 
 
+def reference_offset_current(
+    address: int,
+    *,
+    reference: int,
+    unit: str = "A",
+) -> NumberField[Any]:
+    """A current reported as a magnitude relative to a fixed reference point.
+
+    Confirmed by BLUETTI support for ``b_c`` (address 51220): raw values
+    below the reference mean discharging, above mean charging, but only the
+    magnitude is available at this register - the direction isn't encoded
+    here (see https://github.com/bluetti-community/bluetti-modbus/issues/8).
+    """
+    return NumberField(
+        address,
+        convert=lambda raw: abs(raw - reference) * 0.1,
+        word_order="little",
+        unit=unit,
+    )
+
+
 @unique
 class FieldType(Enum):
     INT16 = "int16"
