@@ -3,9 +3,6 @@ from ..enums import *
 from ..fields import FieldType, field
 
 # GENERATED FILE! DO NOT EDIT!
-# (except d_serial/d_ver_arm/d_ver_dsp, added by hand ahead of bluetti-registers
-# cutting a working release with the confirmed addresses from PR #11 - safe to
-# replace with whatever the next real regeneration produces once one exists)
 
 
 class Balco260(BluettiDevice):
