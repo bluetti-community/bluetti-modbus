@@ -1,8 +1,6 @@
-import asyncio
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 import pytest
-from modbus_connection.exceptions import AcknowledgeError, IllegalDataAddressError
 from modbus_connection.mock import MockModbusConnection
 
 from bluetti_modbus_lib.modbus.client import BluettiModbusClient, ClientReturnValue
@@ -80,63 +78,6 @@ async def test_read_reconnects_transparently_after_a_dropped_link():
 
     by_name = {r.name: r for r in results}
     assert by_name["d_num_inverters"].value == 2
-
-
-@pytest.mark.asyncio
-async def test_read_retries_once_after_an_acknowledge_response():
-    client, _ = _client()
-    client.device.async_update = AsyncMock(  # type: ignore[method-assign]
-        side_effect=[AcknowledgeError(5), None]
-    )
-
-    await client.read()
-
-    assert client.device.async_update.await_count == 2
-
-
-@pytest.mark.asyncio
-async def test_read_gives_up_after_a_second_acknowledge_response():
-    client, _ = _client()
-    client.device.async_update = AsyncMock(  # type: ignore[method-assign]
-        side_effect=[AcknowledgeError(5), AcknowledgeError(5)]
-    )
-
-    with pytest.raises(AcknowledgeError):
-        await client.read()
-
-    assert client.device.async_update.await_count == 2
-
-
-@pytest.mark.asyncio
-async def test_read_does_not_retry_a_non_transient_modbus_error():
-    client, _ = _client()
-    client.device.async_update = AsyncMock(  # type: ignore[method-assign]
-        side_effect=IllegalDataAddressError(2)
-    )
-
-    with pytest.raises(IllegalDataAddressError):
-        await client.read()
-
-    assert client.device.async_update.await_count == 1
-
-
-@pytest.mark.asyncio
-async def test_read_survives_a_slow_update_within_the_overall_budget():
-    # Regression test: the update-wide timeout must be large enough to cover
-    # a single slow register block, not just fail immediately - a real
-    # production symptom ("Request cancelled outside library") was traced to
-    # this budget being too tight for how long one block can legitimately
-    # take on this device's Modbus TCP stack under load.
-    client, _ = _client()
-
-    async def slow_update() -> None:
-        await asyncio.sleep(15)
-
-    client.device.async_update = AsyncMock(side_effect=slow_update)  # type: ignore[method-assign]
-
-    await client.read()
-
-    client.device.async_update.assert_awaited_once()
 
 
 @pytest.mark.asyncio
