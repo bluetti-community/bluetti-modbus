@@ -3,6 +3,9 @@ from ..enums import *
 from ..fields import FieldType, field
 
 # GENERATED FILE! DO NOT EDIT!
+# (except d_serial/d_ver_arm/d_ver_dsp, added by hand ahead of bluetti-registers
+# cutting a working release with the confirmed addresses from PR #11 - safe to
+# replace with whatever the next real regeneration produces once one exists)
 
 
 class Balco260(BluettiDevice):
@@ -86,6 +89,18 @@ class Balco260(BluettiDevice):
         t=FieldType.STRING,
         address=50200,
         length=6,
+    )
+    d_serial = field(
+        t=FieldType.UINT64,
+        address=50206,
+    )
+    d_ver_arm = field(
+        t=FieldType.UINT32,
+        address=50210,
+    )
+    d_ver_dsp = field(
+        t=FieldType.UINT32,
+        address=50212,
     )
     g_i_f = field(
         t=FieldType.UINT16,
