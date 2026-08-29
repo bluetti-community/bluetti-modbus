@@ -152,9 +152,8 @@ class EP2000(BluettiDevice):
         unit="V",
         scale=0.1,
     )
-    # b_c reads as a magnitude relative to a 30000 reference, not a plain
-    # scaled value - see reference_offset_current() and issue #8.
     b_c = reference_offset_current(51220, reference=30000)
+
     b_soc = field(
         t=FieldType.UINT16,
         address=51221,

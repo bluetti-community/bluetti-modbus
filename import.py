@@ -1,6 +1,6 @@
 import requests
 
-tag = "0.0.24"
+tag = "0.0.26"
 url = f"https://github.com/bluetti-community/bluetti-registers/releases/download/{tag}/modbus-tcp.json"
 
 output = "src/bluetti_modbus_lib/devices/"
@@ -103,7 +103,7 @@ from ..fields import FieldType, {fields_import}
 
 
 class {name}(BluettiDevice):
-{fields}
+{fields.lstrip(chr(10))}
 """
 
     with open(output + file_name, "w", encoding="utf-8") as f:
