@@ -198,14 +198,17 @@ get started.
 
 ## Setting up a development environment
 
-The easiest way to start is by opening this repository in a
-[Dev Container][devcontainer] - it installs Python 3.13, the `cli` extra,
-and every dev tool below automatically.
+The easiest way to start is by opening a Codespace here on GitHub, or by
+using the [Dev Container][devcontainer] feature of Visual Studio Code -
+either installs Python 3.13, the `cli` extra, and every dev tool below
+automatically, no local setup required.
 
 [![Open in Dev Containers][devcontainer-shield]][devcontainer]
 
 To set it up manually instead: this project uses a plain `venv` + `pip`
-workflow - no Poetry, no Node tooling. You need Python 3.13+.
+workflow - no Poetry, no Node tooling required. You need at least:
+
+- Python 3.13+
 
 ```bash
 python -m venv .venv
@@ -213,12 +216,21 @@ source .venv/bin/activate
 pip install -e ".[cli]"
 ```
 
-`script/run_checks.sh` installs whatever's still missing (ruff, mypy,
-pytest) and runs the same checks CI does - formatting, ruff, mypy --strict,
+As this repository uses [pre-commit][pre-commit], changes are linted and
+formatted on every commit once you've run `pre-commit install` (the
+Dev Container does this for you automatically). `script/run_checks.sh`
+installs whatever's still missing (ruff, mypy, pytest) and runs all checks
+and tests manually, the same way CI does - formatting, ruff, mypy --strict,
 and the test suite with 100% coverage required:
 
 ```bash
 script/run_checks.sh
+```
+
+To run just the Python tests:
+
+```bash
+pytest
 ```
 
 `script/format_code.sh` applies ruff's safe autofixes and formats the tree.
@@ -292,6 +304,7 @@ SOFTWARE.
 [official-docs]: https://github.com/bluetti-official/bluetti-modbus-tcp-slave
 [patrick-original]: https://github.com/Patrick762/bluetti-modbus-lib
 [patrick762]: https://github.com/Patrick762
+[pre-commit]: https://pre-commit.com
 [pymodbus]: https://pypi.org/project/pymodbus/
 [pypi-shield]: https://img.shields.io/pypi/v/bluetti-modbus.svg
 [pypi]: https://pypi.org/project/bluetti-modbus/
