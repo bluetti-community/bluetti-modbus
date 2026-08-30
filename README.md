@@ -4,6 +4,7 @@
 [![Python Versions][python-versions-shield]][pypi]
 [![License][license-shield]](LICENSE)
 [![Build Status][build-shield]][build]
+[![Open in Dev Containers][devcontainer-shield]][devcontainer]
 
 [![Sponsor Patrick762 via GitHub Sponsors][github-sponsors-shield]][github-sponsors]
 
@@ -197,8 +198,14 @@ get started.
 
 ## Setting up a development environment
 
-This project uses a plain `venv` + `pip` workflow - no Poetry, no Node
-tooling. You need Python 3.13+.
+The easiest way to start is by opening this repository in a
+[Dev Container][devcontainer] - it installs Python 3.13, the `cli` extra,
+and every dev tool below automatically.
+
+[![Open in Dev Containers][devcontainer-shield]][devcontainer]
+
+To set it up manually instead: this project uses a plain `venv` + `pip`
+workflow - no Poetry, no Node tooling. You need Python 3.13+.
 
 ```bash
 python -m venv .venv
@@ -275,6 +282,8 @@ SOFTWARE.
 [build-shield]: https://github.com/bluetti-community/bluetti-modbus/actions/workflows/tests.yml/badge.svg
 [build]: https://github.com/bluetti-community/bluetti-modbus/actions/workflows/tests.yml
 [contributors]: https://github.com/bluetti-community/bluetti-modbus/graphs/contributors
+[devcontainer-shield]: https://img.shields.io/static/v1?label=Dev%20Containers&message=Open&color=blue&logo=visualstudiocode
+[devcontainer]: https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/bluetti-community/bluetti-modbus
 [github-sponsors-shield]: https://img.shields.io/badge/sponsor-Patrick762-db61a2.svg?logo=githubsponsors
 [github-sponsors]: https://github.com/sponsors/Patrick762
 [ha-core-pr]: https://github.com/home-assistant/core/pull/180602

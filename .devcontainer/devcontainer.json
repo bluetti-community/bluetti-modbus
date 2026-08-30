@@ -1,0 +1,45 @@
+{
+  "customizations": {
+    "codespaces": {
+      "openFiles": ["README.md", "src/bluetti_modbus_lib/devices/getter.py"]
+    },
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "charliermarsh.ruff",
+        "redhat.vscode-yaml",
+        "GitHub.vscode-pull-request-github",
+        "GitHub.vscode-github-actions",
+        "ryanluker.vscode-coverage-gutters"
+      ],
+      "settings": {
+        "[python]": {
+          "editor.codeActionsOnSave": {
+            "source.fixAll": true,
+            "source.organizeImports": true
+          }
+        },
+        "coverage-gutters.showGutterCoverage": false,
+        "coverage-gutters.showLineCoverage": true,
+        "coverage-gutters.xmlname": "coverage.xml",
+        "python.analysis.extraPaths": ["${workspaceFolder}/src"],
+        "python.defaultInterpreterPath": ".venv/bin/python",
+        "python.testing.cwd": "${workspaceFolder}",
+        "python.testing.pytestArgs": ["--cov-report=xml"],
+        "python.testing.pytestEnabled": true,
+        "ruff.importStrategy": "fromEnvironment",
+        "ruff.interpreter": [".venv/bin/python"]
+      }
+    }
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/python:1": {
+      "installTools": false,
+      "version": "3.13"
+    }
+  },
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "name": "Unofficial async client for Bluetti power stations over Modbus",
+  "updateContentCommand": "python -m venv .venv && .venv/bin/pip install -e '.[cli]' pre-commit ruff mypy 'pytest>=8' 'pytest-asyncio>=0.24' 'pytest-cov>=5' && .venv/bin/pre-commit install"
+}

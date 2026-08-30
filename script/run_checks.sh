@@ -35,6 +35,9 @@ echo "==> Running mypy --strict"
 "$PYTHON_BIN" -m mypy
 
 echo "==> Running tests (100% coverage required)"
-"$PYTHON_BIN" -m pytest tests/ -v --cov=bluetti_modbus_lib --cov-report=term-missing --cov-fail-under=100
+# --cov-report=xml on top of term-missing, not instead of it: xml is for the
+# editor's Coverage Gutters extension (see .devcontainer/devcontainer.json),
+# term-missing is what a human reads in this script's own output.
+"$PYTHON_BIN" -m pytest tests/ -v --cov=bluetti_modbus_lib --cov-report=term-missing --cov-report=xml --cov-fail-under=100
 
 echo "==> All checks passed"
