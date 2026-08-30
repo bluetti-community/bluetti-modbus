@@ -3,6 +3,7 @@ from unittest.mock import patch
 import pytest
 from modbus_connection.mock import MockModbusConnection
 
+from bluetti_modbus_lib.exceptions import BluettiModbusConnectionError
 from bluetti_modbus_lib.modbus.client import BluettiModbusClient, ClientReturnValue
 
 
@@ -46,8 +47,10 @@ async def test_read_raises_on_timeout_without_closing_the_connection():
     client, mock_conn = _client()
     mock_conn.for_unit(1).fail_requests(TimeoutError("simulated timeout"))
 
-    with pytest.raises(TimeoutError):
+    with pytest.raises(BluettiModbusConnectionError) as exc_info:
         await client.read()
+
+    assert isinstance(exc_info.value.__cause__, TimeoutError)
 
     # A failed read must not tear the connection down - opening a fresh one on
     # every read/retry is exactly what makes this device's Modbus TCP stack

@@ -81,7 +81,7 @@ import asyncio
 
 from modbus_connection.pymodbus import connect_tcp
 
-from bluetti_modbus_lib.devices.getter import get_device
+from bluetti_modbus_lib import BluettiModbusConnectionError, get_device
 
 
 async def main() -> None:
@@ -92,7 +92,11 @@ async def main() -> None:
         if device is None:
             return
 
-        await device.async_update_with_retry()
+        try:
+            await device.async_update_with_retry()
+        except BluettiModbusConnectionError as err:
+            print("Could not read the device:", err)
+            return
 
         print(device.values["b_soc"], "%")
         print(device.values["b_v"], "V")
@@ -111,13 +115,21 @@ which one it's talking to. `async_update_with_retry()` is the entry point
 most callers want: it retries once on a transient acknowledge/busy response
 (codes 5/6), which Bluetti devices return in practice on registers that
 otherwise read fine. Call `async_update()` directly instead if you want that
-first failure to raise immediately. Either way, decoded values land on
-`device.values`, a plain `dict[str, Any]` keyed by field name; `field_names()`
-and `get_field()` expose the field metadata (address, type, scale, unit,
-whether it's writable) behind each key, deliberately limited to what's true
-at the protocol level - no Home Assistant concepts like entity category or
-device class live here, since those describe UI presentation, not the
-register.
+first failure to raise immediately. Either way, a communication failure
+raises `BluettiModbusConnectionError` (also a `modbus_connection.ModbusError`,
+for code that already catches that directly) - except for a transient busy
+response, which `async_update_with_retry` decides whether to retry rather
+than wrapping. Decoded values land on `device.values`, a plain
+`dict[str, Any]` keyed by field name; `field_names()` and `get_field()`
+expose the field metadata (address, type, scale, unit, whether it's
+writable) behind each key, deliberately limited to what's true at the
+protocol level - no Home Assistant concepts like entity category or device
+class live here, since those describe UI presentation, not the register.
+
+Everything above (`get_device`, the device classes, `BluettiModbusError`,
+`BluettiModbusConnectionError`, `BluettiModbusClient`, the inverter enums) is
+importable directly from `bluetti_modbus_lib`, not from the deeper module
+paths that define them.
 
 ## CLI
 
