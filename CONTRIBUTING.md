@@ -4,10 +4,10 @@ Contributions - bug reports, fixes, new fields, device coverage - are welcome.
 
 ## Before you start
 
-- `src/bluetti_modbus_lib/devices/balco260.py` and `ep2000.py` are
-  **generated** from [bluetti-registers][bluetti-registers] by `import.py`
-  (see the `GENERATED FILE! DO NOT EDIT!` header at the top of each). A
-  [scheduled workflow](.github/workflows/sync-devices.yml) already keeps them
+- `src/bluetti_modbus_lib/devices/balco260.py` is **generated** from
+  [bluetti-registers][bluetti-registers] by `import.py` (see the
+  `GENERATED FILE! DO NOT EDIT!` header at the top). A
+  [scheduled workflow](.github/workflows/sync-devices.yml) already keeps it
   in sync weekly - if a field is wrong, missing, or misnamed, the fix belongs
   in `bluetti-registers`, not here. Everything else in `src/` is regular,
   hand-maintained code.
@@ -15,10 +15,13 @@ Contributions - bug reports, fixes, new fields, device coverage - are welcome.
   section) - it decodes what a device reports, it does not write control
   registers. A PR adding write support is a bigger design conversation worth
   opening an issue for first.
-- `bluetti_modbus_lib.devices.*` (Balco260/EP2000/SMeter) is the integration
+- `bluetti_modbus_lib.devices.*` (Balco260/SMeter) is the integration
   surface other applications should build on; `bluetti_modbus_lib.modbus`
   (`BluettiModbusClient`) exists only for the `bluetti-modread` CLI and
   standalone/manual use.
+- EP2000 support was removed pending confirmation it actually exposes Modbus
+  TCP - see [bluetti-official/bluetti-home-assistant#125][ep2000-issue]. A PR
+  re-adding it needs that confirmed first, not just a register-map guess.
 
 ## Setting up a development environment
 
@@ -62,3 +65,4 @@ fix and an unrelated refactor are two PRs, not one. CI (`tests.yml`) has to
 be green before merge.
 
 [bluetti-registers]: https://github.com/bluetti-community/bluetti-registers
+[ep2000-issue]: https://github.com/bluetti-official/bluetti-home-assistant/issues/125

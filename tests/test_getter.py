@@ -1,4 +1,4 @@
-from bluetti_modbus_lib.devices import EP2000, Balco260, SMeter
+from bluetti_modbus_lib.devices import Balco260, SMeter
 from bluetti_modbus_lib.devices.getter import get_device
 
 
@@ -14,10 +14,6 @@ def test_balco260_serial_and_firmware_version_addresses():
     assert device.get_field("d_serial").address == 50206
     assert device.get_field("d_ver_arm").address == 50210
     assert device.get_field("d_ver_dsp").address == 50212
-
-
-def test_get_device_ep2000():
-    assert isinstance(get_device("ep2000"), EP2000)
 
 
 def test_get_device_smeter():

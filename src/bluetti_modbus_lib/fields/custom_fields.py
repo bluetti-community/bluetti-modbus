@@ -141,8 +141,8 @@ def field(
         case FieldType.STRING:
             return bluetti_string(address, length)
         case FieldType.ENUM:
-            # Every real caller (balco260.py, ep2000.py) passes enum_type
-            # for FieldType.ENUM - the None default only exists because the
+            # Every real caller (balco260.py) passes enum_type for
+            # FieldType.ENUM - the None default only exists because the
             # other FieldTypes don't use this parameter at all.
             assert enum_type is not None, "FieldType.ENUM requires enum_type"
             return enum(address, enum_type, count=count, word_order="little")
