@@ -6,8 +6,6 @@
 [![Build Status][build-shield]][build]
 [![Open in Dev Containers][devcontainer-shield]][devcontainer]
 
-[![Sponsor Patrick762 via GitHub Sponsors][github-sponsors-shield]][github-sponsors]
-
 Asynchronous Python client for Bluetti power stations over their local Modbus
 TCP interface.
 
