@@ -38,8 +38,8 @@ Supported out of the box:
   BLUETTI's own official register spec, not yet verified against real
   EP2000 hardware (see [bluetti-registers][bluetti-registers] for the
   provenance of every field)
-- **SMeter**: Bluetti's AC meter/CT accessory (register map decoded, but not
-  yet verified against real hardware)
+- **S Meter**: Bluetti's AC meter/CT accessory (register map decoded, but
+  not yet verified against real hardware)
 
 EP2000 support was pulled for a while pending confirmation that it exposes
 Modbus TCP at all (see
