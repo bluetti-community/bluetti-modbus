@@ -85,6 +85,23 @@ def reference_offset_current(
     )
 
 
+def bit_flag(address: int, *, bit: int) -> NumberField[Any]:
+    """A single documented bit inside an otherwise-undocumented register.
+
+    Only the named bit's meaning is decoded - every other bit is left alone
+    (not assumed to be always 0), so this only exists for registers where
+    the official spec documents exactly one bit and marks the rest
+    "reserved" (unlike this library's more complex, genuinely multi-bit
+    status/bitmap registers, which stay raw uints - see e.g. bluetti-
+    registers' UNDECODED_BITMAP_FIELDS).
+    """
+    return NumberField(
+        address,
+        convert=lambda raw: bool(raw & (1 << bit)),
+        word_order="little",
+    )
+
+
 def uint64(
     address: int,
     *,

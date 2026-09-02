@@ -1,15 +1,13 @@
 from ..base_devices import BluettiDevice
 from ..enums import *
-from ..fields import FieldType, field
+from ..fields import FieldType, bit_flag, field
 
 # GENERATED FILE! DO NOT EDIT!
 
 
 class SMeter(BluettiDevice):
-    d_status = field(
-        t=FieldType.UINT16,
-        address=55111,
-    )
+    d_status = bit_flag(55111, bit=2)
+
     d_timestamp = field(
         t=FieldType.UINT32,
         address=55112,
@@ -62,17 +60,17 @@ class SMeter(BluettiDevice):
     ac_a_p_reactive = field(
         t=FieldType.FLOAT32,
         address=55132,
-        unit="kVAR",
+        unit="kvar",
     )
     ac_b_p_reactive = field(
         t=FieldType.FLOAT32,
         address=55134,
-        unit="kVAR",
+        unit="kvar",
     )
     ac_c_p_reactive = field(
         t=FieldType.FLOAT32,
         address=55136,
-        unit="kVAR",
+        unit="kvar",
     )
     ac_a_p_apparent = field(
         t=FieldType.FLOAT32,
@@ -129,7 +127,7 @@ class SMeter(BluettiDevice):
     ac_p_reactive_total = field(
         t=FieldType.FLOAT32,
         address=55160,
-        unit="kVAR",
+        unit="kvar",
     )
     ac_p_apparent_total = field(
         t=FieldType.FLOAT32,
