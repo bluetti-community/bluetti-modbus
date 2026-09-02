@@ -62,17 +62,17 @@ class SMeter(BluettiDevice):
     ac_a_p_reactive = field(
         t=FieldType.FLOAT32,
         address=55132,
-        unit="kVAR",
+        unit="kvar",
     )
     ac_b_p_reactive = field(
         t=FieldType.FLOAT32,
         address=55134,
-        unit="kVAR",
+        unit="kvar",
     )
     ac_c_p_reactive = field(
         t=FieldType.FLOAT32,
         address=55136,
-        unit="kVAR",
+        unit="kvar",
     )
     ac_a_p_apparent = field(
         t=FieldType.FLOAT32,
@@ -129,7 +129,7 @@ class SMeter(BluettiDevice):
     ac_p_reactive_total = field(
         t=FieldType.FLOAT32,
         address=55160,
-        unit="kVAR",
+        unit="kvar",
     )
     ac_p_apparent_total = field(
         t=FieldType.FLOAT32,
