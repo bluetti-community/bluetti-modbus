@@ -33,12 +33,20 @@ Supported out of the box:
 
 - **Balco260**: battery voltage/current/SoC/SoH/cycle count, per-string PV,
   grid import/export, AC output, inverter status/fault/warning, and more
+- **EP2000**: the same Balco260 register set plus a rated-capacity and
+  EMS/grid-export control block Balco260 doesn't have - sourced from
+  BLUETTI's own official register spec, not yet verified against real
+  EP2000 hardware (see [bluetti-registers][bluetti-registers] for the
+  provenance of every field)
 - **SMeter**: Bluetti's AC meter/CT accessory (register map decoded, but not
   yet verified against real hardware)
 
-EP2000 support was pulled pending confirmation that it actually exposes
-Modbus TCP at all - see
-[bluetti-official/bluetti-home-assistant#125](https://github.com/bluetti-official/bluetti-home-assistant/issues/125).
+EP2000 support was pulled for a while pending confirmation that it exposes
+Modbus TCP at all (see
+[bluetti-official/bluetti-home-assistant#125](https://github.com/bluetti-official/bluetti-home-assistant/issues/125))
+and re-added once BLUETTI published an official register spec confirming it
+does - the original report's closed port 502 on one specific unit is still
+unexplained, so treat this device as spec-derived rather than field-tested.
 
 Field names, units, and register addresses come from
 [bluetti-registers][bluetti-registers], not from hand-written tables in this
@@ -110,7 +118,7 @@ asyncio.run(main())
 
 There is no self-describing header to detect the model from, unlike some
 Modbus devices - `get_device()` takes the model as a plain string
-(`"balco260"` or `"smeter"`); the caller has to already know
+(`"balco260"`, `"ep2000"`, or `"smeter"`); the caller has to already know
 which one it's talking to. `async_update_with_retry()` is the entry point
 most callers want: it retries once on a transient acknowledge/busy response
 (codes 5/6), which Bluetti devices return in practice on registers that
@@ -170,7 +178,7 @@ follow the naming convention documented in
 Two different things in this library talk Modbus, for two different
 audiences:
 
-- `Balco260` and `SMeter` (`bluetti_modbus_lib.devices`) are the
+- `Balco260`, `EP2000`, and `SMeter` (`bluetti_modbus_lib.devices`) are the
   integration surface: each takes a `ModbusUnit` supplied by the caller,
   built from whichever backend and connection the caller already manages.
   This is what an application - a Home Assistant integration, for example -

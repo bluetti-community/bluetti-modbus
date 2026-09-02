@@ -5,7 +5,7 @@ from ..fields import FieldType, field, reference_offset_current
 # GENERATED FILE! DO NOT EDIT!
 
 
-class Balco260(BluettiDevice):
+class EP2000(BluettiDevice):
     d_num_inverters = field(
         t=FieldType.UINT16,
         address=50001,
@@ -81,6 +81,77 @@ class Balco260(BluettiDevice):
         address=50027,
         count=5,
         enum_type=InverterFault,
+    )
+    d_manufacturer = field(
+        t=FieldType.STRING,
+        address=50032,
+        length=16,
+    )
+    d_reactive_p_total = field(
+        t=FieldType.INT16,
+        address=50048,
+        count=2,
+    )
+    d_apparent_p_total = field(
+        t=FieldType.INT16,
+        address=50050,
+        count=2,
+    )
+    b_p = field(
+        t=FieldType.UINT16,
+        address=50052,
+        unit="W",
+        count=2,
+    )
+    d_rated_p_max = field(
+        t=FieldType.INT16,
+        address=50054,
+        count=2,
+    )
+    d_rated_p_max_continuous = field(
+        t=FieldType.INT16,
+        address=50056,
+        count=2,
+    )
+    d_rated_va_max_continuous = field(
+        t=FieldType.INT16,
+        address=50058,
+        count=2,
+    )
+    d_rated_var_max_continuous = field(
+        t=FieldType.INT16,
+        address=50060,
+        count=2,
+    )
+    d_rated_var_max_continuous_neg = field(
+        t=FieldType.INT16,
+        address=50062,
+        count=2,
+    )
+    d_rated_pf_min_over_excited = field(
+        t=FieldType.INT16,
+        address=50064,
+        count=2,
+    )
+    d_rated_pf_min_under_excited = field(
+        t=FieldType.INT16,
+        address=50066,
+        count=2,
+    )
+    d_online_component = field(
+        t=FieldType.UINT16,
+        address=50068,
+    )
+    d_rated_v = field(
+        t=FieldType.UINT16,
+        address=50069,
+        unit="V",
+    )
+    d_rated_f = field(
+        t=FieldType.UINT16,
+        address=50070,
+        unit="Hz",
+        scale=0.01,
     )
     d_inverter_type = field(
         t=FieldType.STRING,
@@ -441,6 +512,123 @@ class Balco260(BluettiDevice):
         unit="A",
         scale=0.1,
     )
+    g_1_p_active = field(
+        t=FieldType.UINT16,
+        address=50288,
+        unit="W",
+        count=2,
+    )
+    g_2_p_active = field(
+        t=FieldType.UINT16,
+        address=50290,
+        unit="W",
+        count=2,
+    )
+    g_3_p_active = field(
+        t=FieldType.UINT16,
+        address=50292,
+        unit="W",
+        count=2,
+    )
+    g_1_p_reactive = field(
+        t=FieldType.UINT16,
+        address=50294,
+        unit="W",
+        count=2,
+    )
+    g_2_p_reactive = field(
+        t=FieldType.UINT16,
+        address=50296,
+        unit="W",
+        count=2,
+    )
+    g_3_p_reactive = field(
+        t=FieldType.UINT16,
+        address=50298,
+        unit="W",
+        count=2,
+    )
+    g_1_p_apparent = field(
+        t=FieldType.UINT16,
+        address=50300,
+        unit="W",
+        count=2,
+    )
+    g_2_p_apparent = field(
+        t=FieldType.UINT16,
+        address=50302,
+        unit="W",
+        count=2,
+    )
+    g_3_p_apparent = field(
+        t=FieldType.UINT16,
+        address=50304,
+        unit="W",
+        count=2,
+    )
+    d_inverter_1_p_active_internal = field(
+        t=FieldType.UINT16,
+        address=50306,
+        unit="W",
+        count=2,
+    )
+    d_inverter_2_p_active_internal = field(
+        t=FieldType.UINT16,
+        address=50308,
+        unit="W",
+        count=2,
+    )
+    d_inverter_3_p_active_internal = field(
+        t=FieldType.UINT16,
+        address=50310,
+        unit="W",
+        count=2,
+    )
+    d_hw_ver = field(
+        t=FieldType.STRING,
+        address=50400,
+        length=2,
+    )
+    d_p_active = field(
+        t=FieldType.UINT16,
+        address=50402,
+        unit="W",
+    )
+    d_p_reactive = field(
+        t=FieldType.UINT16,
+        address=50403,
+        unit="W",
+    )
+    d_f = field(
+        t=FieldType.UINT16,
+        address=50404,
+        unit="Hz",
+        scale=0.1,
+    )
+    d_operational_mode_status = field(
+        t=FieldType.UINT16,
+        address=50405,
+    )
+    d_connection_status = field(
+        t=FieldType.UINT16,
+        address=50406,
+    )
+    d_alarm_status = field(
+        t=FieldType.UINT16,
+        address=50407,
+    )
+    d_inverter_der_status = field(
+        t=FieldType.UINT16,
+        address=50408,
+    )
+    d_local_control_mode_status = field(
+        t=FieldType.UINT16,
+        address=50409,
+    )
+    d_storage_mode_status = field(
+        t=FieldType.UINT16,
+        address=50410,
+    )
     d_num_battery_packs = field(
         t=FieldType.UINT16,
         address=51001,
@@ -620,4 +808,118 @@ class Balco260(BluettiDevice):
         t=FieldType.UINT16,
         address=57017,
         unit="%",
+    )
+    d_ems_ctrl = field(
+        t=FieldType.UINT16,
+        address=57030,
+    )
+    d_p_active_target_l1 = field(
+        t=FieldType.UINT16,
+        address=57032,
+        unit="W",
+        count=2,
+    )
+    d_p_active_target_l2 = field(
+        t=FieldType.UINT16,
+        address=57034,
+        unit="W",
+        count=2,
+    )
+    d_p_active_target_l3 = field(
+        t=FieldType.UINT16,
+        address=57036,
+        unit="W",
+        count=2,
+    )
+    d_p_reactive_target_l1 = field(
+        t=FieldType.UINT16,
+        address=57038,
+        unit="W",
+        count=2,
+    )
+    d_p_reactive_target_l2 = field(
+        t=FieldType.UINT16,
+        address=57040,
+        unit="W",
+        count=2,
+    )
+    d_p_reactive_target_l3 = field(
+        t=FieldType.UINT16,
+        address=57042,
+        unit="W",
+        count=2,
+    )
+    d_p_apparent_target_l1 = field(
+        t=FieldType.UINT16,
+        address=57044,
+        unit="W",
+        count=2,
+    )
+    d_p_apparent_target_l2 = field(
+        t=FieldType.UINT16,
+        address=57046,
+        unit="W",
+        count=2,
+    )
+    d_p_apparent_target_l3 = field(
+        t=FieldType.UINT16,
+        address=57048,
+        unit="W",
+        count=2,
+    )
+    d_p_output_level_pct = field(
+        t=FieldType.UINT16,
+        address=57050,
+        unit="W",
+    )
+    d_p_limit_timeout = field(
+        t=FieldType.UINT16,
+        address=57051,
+        unit="W",
+    )
+    d_p_limit_ramp_time = field(
+        t=FieldType.UINT16,
+        address=57052,
+        unit="W",
+    )
+    d_p_limit_ramp_rate_pct = field(
+        t=FieldType.UINT16,
+        address=57053,
+        unit="W",
+    )
+    d_battery_control = field(
+        t=FieldType.UINT16,
+        address=57503,
+    )
+    d_export_limit = field(
+        t=FieldType.UINT16,
+        address=57504,
+        unit="W",
+        count=2,
+    )
+    d_storage_set_point = field(
+        t=FieldType.UINT16,
+        address=57506,
+        unit="W",
+        count=2,
+    )
+    d_op_mod_connect = field(
+        t=FieldType.UINT16,
+        address=57508,
+    )
+    d_op_mod_gen_lim_w = field(
+        t=FieldType.UINT16,
+        address=57509,
+        unit="W",
+        count=2,
+    )
+    d_op_mod_load_lim_w = field(
+        t=FieldType.UINT16,
+        address=57511,
+        unit="W",
+        count=2,
+    )
+    d_ramp_rate = field(
+        t=FieldType.UINT16,
+        address=57513,
     )

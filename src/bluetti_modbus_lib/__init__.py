@@ -1,11 +1,18 @@
 """Unofficial async client for Bluetti power stations over Modbus."""
 
-from .devices import Balco260, SMeter, get_device
-from .enums import InverterFault, InverterStatus, InverterWarning
+from .devices import EP2000, Balco260, SMeter, get_device
+from .enums import (
+    InverterFault,
+    InverterStatus,
+    InverterWarning,
+    PackChargingStatus,
+    PvType,
+)
 from .exceptions import BluettiModbusConnectionError, BluettiModbusError
 from .modbus import BluettiModbusClient
 
 __all__ = [
+    "EP2000",
     "Balco260",
     "BluettiModbusClient",
     "BluettiModbusConnectionError",
@@ -13,6 +20,8 @@ __all__ = [
     "InverterFault",
     "InverterStatus",
     "InverterWarning",
+    "PackChargingStatus",
+    "PvType",
     "SMeter",
     "get_device",
 ]
