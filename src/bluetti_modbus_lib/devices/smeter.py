@@ -1,15 +1,13 @@
 from ..base_devices import BluettiDevice
 from ..enums import *
-from ..fields import FieldType, field
+from ..fields import FieldType, bit_flag, field
 
 # GENERATED FILE! DO NOT EDIT!
 
 
 class SMeter(BluettiDevice):
-    d_status = field(
-        t=FieldType.UINT16,
-        address=55111,
-    )
+    d_status = bit_flag(55111, bit=2)
+
     d_timestamp = field(
         t=FieldType.UINT32,
         address=55112,

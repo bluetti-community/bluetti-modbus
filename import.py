@@ -47,11 +47,18 @@ def get_type(t: str, name: str):
 # reference_offset_current()'s own docstring for why b_c needs this.
 REFERENCE_OFFSET_CURRENT_FIELDS = {"b_c": 30000}
 
+# Single documented bit inside an otherwise-"reserved" register - see
+# bit_flag()'s own docstring. d_status (55111, S Meter): bit0/1 reserved,
+# bit2 online status (bluetti-registers#14 / the official Cassandra Protocol
+# register list's own remark on that address).
+BIT_FLAG_FIELDS = {"d_status": 2}
+
 for d in schema:
     name = d["name"]
     file_name = str(name).lower() + ".py"
     fields = ""
     uses_reference_offset_current = False
+    uses_bit_flag = False
 
     for f in d["fields"]:
         if f["name"] in REFERENCE_OFFSET_CURRENT_FIELDS:
@@ -59,6 +66,14 @@ for d in schema:
             reference = REFERENCE_OFFSET_CURRENT_FIELDS[f["name"]]
             fields += f"""
     {f["name"]} = reference_offset_current({f["address"]}, reference={reference})
+"""
+            continue
+
+        if f["name"] in BIT_FLAG_FIELDS:
+            uses_bit_flag = True
+            bit = BIT_FLAG_FIELDS[f["name"]]
+            fields += f"""
+    {f["name"]} = bit_flag({f["address"]}, bit={bit})
 """
             continue
 
@@ -91,9 +106,14 @@ for d in schema:
 
         fields += "\n    )"
 
-    fields_import = (
-        "field, reference_offset_current" if uses_reference_offset_current else "field"
-    )
+    extra_imports = []
+    if uses_reference_offset_current:
+        extra_imports.append("reference_offset_current")
+    if uses_bit_flag:
+        extra_imports.append("bit_flag")
+    # ruff (isort) sorts a module's names alphabetically within one import -
+    # match that here so the generated file doesn't fail lint every time.
+    fields_import = ", ".join(sorted(["field", *extra_imports]))
 
     content = f"""from ..base_devices import BluettiDevice
 from ..enums import *

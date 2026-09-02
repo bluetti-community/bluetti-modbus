@@ -6,6 +6,7 @@ from modbus_connection.model.fields import FloatField, NumberField, StringField
 from bluetti_modbus_lib.fields.custom_fields import (
     BluettiStringField,
     FieldType,
+    bit_flag,
     field,
     reference_offset_current,
 )
@@ -91,3 +92,17 @@ def test_reference_offset_current_decodes_magnitude_around_the_reference():
     # Below the reference (discharging) decodes to the same kind of magnitude.
     assert reg.decode([29500]) == pytest.approx(50.0)
     assert reg.decode([30000]) == 0
+
+
+def test_bit_flag_decodes_only_the_named_bit():
+    # d_status (S Meter, 55111): bit0/1 "reserved" per the official spec,
+    # bit2 online status.
+    reg = bit_flag(55111, bit=2)
+
+    assert isinstance(reg, NumberField)
+    assert reg.decode([0]) is False
+    assert reg.decode([0b100]) is True
+    # Reserved bits set alongside bit2 don't change the result - only bit2
+    # is examined, nothing is assumed about the rest.
+    assert reg.decode([0b111]) is True
+    assert reg.decode([0b011]) is False
