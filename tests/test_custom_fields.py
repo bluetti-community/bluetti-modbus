@@ -9,6 +9,7 @@ from bluetti_modbus_lib.fields.custom_fields import (
     bit_flag,
     dotted_version,
     field,
+    nibble,
     reference_offset_current,
 )
 
@@ -121,3 +122,18 @@ def test_bit_flag_decodes_only_the_named_bit():
     # is examined, nothing is assumed about the rest.
     assert reg.decode([0b111]) is True
     assert reg.decode([0b011]) is False
+
+
+def test_nibble_decodes_the_named_4_bits():
+    # pv_dc_count/pv_ac_count (Balco260/EP2000, both 50267): bit0-3/bit4-7
+    # respectively. raw=0x32 -> low nibble 2, high nibble 3.
+    low = nibble(50267, high=False)
+    high = nibble(50267, high=True)
+
+    assert isinstance(low, NumberField)
+    assert isinstance(high, NumberField)
+    assert low.decode([0x32]) == 2
+    assert high.decode([0x32]) == 3
+    # The other nibble's bits don't leak into this one's result.
+    assert low.decode([0xF0]) == 0
+    assert high.decode([0x0F]) == 0

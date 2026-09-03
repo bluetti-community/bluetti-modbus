@@ -126,6 +126,23 @@ def bit_flag(address: int, *, bit: int) -> NumberField[Any]:
     )
 
 
+def nibble(address: int, *, high: bool) -> NumberField[Any]:
+    """One documented 4-bit nibble (0-15) of an otherwise packed register.
+
+    Like bit_flag() but for a 4-bit count instead of a single bit - see its
+    docstring. pv_dc_count/pv_ac_count (Balco260/EP2000, both address 50267,
+    "PV connection quantity per inverter") are the confirmed case: bit0-3 is
+    the low nibble (high=False), bit4-7 is the high nibble (high=True), per
+    the official register spec's own remark column.
+    """
+    shift = 4 if high else 0
+    return NumberField(
+        address,
+        convert=lambda raw: (raw >> shift) & 0xF,
+        word_order="little",
+    )
+
+
 def uint64(
     address: int,
     *,
