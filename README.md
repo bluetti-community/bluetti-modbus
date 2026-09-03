@@ -12,53 +12,35 @@ TCP interface.
 ## About
 
 This package reads Bluetti power stations over Modbus, using the register
-maps Bluetti documents for its Modbus TCP slave implementation. It is built
-on top of [`modbus-connection`][modbus-connection], a backend-neutral async
-Modbus toolkit: the library does **not** create or own a connection itself.
-The caller opens a `ModbusConnection` and hands over a `ModbusUnit`; a site
-with several devices creates one device object per unit, all sharing a
-single connection.
+maps Bluetti documents for its Modbus TCP slave implementation. It's built on
+[`modbus-connection`][modbus-connection], a backend-neutral async Modbus
+toolkit - the caller owns the connection and hands this library a
+`ModbusUnit`, so a site with several devices shares one connection across
+several device objects.
 
-Because the caller owns the connection, the transport is up to you - Modbus
-TCP over Ethernet or WiFi is the common path, but anything that hands this
-library a `ModbusUnit` will do. This is the integration surface used to embed
-the library into another application, such as the `bluetti_modbus` Home
-Assistant integration (currently in review at
-[home-assistant/core#180602][ha-core-pr]).
-
-This library is primarily **read-only** - it decodes what a device reports.
-A small, explicit set of fields `bluetti-registers`' schema marks writeable
-(currently: Balco260's 3 control switches and 2 battery SOC thresholds - not
-yet EP2000, which is still spec-derived rather than field-tested) also
+The library is primarily **read-only** - it decodes what a device reports. A
+small, explicit set of fields `bluetti-registers`' schema marks writeable
+(currently Balco260's 3 control switches and 2 battery SOC thresholds) also
 support `await device.write(field_name, value)`, validated against the
 schema's own bounds (via [`probatio`][probatio]) before anything reaches the
-device. Everything else stays read-only.
+device.
 
 Supported out of the box:
 
 - **Balco260**: battery voltage/current/SoC/SoH/cycle count, per-string PV,
   grid import/export, AC output, inverter status/fault/warning, and more
 - **EP2000**: the same Balco260 register set plus a rated-capacity and
-  EMS/grid-export control block Balco260 doesn't have - sourced from
-  BLUETTI's own official register spec, not yet verified against real
-  EP2000 hardware (see [bluetti-registers][bluetti-registers] for the
-  provenance of every field)
+  EMS/grid-export control block - sourced from BLUETTI's own official
+  register spec, not yet verified against real EP2000 hardware
 - **S Meter**: Bluetti's AC meter/CT accessory (register map decoded, but
   not yet verified against real hardware)
 
-EP2000 support was pulled for a while pending confirmation that it exposes
-Modbus TCP at all (see
-[bluetti-official/bluetti-home-assistant#125](https://github.com/bluetti-official/bluetti-home-assistant/issues/125))
-and re-added once BLUETTI published an official register spec confirming it
-does - the original report's closed port 502 on one specific unit is still
-unexplained, so treat this device as spec-derived rather than field-tested.
-
 Field names, units, and register addresses come from
-[bluetti-registers][bluetti-registers], not from hand-written tables in this
-repository - `devices/balco260.py` is generated from it by `import.py`, and a
-[scheduled workflow][sync-devices] re-runs that
-generator weekly and commits any diff, so `main` never silently drifts from
-what `bluetti-registers` currently documents.
+[bluetti-registers][bluetti-registers] - `devices/balco260.py` is generated
+from it by `import.py`, and a [scheduled workflow][sync-devices] keeps it in
+sync weekly, so `main` never silently drifts from what it currently
+documents. See [CONTRIBUTING.md](CONTRIBUTING.md) for EP2000's verification
+status and this project's writable-field policy.
 
 ## Enabling Modbus TCP on your device
 
@@ -350,7 +332,6 @@ SOFTWARE.
 [devcontainer]: https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/bluetti-community/bluetti-modbus
 [github-sponsors-shield]: https://img.shields.io/badge/sponsor-Patrick762-db61a2.svg?logo=githubsponsors
 [github-sponsors]: https://github.com/sponsors/Patrick762
-[ha-core-pr]: https://github.com/home-assistant/core/pull/180602
 [license-shield]: https://img.shields.io/github/license/bluetti-community/bluetti-modbus.svg
 [modbus-connection]: https://pypi.org/project/modbus-connection/
 [official-docs]: https://github.com/bluetti-official/bluetti-modbus-tcp-slave
