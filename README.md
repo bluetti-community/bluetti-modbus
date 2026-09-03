@@ -1,4 +1,4 @@
-# Python: Unofficial async client for Bluetti power stations over Modbus
+# Python: async client for Bluetti power stations over Modbus
 
 [![PyPI Version][pypi-shield]][pypi]
 [![Python Versions][python-versions-shield]][pypi]
@@ -12,53 +12,35 @@ TCP interface.
 ## About
 
 This package reads Bluetti power stations over Modbus, using the register
-maps Bluetti documents for its Modbus TCP slave implementation. It is built
-on top of [`modbus-connection`][modbus-connection], a backend-neutral async
-Modbus toolkit: the library does **not** create or own a connection itself.
-The caller opens a `ModbusConnection` and hands over a `ModbusUnit`; a site
-with several devices creates one device object per unit, all sharing a
-single connection.
+maps Bluetti documents for its Modbus TCP slave implementation. It's built on
+[`modbus-connection`][modbus-connection], a backend-neutral async Modbus
+toolkit - the caller owns the connection and hands this library a
+`ModbusUnit`, so a site with several devices shares one connection across
+several device objects.
 
-Because the caller owns the connection, the transport is up to you - Modbus
-TCP over Ethernet or WiFi is the common path, but anything that hands this
-library a `ModbusUnit` will do. This is the integration surface used to embed
-the library into another application, such as the `bluetti_modbus` Home
-Assistant integration (currently in review at
-[home-assistant/core#180602][ha-core-pr]).
-
-This library is primarily **read-only** - it decodes what a device reports.
-A small, explicit set of fields `bluetti-registers`' schema marks writeable
-(currently: Balco260's 3 control switches and 2 battery SOC thresholds - not
-yet EP2000, which is still spec-derived rather than field-tested) also
+The library is primarily **read-only** - it decodes what a device reports. A
+small, explicit set of fields `bluetti-registers`' schema marks writeable
+(currently Balco 260's 3 control switches and 2 battery SOC thresholds) also
 support `await device.write(field_name, value)`, validated against the
 schema's own bounds (via [`probatio`][probatio]) before anything reaches the
-device. Everything else stays read-only.
+device.
 
 Supported out of the box:
 
-- **Balco260**: battery voltage/current/SoC/SoH/cycle count, per-string PV,
+- **Balco 260**: battery voltage/current/SoC/SoH/cycle count, per-string PV,
   grid import/export, AC output, inverter status/fault/warning, and more
-- **EP2000**: the same Balco260 register set plus a rated-capacity and
-  EMS/grid-export control block Balco260 doesn't have - sourced from
-  BLUETTI's own official register spec, not yet verified against real
-  EP2000 hardware (see [bluetti-registers][bluetti-registers] for the
-  provenance of every field)
-- **S Meter**: Bluetti's AC meter/CT accessory (register map decoded, but
-  not yet verified against real hardware)
-
-EP2000 support was pulled for a while pending confirmation that it exposes
-Modbus TCP at all (see
-[bluetti-official/bluetti-home-assistant#125](https://github.com/bluetti-official/bluetti-home-assistant/issues/125))
-and re-added once BLUETTI published an official register spec confirming it
-does - the original report's closed port 502 on one specific unit is still
-unexplained, so treat this device as spec-derived rather than field-tested.
+- **EP2000**: the same Balco 260 register set plus a rated-capacity and
+  EMS/grid-export control block - sourced from BLUETTI's own official
+  register spec, not yet verified against real EP2000 hardware
+- **S Meter**: Bluetti's AC meter/CT accessory, confirmed against real
+  hardware
 
 Field names, units, and register addresses come from
-[bluetti-registers][bluetti-registers], not from hand-written tables in this
-repository - `devices/balco260.py` is generated from it by `import.py`, and a
-[scheduled workflow][sync-devices] re-runs that
-generator weekly and commits any diff, so `main` never silently drifts from
-what `bluetti-registers` currently documents.
+[bluetti-registers][bluetti-registers] - `devices/balco260.py` is generated
+from it by `import.py`, and a [scheduled workflow][sync-devices] keeps it in
+sync weekly, so `main` never silently drifts from what it currently
+documents. See [CONTRIBUTING.md](CONTRIBUTING.md) for EP2000's verification
+status and this project's writable-field policy.
 
 ## Enabling Modbus TCP on your device
 
@@ -151,7 +133,7 @@ paths that define them.
 
 ### Multiple battery packs (BC200)
 
-A Balco260 can have up to `MAX_BATTERY_PACKS` (5, confirmed by BLUETTI)
+A Balco 260 can have up to `MAX_BATTERY_PACKS` (5, confirmed by BLUETTI)
 BC200 packs attached - `device.values["d_num_battery_packs"]` (register
 51001) says how many are actually there. Pack 1's own data (`b_soc`, `b_v`,
 serial number, etc.) is already part of the main `Balco260` device's own
@@ -181,7 +163,7 @@ testing, not something another application should build on (see
 bluetti-modread -c 10.2.1.60 -p 502 -t balco260
 ```
 
-Example output, captured from a real Balco260 (truncated - `bluetti-modread`
+Example output, captured from a real Balco 260 (truncated - `bluetti-modread`
 prints one line per field):
 
 ```text
@@ -220,6 +202,19 @@ audiences:
   CLI above and standalone/manual use, not as something another application
   should depend on - doing so would open a second, competing connection to
   the device instead of sharing one.
+
+## Related projects
+
+This library is the Modbus layer for Home Assistant integrations built on
+top of it:
+
+- [`hassio-bluetti-modbus`][hassio-bluetti-modbus] - a HACS-installable
+  custom integration, vendoring this library directly (see its own README
+  for why).
+- [`bluetti-home-assistant`][bluetti-home-assistant] - a cloud + Modbus
+  hybrid integration, depending on this library via PyPI.
+- [home-assistant/core#180602][ha-core-pr] - an in-review attempt at a
+  built-in `home-assistant/core` integration for the Modbus-only path.
 
 ## Relationship to Patrick762's `bluetti-modbus-lib`
 
@@ -341,6 +336,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 [bluetti-community]: https://github.com/bluetti-community
+[bluetti-home-assistant]: https://github.com/bluetti-community/bluetti-home-assistant
 [bluetti-registers-naming]: https://github.com/bluetti-community/bluetti-registers#naming-convention-for-field-names
 [bluetti-registers]: https://github.com/bluetti-community/bluetti-registers
 [build-shield]: https://github.com/bluetti-community/bluetti-modbus/actions/workflows/tests.yml/badge.svg
@@ -351,6 +347,7 @@ SOFTWARE.
 [github-sponsors-shield]: https://img.shields.io/badge/sponsor-Patrick762-db61a2.svg?logo=githubsponsors
 [github-sponsors]: https://github.com/sponsors/Patrick762
 [ha-core-pr]: https://github.com/home-assistant/core/pull/180602
+[hassio-bluetti-modbus]: https://github.com/bluetti-community/hassio-bluetti-modbus
 [license-shield]: https://img.shields.io/github/license/bluetti-community/bluetti-modbus.svg
 [modbus-connection]: https://pypi.org/project/modbus-connection/
 [official-docs]: https://github.com/bluetti-official/bluetti-modbus-tcp-slave
