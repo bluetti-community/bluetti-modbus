@@ -96,7 +96,9 @@ for d in schema:
         if name == "Balco260" and f.get("writeable"):
             if "num_min" in f and "num_max" in f:
                 uses_range = True
-                fields += f"\n        writable=Range(min={f['num_min']}, max={f['num_max']}),"
+                fields += (
+                    f"\n        writable=Range(min={f['num_min']}, max={f['num_max']}),"
+                )
             else:
                 fields += "\n        writable=True,"
 
