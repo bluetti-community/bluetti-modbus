@@ -25,12 +25,13 @@ dependencies = ["modbus-connection>=4.10.0", "probatio>=0.11.4"]
 
 [project.optional-dependencies]
 # Concrete backend for the bluetti-modread CLI (pip install bluetti-modbus[cli]).
-# What both HA integrations use in production today.
-cli = ["modbus-connection[pymodbus]>=4.10.0"]
-# Experimental: bluetti-modread --backend tmodbus, for evaluating a possible
-# future migration against real hardware before touching either HA
-# integration - see CONTRIBUTING.md. Not used by anything in production.
-cli-tmodbus = ["modbus-connection[tmodbus]>=4.10.0"]
+# tmodbus is the default since 0.4.0 - confirmed via persistent-connection
+# testing against real Balco260/S Meter hardware: it correctly reports a
+# corrupted/truncated reply as ModbusProtocolError, where pymodbus reports
+# the identical event as a generic timeout (see #29 and CONTRIBUTING.md).
+cli = ["modbus-connection[tmodbus]>=4.10.0"]
+# The previous default backend, still available for anyone who needs it.
+cli-pymodbus = ["modbus-connection[pymodbus]>=4.10.0"]
 
 [project.urls]
 Homepage = "https://github.com/bluetti-community/bluetti-modbus"

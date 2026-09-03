@@ -24,16 +24,19 @@ class ClientReturnValue:
 
 class BluettiModbusClient:
     def __init__(
-        self, host: str, port: int, device_type: str, *, backend: Backend = "pymodbus"
+        self, host: str, port: int, device_type: str, *, backend: Backend = "tmodbus"
     ) -> None:
-        # Import chosen here, not at module level: modbus_connection[tmodbus]
-        # is an opt-in trial extra (see pyproject.toml's cli-tmodbus), not
-        # installed by default - importing it eagerly would break every
-        # caller that only has [cli] (pymodbus) installed, which is every
-        # real caller today. backend="tmodbus" is currently reachable only
-        # from bluetti-modread's own --backend flag - see its docstring for
-        # why (CONTRIBUTING.md: investigating a tmodbus migration, evaluating
-        # real-hardware behavior before touching either HA integration).
+        # tmodbus is the default since 0.4.0 - confirmed via persistent-
+        # connection testing against real Balco260/S Meter hardware: it
+        # correctly reports a corrupted/truncated reply as ModbusProtocolError,
+        # where pymodbus reports the identical event as a generic timeout
+        # (see #29 and CONTRIBUTING.md). backend="pymodbus" stays available
+        # (pip install "bluetti-modbus[cli-pymodbus]") for anyone who needs
+        # the previous default.
+        #
+        # Import chosen here, not at module level: each backend is an
+        # optional extra (see pyproject.toml's cli/cli-pymodbus) - importing
+        # both eagerly would require every caller to install both.
         #
         # Typed against modbus_connection's own backend-neutral base (its
         # public re-export of BaseModbusConnection) - the two branches below
