@@ -32,8 +32,8 @@ Supported out of the box:
 - **EP2000**: the same Balco 260 register set plus a rated-capacity and
   EMS/grid-export control block - sourced from BLUETTI's own official
   register spec, not yet verified against real EP2000 hardware
-- **S Meter**: Bluetti's AC meter/CT accessory (register map decoded, but
-  not yet verified against real hardware)
+- **S Meter**: Bluetti's AC meter/CT accessory, confirmed against real
+  hardware
 
 Field names, units, and register addresses come from
 [bluetti-registers][bluetti-registers] - `devices/balco260.py` is generated
