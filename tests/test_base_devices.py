@@ -6,6 +6,8 @@ from modbus_connection.exceptions import (
     AcknowledgeError,
     IllegalDataAddressError,
     ModbusError,
+    ModbusProtocolError,
+    ModbusTimeoutError,
 )
 from modbus_connection.mock import MockModbusConnection
 from probatio.error import RangeInvalid
@@ -76,6 +78,61 @@ async def test_async_update_with_retry_gives_up_after_a_second_busy_response():
     )
 
     with pytest.raises(AcknowledgeError):
+        await device.async_update_with_retry()
+
+    assert device.async_update.await_count == 2
+
+
+@pytest.mark.asyncio
+async def test_async_update_with_retry_retries_once_after_a_corrupted_frame():
+    # Real-hardware evidence (persistent-connection testing against a real
+    # Balco260/S Meter, tmodbus backend - bluetti-community/bluetti-modbus#29):
+    # this recovers cleanly on the very next read on the same connection,
+    # every time observed, with no reconnect needed.
+    device = _balco260()
+    corrupted = BluettiModbusConnectionError(
+        "read_holding_registers(53001, 12): Expected response to start "
+        "with function code and byte count"
+    )
+    corrupted.__cause__ = ModbusProtocolError(
+        "Expected response to start with function code and byte count"
+    )
+    device.async_update = AsyncMock(side_effect=[corrupted, None])  # type: ignore[method-assign]
+
+    await device.async_update_with_retry()
+
+    assert device.async_update.await_count == 2
+
+
+@pytest.mark.asyncio
+async def test_async_update_with_retry_retries_once_after_a_pymodbus_timeout():
+    # pymodbus can't tell a corrupted reply apart from no reply at all - both
+    # surface as ModbusTimeoutError (confirmed via a real wire-level capture:
+    # the device's malformed reply still arrived, pymodbus just discarded it
+    # and then genuinely timed out) - retried the same as ModbusProtocolError.
+    device = _balco260()
+    timed_out = BluettiModbusConnectionError(
+        "read_holding_registers(51001, 8): Modbus Error: [Input/Output] "
+        "No response received after 0 retries, continue with next request"
+    )
+    timed_out.__cause__ = ModbusTimeoutError("no response")
+    device.async_update = AsyncMock(side_effect=[timed_out, None])  # type: ignore[method-assign]
+
+    await device.async_update_with_retry()
+
+    assert device.async_update.await_count == 2
+
+
+@pytest.mark.asyncio
+async def test_async_update_with_retry_gives_up_after_a_second_corrupted_frame():
+    device = _balco260()
+    corrupted = BluettiModbusConnectionError("read_holding_registers(53001, 12): ...")
+    corrupted.__cause__ = ModbusProtocolError(
+        "Expected response to start with function code and byte count"
+    )
+    device.async_update = AsyncMock(side_effect=[corrupted, corrupted])  # type: ignore[method-assign]
+
+    with pytest.raises(BluettiModbusConnectionError):
         await device.async_update_with_retry()
 
     assert device.async_update.await_count == 2

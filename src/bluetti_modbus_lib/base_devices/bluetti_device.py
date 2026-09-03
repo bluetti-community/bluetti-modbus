@@ -5,6 +5,8 @@ from typing import Any, override
 from modbus_connection.exceptions import (
     AcknowledgeError,
     ModbusError,
+    ModbusProtocolError,
+    ModbusTimeoutError,
     ServerDeviceBusyError,
 )
 from modbus_connection.model import Component, RegisterField
@@ -47,13 +49,30 @@ class BluettiDevice(Component):
             raise BluettiModbusConnectionError(str(err)) from err
 
     async def async_update_with_retry(self) -> None:
-        """Refresh this device's values, retrying once on a transient busy response.
+        """Refresh this device's values, retrying once on a transient failure.
 
-        Codes 5/6 (acknowledge / server device busy) mean the device accepted
-        the request but wants more time - seen in practice on registers that
-        otherwise read fine, so it's transient device behavior, not a
-        permanently bad address. Callers that want a hard failure to surface
-        immediately should call ``async_update()`` directly instead.
+        Two things are retried once here, both confirmed transient on real
+        hardware rather than assumed:
+
+        - Codes 5/6 (acknowledge / server device busy) mean the device
+          accepted the request but wants more time - seen in practice on
+          registers that otherwise read fine, so it's transient device
+          behavior, not a permanently bad address.
+        - A corrupted/truncated reply - ModbusProtocolError under tmodbus
+          (bluetti-community/bluetti-modbus#29), or the same event
+          classified as ModbusTimeoutError under pymodbus, which can't tell
+          a corrupted reply apart from no reply at all. Persistent-connection
+          testing against real Balco260/S Meter hardware (both backends)
+          showed this recovers cleanly on the very next read on the same
+          connection every time, with no reconnect needed - so one immediate
+          retry here avoids losing the whole poll cycle to what is, in
+          practice, a one-off glitch. A genuinely dead connection still fails
+          - just one attempt later, at up to 2x the timeout budget.
+
+        Anything else (e.g. an illegal address/function code) is a permanent
+        condition retrying can't fix, and is not retried here - callers that
+        want a hard failure to surface immediately for any reason should call
+        ``async_update()`` directly instead.
 
         A device that is still busy after this one retry raises the bare
         AcknowledgeError/ServerDeviceBusyError, not wrapped into
@@ -65,6 +84,11 @@ class BluettiDevice(Component):
             await self._async_update_with_timeout()
         except (AcknowledgeError, ServerDeviceBusyError):
             await self._async_update_with_timeout()
+        except BluettiModbusConnectionError as err:
+            if isinstance(err.__cause__, (ModbusProtocolError, ModbusTimeoutError)):
+                await self._async_update_with_timeout()
+            else:
+                raise
 
     async def _async_update_with_timeout(self) -> None:
         # One async_update() call reads several register blocks sequentially
