@@ -1,6 +1,6 @@
 import requests
 
-tag = "0.0.32"
+tag = "0.0.33"
 url = f"https://github.com/bluetti-community/bluetti-registers/releases/download/{tag}/modbus-tcp.json"
 
 output = "src/bluetti_modbus_lib/devices/"
@@ -48,6 +48,13 @@ REFERENCE_OFFSET_CURRENT_FIELDS = {"b_c": 30000}
 # register list's own remark on that address).
 BIT_FLAG_FIELDS = {"d_status": 2}
 
+# Documented 4-bit nibble inside an otherwise packed register - see
+# nibble()'s own docstring. pv_dc_count/pv_ac_count (Balco260/EP2000, both
+# 50267, "PV connection quantity per inverter"): bit0-3/bit4-7 respectively,
+# per the official register spec's own remark on that address.
+# name -> is the high nibble (bit4-7), not the low one (bit0-3).
+NIBBLE_FIELDS = {"pv_dc_count": False, "pv_ac_count": True}
+
 for d in schema:
     name = d["name"]
     file_name = str(name).lower() + ".py"
@@ -55,6 +62,7 @@ for d in schema:
     uses_reference_offset_current = False
     uses_dotted_version = False
     uses_bit_flag = False
+    uses_nibble = False
     uses_range = False
 
     for f in d["fields"]:
@@ -82,6 +90,14 @@ for d in schema:
             bit = BIT_FLAG_FIELDS[f["name"]]
             fields += f"""
     {f["name"]} = bit_flag({f["address"]}, bit={bit})
+"""
+            continue
+
+        if f["name"] in NIBBLE_FIELDS:
+            uses_nibble = True
+            high = NIBBLE_FIELDS[f["name"]]
+            fields += f"""
+    {f["name"]} = nibble({f["address"]}, high={high})
 """
             continue
 
@@ -140,6 +156,8 @@ for d in schema:
         extra_imports.append("dotted_version")
     if uses_bit_flag:
         extra_imports.append("bit_flag")
+    if uses_nibble:
+        extra_imports.append("nibble")
     # ruff (isort) sorts a module's names alphabetically within one import -
     # match that here so the generated file doesn't fail lint every time.
     fields_import = ", ".join(sorted(["field", *extra_imports]))

@@ -1,6 +1,6 @@
 from ..base_devices import BluettiDevice
 from ..enums import *
-from ..fields import FieldType, dotted_version, field, reference_offset_current
+from ..fields import FieldType, dotted_version, field, nibble, reference_offset_current
 
 # GENERATED FILE! DO NOT EDIT!
 
@@ -416,10 +416,10 @@ class EP2000(BluettiDevice):
         unit="A",
         scale=0.1,
     )
-    pv_count = field(
-        t=FieldType.UINT16,
-        address=50267,
-    )
+    pv_dc_count = nibble(50267, high=False)
+
+    pv_ac_count = nibble(50267, high=True)
+
     pv_1_i_type = field(
         t=FieldType.ENUM,
         address=50268,
