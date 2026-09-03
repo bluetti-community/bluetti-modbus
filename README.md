@@ -1,4 +1,4 @@
-# Python: Unofficial async client for Bluetti power stations over Modbus
+# Python: async client for Bluetti power stations over Modbus
 
 [![PyPI Version][pypi-shield]][pypi]
 [![Python Versions][python-versions-shield]][pypi]
