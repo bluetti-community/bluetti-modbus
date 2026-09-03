@@ -149,6 +149,28 @@ Everything above (`get_device`, the device classes, `BluettiModbusError`,
 importable directly from `bluetti_modbus_lib`, not from the deeper module
 paths that define them.
 
+### Multiple battery packs (BC200)
+
+A Balco260 can have up to `MAX_BATTERY_PACKS` (5, confirmed by BLUETTI)
+BC200 packs attached - `device.values["d_num_battery_packs"]` (register
+51001) says how many are actually there. Pack 1's own data (`b_soc`, `b_v`,
+serial number, etc.) is already part of the main `Balco260` device's own
+fields - reading its own Modbus slave address covers pack 1. Packs 2 and up
+answer on their *own* slave address (2, 3, ...), confirmed by BLUETTI to
+apply to the entire "Each Pack Base Information" block, not just SOC/SOH
+(see `bluetti-community/bluetti-modbus#8`). `battery_pack()` builds a
+`Balco260` restricted to just that block, at a given pack's slave address:
+
+```python
+from bluetti_modbus_lib import battery_pack
+
+pack2 = battery_pack(connection, 2)
+await pack2.async_update_with_retry()
+print(pack2.values["b_soc"], "%")
+```
+
+`PACK_INFO_FIELDS` lists the field names this covers.
+
 ## CLI
 
 The optional CLI reads a device straight from the terminal - useful for
