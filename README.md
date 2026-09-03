@@ -20,16 +20,16 @@ several device objects.
 
 The library is primarily **read-only** - it decodes what a device reports. A
 small, explicit set of fields `bluetti-registers`' schema marks writeable
-(currently Balco260's 3 control switches and 2 battery SOC thresholds) also
+(currently Balco 260's 3 control switches and 2 battery SOC thresholds) also
 support `await device.write(field_name, value)`, validated against the
 schema's own bounds (via [`probatio`][probatio]) before anything reaches the
 device.
 
 Supported out of the box:
 
-- **Balco260**: battery voltage/current/SoC/SoH/cycle count, per-string PV,
+- **Balco 260**: battery voltage/current/SoC/SoH/cycle count, per-string PV,
   grid import/export, AC output, inverter status/fault/warning, and more
-- **EP2000**: the same Balco260 register set plus a rated-capacity and
+- **EP2000**: the same Balco 260 register set plus a rated-capacity and
   EMS/grid-export control block - sourced from BLUETTI's own official
   register spec, not yet verified against real EP2000 hardware
 - **S Meter**: Bluetti's AC meter/CT accessory (register map decoded, but
@@ -133,7 +133,7 @@ paths that define them.
 
 ### Multiple battery packs (BC200)
 
-A Balco260 can have up to `MAX_BATTERY_PACKS` (5, confirmed by BLUETTI)
+A Balco 260 can have up to `MAX_BATTERY_PACKS` (5, confirmed by BLUETTI)
 BC200 packs attached - `device.values["d_num_battery_packs"]` (register
 51001) says how many are actually there. Pack 1's own data (`b_soc`, `b_v`,
 serial number, etc.) is already part of the main `Balco260` device's own
@@ -163,7 +163,7 @@ testing, not something another application should build on (see
 bluetti-modread -c 10.2.1.60 -p 502 -t balco260
 ```
 
-Example output, captured from a real Balco260 (truncated - `bluetti-modread`
+Example output, captured from a real Balco 260 (truncated - `bluetti-modread`
 prints one line per field):
 
 ```text
