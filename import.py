@@ -59,6 +59,7 @@ for d in schema:
     fields = ""
     uses_reference_offset_current = False
     uses_bit_flag = False
+    uses_range = False
 
     for f in d["fields"]:
         if f["name"] in REFERENCE_OFFSET_CURRENT_FIELDS:
@@ -81,6 +82,23 @@ for d in schema:
     {f["name"]} = field(
         t=FieldType.{get_type(str(f["content"]), f["name"])},
         address={f["address"]},"""
+
+        # "writeable" is a real protocol fact bluetti-registers' own schema
+        # already carries - not something invented here. Bounded ones get a
+        # probatio validator instead of a bare True, so an out-of-range
+        # write is rejected before it ever reaches the device.
+        #
+        # Balco260 only for now, even though EP2000 shares (and adds to)
+        # the same writeable fields in the schema - EP2000 is still
+        # spec-derived, not verified against real hardware (see the
+        # README), and writing to an unconfirmed device's control
+        # registers is a materially bigger risk than reading from it.
+        if name == "Balco260" and f.get("writeable"):
+            if "num_min" in f and "num_max" in f:
+                uses_range = True
+                fields += f"\n        writable=Range(min={f['num_min']}, max={f['num_max']}),"
+            else:
+                fields += "\n        writable=True,"
 
         if "unit" in f:
             fields += f'\n        unit="{f["unit"]}",'
@@ -114,8 +132,11 @@ for d in schema:
     # ruff (isort) sorts a module's names alphabetically within one import -
     # match that here so the generated file doesn't fail lint every time.
     fields_import = ", ".join(sorted(["field", *extra_imports]))
+    # ruff (isort) groups a third-party import above and separate from this
+    # package's own relative ones, with a blank line between the groups.
+    range_import = "from probatio import Range\n\n" if uses_range else ""
 
-    content = f"""from ..base_devices import BluettiDevice
+    content = f"""{range_import}from ..base_devices import BluettiDevice
 from ..enums import *
 from ..fields import FieldType, {fields_import}
 

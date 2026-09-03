@@ -11,10 +11,17 @@ Contributions - bug reports, fixes, new fields, device coverage - are welcome.
   in sync weekly - if a field is wrong, missing, or misnamed, the fix belongs
   in `bluetti-registers`, not here. Everything else in `src/` is regular,
   hand-maintained code.
-- This library is read-only by design (see the README's Architecture
-  section) - it decodes what a device reports, it does not write control
-  registers. A PR adding write support is a bigger design conversation worth
-  opening an issue for first.
+- This library is primarily read-only by design (see the README's Architecture
+  section) - it decodes what a device reports. The exception is the small,
+  explicit set of fields `bluetti-registers`' schema itself marks
+  `writeable` (a real, deliberate protocol fact - the device documents that
+  register as writable, not something this library invents): `import.py`
+  wires those into `field(writable=...)`, bounded with a
+  [`probatio`][probatio] validator when the schema also carries
+  `num_min`/`num_max`. Adding write support for a field the schema does
+  *not* already mark writeable is still the bigger design conversation worth
+  an issue first - this isn't a general invitation to make arbitrary fields
+  writable.
 - `bluetti_modbus_lib.devices.*` (Balco260/EP2000/SMeter) is the integration
   surface other applications should build on; `bluetti_modbus_lib.modbus`
   (`BluettiModbusClient`) exists only for the `bluetti-modread` CLI and
@@ -71,3 +78,4 @@ be green before merge.
 
 [bluetti-registers]: https://github.com/bluetti-community/bluetti-registers
 [ep2000-issue]: https://github.com/bluetti-official/bluetti-home-assistant/issues/125
+[probatio]: https://pypi.org/project/probatio/

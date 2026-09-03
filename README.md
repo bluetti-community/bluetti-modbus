@@ -26,8 +26,13 @@ the library into another application, such as the `bluetti_modbus` Home
 Assistant integration (currently in review at
 [home-assistant/core#180602][ha-core-pr]).
 
-This library is **read-only**. It decodes what a device reports; it does not
-write control registers.
+This library is primarily **read-only** - it decodes what a device reports.
+A small, explicit set of fields `bluetti-registers`' schema marks writeable
+(currently: Balco260's 3 control switches and 2 battery SOC thresholds - not
+yet EP2000, which is still spec-derived rather than field-tested) also
+support `await device.write(field_name, value)`, validated against the
+schema's own bounds (via [`probatio`][probatio]) before anything reaches the
+device. Everything else stays read-only.
 
 Supported out of the box:
 
@@ -325,6 +330,7 @@ SOFTWARE.
 [patrick-original]: https://github.com/Patrick762/bluetti-modbus-lib
 [patrick762]: https://github.com/Patrick762
 [pre-commit]: https://pre-commit.com
+[probatio]: https://pypi.org/project/probatio/
 [pymodbus]: https://pypi.org/project/pymodbus/
 [pypi-shield]: https://img.shields.io/pypi/v/bluetti-modbus.svg
 [pypi]: https://pypi.org/project/bluetti-modbus/
