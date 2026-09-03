@@ -203,6 +203,19 @@ audiences:
   should depend on - doing so would open a second, competing connection to
   the device instead of sharing one.
 
+## Related projects
+
+This library is the Modbus layer for Home Assistant integrations built on
+top of it:
+
+- [`hassio-bluetti-modbus`][hassio-bluetti-modbus] - a HACS-installable
+  custom integration, vendoring this library directly (see its own README
+  for why).
+- [`bluetti-home-assistant`][bluetti-home-assistant] - a cloud + Modbus
+  hybrid integration, depending on this library via PyPI.
+- [home-assistant/core#180602][ha-core-pr] - an in-review attempt at a
+  built-in `home-assistant/core` integration for the Modbus-only path.
+
 ## Relationship to Patrick762's `bluetti-modbus-lib`
 
 This repository started as a fork of
@@ -323,6 +336,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 [bluetti-community]: https://github.com/bluetti-community
+[bluetti-home-assistant]: https://github.com/bluetti-community/bluetti-home-assistant
 [bluetti-registers-naming]: https://github.com/bluetti-community/bluetti-registers#naming-convention-for-field-names
 [bluetti-registers]: https://github.com/bluetti-community/bluetti-registers
 [build-shield]: https://github.com/bluetti-community/bluetti-modbus/actions/workflows/tests.yml/badge.svg
@@ -332,6 +346,8 @@ SOFTWARE.
 [devcontainer]: https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/bluetti-community/bluetti-modbus
 [github-sponsors-shield]: https://img.shields.io/badge/sponsor-Patrick762-db61a2.svg?logo=githubsponsors
 [github-sponsors]: https://github.com/sponsors/Patrick762
+[ha-core-pr]: https://github.com/home-assistant/core/pull/180602
+[hassio-bluetti-modbus]: https://github.com/bluetti-community/hassio-bluetti-modbus
 [license-shield]: https://img.shields.io/github/license/bluetti-community/bluetti-modbus.svg
 [modbus-connection]: https://pypi.org/project/modbus-connection/
 [official-docs]: https://github.com/bluetti-official/bluetti-modbus-tcp-slave
