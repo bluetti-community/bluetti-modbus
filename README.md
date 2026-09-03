@@ -85,6 +85,11 @@ below, need a concrete backend, installed via the `cli` extra (currently
 pip install "bluetti-modbus[cli]"
 ```
 
+`bluetti-modread` also accepts `--backend tmodbus` (`pip install
+"bluetti-modbus[cli-tmodbus]"` first) - an active trial evaluating a possible
+future migration, not yet used by either HA integration. See
+[CONTRIBUTING.md](CONTRIBUTING.md) for why.
+
 ## Usage
 
 The consumer owns the connection and hands the library a unit:

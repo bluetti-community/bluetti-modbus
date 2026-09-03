@@ -11,9 +11,11 @@ def _client(
     device_type: str = "balco260",
 ) -> tuple[BluettiModbusClient, MockModbusConnection]:
     mock_conn = MockModbusConnection()
-    with patch(
-        "bluetti_modbus_lib.modbus.client.ModbusConnection", return_value=mock_conn
-    ):
+    # backend="pymodbus" (the default) imports ModbusConnection from
+    # modbus_connection.pymodbus locally, inside __init__ - not a module-
+    # level name in client.py, so the patch target is the real source, not
+    # this module.
+    with patch("modbus_connection.pymodbus.ModbusConnection", return_value=mock_conn):
         client = BluettiModbusClient("10.0.0.1", 502, device_type)
     return client, mock_conn
 
@@ -107,3 +109,34 @@ def test_client_return_value_str_includes_all_fields():
 def test_client_raises_for_an_unsupported_device_type():
     with pytest.raises(ValueError, match="not-a-real-device"):
         _client(device_type="not-a-real-device")
+
+
+def test_default_backend_is_pymodbus():
+    # Both HA integrations construct BluettiModbusClient without a backend=
+    # argument at all - this must keep resolving to pymodbus, unchanged,
+    # regardless of the tmodbus trial (backend="tmodbus", CLI-only for now).
+    mock_conn = MockModbusConnection()
+    with (
+        patch(
+            "modbus_connection.pymodbus.ModbusConnection", return_value=mock_conn
+        ) as pym,
+        patch("modbus_connection.tmodbus.ModbusConnection") as tm,
+    ):
+        BluettiModbusClient("10.0.0.1", 502, "balco260")
+
+    pym.assert_called_once()
+    tm.assert_not_called()
+
+
+def test_backend_tmodbus_uses_the_tmodbus_connection():
+    mock_conn = MockModbusConnection()
+    with (
+        patch("modbus_connection.pymodbus.ModbusConnection") as pym,
+        patch(
+            "modbus_connection.tmodbus.ModbusConnection", return_value=mock_conn
+        ) as tm,
+    ):
+        BluettiModbusClient("10.0.0.1", 502, "balco260", backend="tmodbus")
+
+    tm.assert_called_once()
+    pym.assert_not_called()
