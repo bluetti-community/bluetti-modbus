@@ -7,7 +7,7 @@ PYTHON_BIN="${PYTHON_BIN:-python}"
 cd "$ROOT_DIR"
 
 echo "==> Installing project dependencies"
-"$PYTHON_BIN" -m pip install --root-user-action=ignore -e ".[cli,cli-tmodbus]"
+"$PYTHON_BIN" -m pip install --root-user-action=ignore -e ".[cli,cli-pymodbus]"
 
 if ! "$PYTHON_BIN" -m ruff --version >/dev/null 2>&1; then
     echo "==> Installing Ruff"

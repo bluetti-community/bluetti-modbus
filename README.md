@@ -79,16 +79,16 @@ Installing `bluetti-modbus` alone only pulls in `modbus-connection`'s
 backend-neutral interface - enough to use the device classes directly against
 a `ModbusUnit` you already have. The `bluetti-modread` CLI, and the examples
 below, need a concrete backend, installed via the `cli` extra (currently
-[pymodbus][pymodbus]):
+[tmodbus][tmodbus], the default since 0.4.0 - see
+[CONTRIBUTING.md](CONTRIBUTING.md) for why):
 
 ```bash
 pip install "bluetti-modbus[cli]"
 ```
 
-`bluetti-modread` also accepts `--backend tmodbus` (`pip install
-"bluetti-modbus[cli-tmodbus]"` first) - an active trial evaluating a possible
-future migration, not yet used by either HA integration. See
-[CONTRIBUTING.md](CONTRIBUTING.md) for why.
+`bluetti-modread` also accepts `--backend pymodbus` (`pip install
+"bluetti-modbus[cli-pymodbus]"` first) - the previous default, still
+available for anyone who needs it.
 
 ## Usage
 
@@ -97,7 +97,7 @@ The consumer owns the connection and hands the library a unit:
 ```python
 import asyncio
 
-from modbus_connection.pymodbus import connect_tcp
+from modbus_connection.tmodbus import connect_tcp
 
 from bluetti_modbus_lib import BluettiModbusConnectionError, get_device
 
@@ -342,4 +342,5 @@ SOFTWARE.
 [python-versions-shield]: https://img.shields.io/pypi/pyversions/bluetti-modbus.svg
 [releases]: https://github.com/bluetti-community/bluetti-modbus/releases
 [sync-devices]: .github/workflows/sync-devices.yml
+[tmodbus]: https://pypi.org/project/tmodbus/
 [trusted-publishing]: https://docs.pypi.org/trusted-publishers/

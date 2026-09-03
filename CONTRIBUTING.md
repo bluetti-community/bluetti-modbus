@@ -26,16 +26,15 @@ Contributions - bug reports, fixes, new fields, device coverage - are welcome.
   surface other applications should build on; `bluetti_modbus_lib.modbus`
   (`BluettiModbusClient`) exists only for the `bluetti-modread` CLI and
   standalone/manual use.
-- `BluettiModbusClient`'s `backend=` parameter (`"pymodbus"`, the default, or
-  `"tmodbus"`) is an active trial, not a real feature yet: both HA
-  integrations use pymodbus today and always will until real-hardware
-  evidence says otherwise. `bluetti-modread --backend tmodbus` (needs
-  `pip install 'bluetti-modbus[cli-tmodbus]'`) exists to gather that evidence
-  - in particular, whether `ModbusProtocolError` actually fires on the
-  truncated-frame pattern from
-  [bluetti-community/bluetti-modbus#29][truncated-frames-issue], which
-  pymodbus can't tell apart from an ordinary timeout. Do not wire
-  `backend="tmodbus"` into either HA integration as part of unrelated work.
+- `BluettiModbusClient`'s `backend=` parameter defaults to `"tmodbus"` since
+  0.4.0 - both HA integrations use it in production. This followed
+  persistent-connection testing against real Balco260/S Meter hardware,
+  confirming `ModbusProtocolError` does fire on the truncated-frame pattern
+  from [bluetti-community/bluetti-modbus#29][truncated-frames-issue] - a
+  corrupted reply pymodbus can't tell apart from an ordinary timeout (it
+  raises the same `ModbusTimeoutError` for both). `backend="pymodbus"`
+  (`pip install 'bluetti-modbus[cli-pymodbus]'`) stays available for anyone
+  who needs the previous default.
 - EP2000 support is currently spec-derived: BLUETTI's own official register
   list confirms the register map (see `bluetti-registers`' provenance for
   each field), but it isn't yet verified against real EP2000 hardware - the

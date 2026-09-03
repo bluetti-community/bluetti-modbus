@@ -31,11 +31,11 @@ def start() -> None:
         "--backend",
         type=str,
         choices=["pymodbus", "tmodbus"],
-        default="pymodbus",
+        default="tmodbus",
         help=(
-            "Modbus backend (default: pymodbus, what both HA integrations use "
-            "today). tmodbus is an experimental trial - pip install "
-            "'bluetti-modbus[cli-tmodbus]' first. See CONTRIBUTING.md."
+            "Modbus backend (default: tmodbus, what both HA integrations use "
+            "since 0.4.0 - see CONTRIBUTING.md). pymodbus is still available - "
+            "pip install 'bluetti-modbus[cli-pymodbus]' first."
         ),
     )
     args = parser.parse_args()
