@@ -1,6 +1,6 @@
 from ..base_devices import BluettiDevice
 from ..enums import *
-from ..fields import FieldType, field, reference_offset_current
+from ..fields import FieldType, dotted_version, field, reference_offset_current
 
 # GENERATED FILE! DO NOT EDIT!
 
@@ -162,14 +162,10 @@ class EP2000(BluettiDevice):
         t=FieldType.UINT64,
         address=50206,
     )
-    d_ver_arm = field(
-        t=FieldType.UINT32,
-        address=50210,
-    )
-    d_ver_dsp = field(
-        t=FieldType.UINT32,
-        address=50212,
-    )
+    d_ver_arm = dotted_version(50210)
+
+    d_ver_dsp = dotted_version(50212)
+
     g_i_f = field(
         t=FieldType.UINT16,
         address=50214,
@@ -676,26 +672,14 @@ class EP2000(BluettiDevice):
         address=51206,
         count=4,
     )
-    b_ver_1 = field(
-        t=FieldType.UINT32,
-        address=51211,
-        count=2,
-    )
-    b_ver_2 = field(
-        t=FieldType.UINT32,
-        address=51213,
-        count=2,
-    )
-    b_ver_3 = field(
-        t=FieldType.UINT32,
-        address=51215,
-        count=2,
-    )
-    b_ver_4 = field(
-        t=FieldType.UINT32,
-        address=51217,
-        count=2,
-    )
+    b_ver_1 = dotted_version(51211)
+
+    b_ver_2 = dotted_version(51213)
+
+    b_ver_3 = dotted_version(51215)
+
+    b_ver_4 = dotted_version(51217)
+
     b_v = field(
         t=FieldType.UINT16,
         address=51219,
@@ -779,10 +763,8 @@ class EP2000(BluettiDevice):
         t=FieldType.UINT64,
         address=53007,
     )
-    d_iot_ver = field(
-        t=FieldType.UINT32,
-        address=53011,
-    )
+    d_iot_ver = dotted_version(53011)
+
     ac_o_switch = field(
         t=FieldType.UINT16,
         address=57001,
