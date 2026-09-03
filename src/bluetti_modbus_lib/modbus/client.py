@@ -1,13 +1,15 @@
 import logging
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Literal
 
+from modbus_connection import ModbusConnection as _BaseModbusConnection
 from modbus_connection import ModbusTcpParams
-from modbus_connection.pymodbus import ModbusConnection
 
 from ..devices import EP2000, Balco260, SMeter, get_device
 
 LOGGER = logging.getLogger(__name__)
+
+Backend = Literal["pymodbus", "tmodbus"]
 
 
 @dataclass
@@ -21,8 +23,36 @@ class ClientReturnValue:
 
 
 class BluettiModbusClient:
-    def __init__(self, host: str, port: int, device_type: str) -> None:
-        self.conn = ModbusConnection(ModbusTcpParams(host=host, port=port), timeout=10)
+    def __init__(
+        self, host: str, port: int, device_type: str, *, backend: Backend = "pymodbus"
+    ) -> None:
+        # Import chosen here, not at module level: modbus_connection[tmodbus]
+        # is an opt-in trial extra (see pyproject.toml's cli-tmodbus), not
+        # installed by default - importing it eagerly would break every
+        # caller that only has [cli] (pymodbus) installed, which is every
+        # real caller today. backend="tmodbus" is currently reachable only
+        # from bluetti-modread's own --backend flag - see its docstring for
+        # why (CONTRIBUTING.md: investigating a tmodbus migration, evaluating
+        # real-hardware behavior before touching either HA integration).
+        #
+        # Typed against modbus_connection's own backend-neutral base (its
+        # public re-export of BaseModbusConnection) - the two branches below
+        # each import an unrelated concrete class, even though the doc's own
+        # contract is that both back this same base and are interchangeable
+        # at the call sites below. Building the instance inside each branch,
+        # rather than importing under one shared name first, is what lets
+        # mypy see each concrete class as assignment-compatible with that
+        # declared base instead of flagging the import itself.
+        params = ModbusTcpParams(host=host, port=port)
+        self.conn: _BaseModbusConnection
+        if backend == "tmodbus":
+            from modbus_connection.tmodbus import ModbusConnection as _TConn
+
+            self.conn = _TConn(params, timeout=10)
+        else:
+            from modbus_connection.pymodbus import ModbusConnection as _PConn
+
+            self.conn = _PConn(params, timeout=10)
         device = get_device(device_type, self.conn.for_unit(1))
         if device is None:
             raise ValueError(f"Unsupported device type: {device_type!r}")

@@ -20,12 +20,17 @@ classifiers = [
 # caller injects a ModbusUnit built from whichever backend they choose - see
 # README.md. This package does not create or own a Modbus transport itself.
 # probatio validates writable fields' bounds (num_min/num_max from
-# bluetti-registers' schema) - see fields/custom_fields.py's bounded_field().
+# bluetti-registers' schema) - see import.py's Range()-based writable=.
 dependencies = ["modbus-connection>=4.10.0", "probatio>=0.11.4"]
 
 [project.optional-dependencies]
 # Concrete backend for the bluetti-modread CLI (pip install bluetti-modbus[cli]).
+# What both HA integrations use in production today.
 cli = ["modbus-connection[pymodbus]>=4.10.0"]
+# Experimental: bluetti-modread --backend tmodbus, for evaluating a possible
+# future migration against real hardware before touching either HA
+# integration - see CONTRIBUTING.md. Not used by anything in production.
+cli-tmodbus = ["modbus-connection[tmodbus]>=4.10.0"]
 
 [project.urls]
 Homepage = "https://github.com/bluetti-community/bluetti-modbus"

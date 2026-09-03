@@ -26,6 +26,16 @@ Contributions - bug reports, fixes, new fields, device coverage - are welcome.
   surface other applications should build on; `bluetti_modbus_lib.modbus`
   (`BluettiModbusClient`) exists only for the `bluetti-modread` CLI and
   standalone/manual use.
+- `BluettiModbusClient`'s `backend=` parameter (`"pymodbus"`, the default, or
+  `"tmodbus"`) is an active trial, not a real feature yet: both HA
+  integrations use pymodbus today and always will until real-hardware
+  evidence says otherwise. `bluetti-modread --backend tmodbus` (needs
+  `pip install 'bluetti-modbus[cli-tmodbus]'`) exists to gather that evidence
+  - in particular, whether `ModbusProtocolError` actually fires on the
+  truncated-frame pattern from
+  [bluetti-community/bluetti-modbus#29][truncated-frames-issue], which
+  pymodbus can't tell apart from an ordinary timeout. Do not wire
+  `backend="tmodbus"` into either HA integration as part of unrelated work.
 - EP2000 support is currently spec-derived: BLUETTI's own official register
   list confirms the register map (see `bluetti-registers`' provenance for
   each field), but it isn't yet verified against real EP2000 hardware - the
@@ -79,3 +89,4 @@ be green before merge.
 [bluetti-registers]: https://github.com/bluetti-community/bluetti-registers
 [ep2000-issue]: https://github.com/bluetti-official/bluetti-home-assistant/issues/125
 [probatio]: https://pypi.org/project/probatio/
+[truncated-frames-issue]: https://github.com/bluetti-community/bluetti-modbus/issues/29

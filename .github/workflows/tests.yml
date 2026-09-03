@@ -23,7 +23,7 @@ jobs:
         with:
           python-version: "3.13"
 
-      - run: pip install -e ".[cli]" pytest pytest-asyncio pytest-cov
+      - run: pip install -e ".[cli,cli-tmodbus]" pytest pytest-asyncio pytest-cov
 
       - run: python -m pytest tests/ -v --cov=bluetti_modbus_lib --cov-report=term-missing --cov-fail-under=100
 
@@ -53,6 +53,6 @@ jobs:
         with:
           python-version: "3.13"
 
-      - run: pip install -e ".[cli]" mypy
+      - run: pip install -e ".[cli,cli-tmodbus]" mypy
 
       - run: mypy
