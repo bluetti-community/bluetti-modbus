@@ -7,6 +7,7 @@ from bluetti_modbus_lib.fields.custom_fields import (
     BluettiStringField,
     FieldType,
     bit_flag,
+    dotted_version,
     field,
     reference_offset_current,
 )
@@ -92,6 +93,20 @@ def test_reference_offset_current_decodes_magnitude_around_the_reference():
     # Below the reference (discharging) decodes to the same kind of magnitude.
     assert reg.decode([29500]) == pytest.approx(50.0)
     assert reg.decode([30000]) == 0
+
+
+def test_dotted_version_decodes_major_minor_patch():
+    # Raw values captured from a real Balco 260 (registers 51211 - BMS - and
+    # 53011 - IoT module), both matching what the Bluetti app shows for the
+    # same firmware ("v50008.01.10" and "v50012.01.19" respectively).
+    reg = dotted_version(51211)
+
+    assert isinstance(reg, NumberField)
+    assert reg.count == 2
+    assert reg.decode([40430, 7630]) == "50008.01.10"
+    assert reg.decode([14903, 7631]) == "50012.01.19"
+    # Unpopulated on this hardware (b_ver_2/3/4) - still a valid decode.
+    assert reg.decode([0, 0]) == "0.00.00"
 
 
 def test_bit_flag_decodes_only_the_named_bit():

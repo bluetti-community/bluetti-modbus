@@ -85,6 +85,30 @@ def reference_offset_current(
     )
 
 
+def dotted_version(address: int) -> NumberField[Any]:
+    """A firmware/protocol version packed as major*10000 + minor*100 + patch.
+
+    Confirmed against real hardware across 4 independent samples on a
+    Balco 260 (BMS, ARM, DSP, and IoT module firmware versions, all
+    matching what the Bluetti app shows) - see
+    https://github.com/bluetti-community/bluetti-registers/pull/11 for the
+    "version" content type this applies to.
+    """
+
+    def decode(raw: int) -> str:
+        major = raw // 10000
+        minor = (raw // 100) % 100
+        patch = raw % 100
+        return f"{major}.{minor:02d}.{patch:02d}"
+
+    return NumberField(
+        address,
+        count=2,
+        convert=decode,
+        word_order="little",
+    )
+
+
 def bit_flag(address: int, *, bit: int) -> NumberField[Any]:
     """A single documented bit inside an otherwise-undocumented register.
 

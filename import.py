@@ -20,11 +20,6 @@ def get_type(t: str, name: str):
     if upper == "BOOL":
         return "UINT16"
 
-    # A firmware/protocol version, always a plain little-endian uint32 - see
-    # the confirmed examples in https://github.com/bluetti-community/bluetti-registers/pull/11.
-    if upper == "VERSION":
-        return "UINT32"
-
     # A device serial number, spanning 4 registers as a little-endian uint64
     # - same PR as above.
     if upper == "SERIAL":
@@ -58,6 +53,7 @@ for d in schema:
     file_name = str(name).lower() + ".py"
     fields = ""
     uses_reference_offset_current = False
+    uses_dotted_version = False
     uses_bit_flag = False
     uses_range = False
 
@@ -67,6 +63,17 @@ for d in schema:
             reference = REFERENCE_OFFSET_CURRENT_FIELDS[f["name"]]
             fields += f"""
     {f["name"]} = reference_offset_current({f["address"]}, reference={reference})
+"""
+            continue
+
+        # Every "version" content field shares the same encoding (major*10000
+        # + minor*100 + patch) - see dotted_version()'s own docstring. Applies
+        # by content type, not by name, since bluetti-registers already tags
+        # every such field uniformly.
+        if str(f["content"]).upper() == "VERSION":
+            uses_dotted_version = True
+            fields += f"""
+    {f["name"]} = dotted_version({f["address"]})
 """
             continue
 
@@ -129,6 +136,8 @@ for d in schema:
     extra_imports = []
     if uses_reference_offset_current:
         extra_imports.append("reference_offset_current")
+    if uses_dotted_version:
+        extra_imports.append("dotted_version")
     if uses_bit_flag:
         extra_imports.append("bit_flag")
     # ruff (isort) sorts a module's names alphabetically within one import -
