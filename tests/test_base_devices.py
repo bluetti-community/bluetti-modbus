@@ -8,6 +8,7 @@ from modbus_connection.exceptions import (
     ModbusError,
 )
 from modbus_connection.mock import MockModbusConnection
+from probatio.error import RangeInvalid
 
 from bluetti_modbus_lib.devices import Balco260
 from bluetti_modbus_lib.exceptions import BluettiModbusConnectionError
@@ -15,6 +16,11 @@ from bluetti_modbus_lib.exceptions import BluettiModbusConnectionError
 
 def _balco260() -> Balco260:
     return Balco260(MockModbusConnection().for_unit(1))
+
+
+def _balco260_with_unit():
+    mock_conn = MockModbusConnection()
+    return Balco260(mock_conn.for_unit(1)), mock_conn
 
 
 def test_field_names_and_get_sensors_are_the_same_view():
@@ -183,3 +189,39 @@ async def test_async_update_with_retry_survives_a_slow_update_within_the_budget(
     await device.async_update_with_retry()
 
     device.async_update.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_b_soc_low_write_within_bounds_reaches_the_device():
+    # b_soc_low (register 57016) is one of the two SOC-threshold fields
+    # bluetti-registers marks writeable, bounded 0-100 - see import.py's
+    # Range()-based writable=. Confirms the whole chain, not just that
+    # field() accepts the parameter: a real write actually lands on the
+    # register the mock holds.
+    device, mock_conn = _balco260_with_unit()
+
+    await device.write("b_soc_low", 42)
+
+    assert mock_conn.for_unit(1).holding[57016] == 42
+
+
+@pytest.mark.asyncio
+async def test_b_soc_low_write_above_the_bound_is_rejected():
+    device, mock_conn = _balco260_with_unit()
+
+    with pytest.raises(RangeInvalid):
+        await device.write("b_soc_low", 101)
+
+    # Rejected before it ever reaches the device - nothing was written.
+    assert 57016 not in mock_conn.for_unit(1).holding
+
+
+@pytest.mark.asyncio
+async def test_ac_o_switch_is_writable_without_a_bound():
+    # ac_o_switch (57001) is writeable in the schema but has no num_min/
+    # num_max - plain writable=True, no validator.
+    device, mock_conn = _balco260_with_unit()
+
+    await device.write("ac_o_switch", 1)
+
+    assert mock_conn.for_unit(1).holding[57001] == 1

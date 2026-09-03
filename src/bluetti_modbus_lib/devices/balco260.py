@@ -1,3 +1,5 @@
+from probatio import Range
+
 from ..base_devices import BluettiDevice
 from ..enums import *
 from ..fields import FieldType, field, reference_offset_current
@@ -598,22 +600,27 @@ class Balco260(BluettiDevice):
     ac_o_switch = field(
         t=FieldType.UINT16,
         address=57001,
+        writable=True,
     )
     g_i_switch = field(
         t=FieldType.UINT16,
         address=57009,
+        writable=True,
     )
     g_o_switch = field(
         t=FieldType.UINT16,
         address=57010,
+        writable=True,
     )
     b_soc_low = field(
         t=FieldType.UINT16,
         address=57016,
+        writable=Range(min=0, max=100),
         unit="%",
     )
     b_soc_high = field(
         t=FieldType.UINT16,
         address=57017,
+        writable=Range(min=0, max=100),
         unit="%",
     )
