@@ -421,8 +421,9 @@ class EP2000(BluettiDevice):
         address=50267,
     )
     pv_1_i_type = field(
-        t=FieldType.UINT16,
+        t=FieldType.ENUM,
         address=50268,
+        enum_type=PvType,
     )
     pv_1_i_p = field(
         t=FieldType.UINT16,
@@ -442,8 +443,9 @@ class EP2000(BluettiDevice):
         scale=0.1,
     )
     pv_2_i_type = field(
-        t=FieldType.UINT16,
+        t=FieldType.ENUM,
         address=50272,
+        enum_type=PvType,
     )
     pv_2_i_p = field(
         t=FieldType.UINT16,
@@ -463,8 +465,9 @@ class EP2000(BluettiDevice):
         scale=0.1,
     )
     pv_3_i_type = field(
-        t=FieldType.UINT16,
+        t=FieldType.ENUM,
         address=50276,
+        enum_type=PvType,
     )
     pv_3_i_p = field(
         t=FieldType.UINT16,
@@ -484,8 +487,9 @@ class EP2000(BluettiDevice):
         scale=0.1,
     )
     pv_4_i_type = field(
-        t=FieldType.UINT16,
+        t=FieldType.ENUM,
         address=50280,
+        enum_type=PvType,
     )
     pv_4_i_p = field(
         t=FieldType.UINT16,
