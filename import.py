@@ -1,15 +1,19 @@
 import requests
 
-# Beta: bluetti-registers' ac500-beta branch, tagged ac500-beta-5 - not a
+# Beta: bluetti-registers' ac500-beta branch, tagged ac500-beta-6 - not a
 # real bluetti-registers release. See devices/ac500.py's own generated-file
 # note and this branch's PR description for why AC500 stays off main until
 # ItsMe00007/gjniewenhuijse confirm it against real hardware. beta-2 fixed
 # g_i_f's scale; beta-3 added ac_o_switch; beta-4 added g_i_switch,
 # g_o_switch, dc_o_switch (all confirmed working on real AC500 hardware,
-# bluetti-official/bluetti-modbus-tcp-slave#5); beta-5 merges in
+# bluetti-official/bluetti-modbus-tcp-slave#5); beta-5 merged in
 # bluetti-registers' main (b_ver_count) so Balco260/EP2000 don't regress
-# when regenerating from this beta tag.
-tag = "ac500-beta-5"
+# when regenerating from this beta tag - that merge also silently widened
+# g_i_p_local/ac_o_p_local/pv_i_p_local/pv_i_e_local to 2 registers on
+# AC500 (correct for Balco260, unverified for AC500); beta-6 reverts those
+# 4 back to 1 register after a real-hardware timeout reading the +1
+# address (same issue thread).
+tag = "ac500-beta-6"
 url = f"https://github.com/bluetti-community/bluetti-registers/releases/download/{tag}/modbus-tcp.json"
 
 output = "src/bluetti_modbus_lib/devices/"

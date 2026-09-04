@@ -20,10 +20,10 @@ class AC500(BluettiDevice):
         (50210, 50211),
         (50212, 50213),
         (50214, 50214),
-        (50215, 50216),
-        (50217, 50218),
-        (50219, 50220),
-        (50229, 50230),
+        (50215, 50215),
+        (50217, 50217),
+        (50219, 50219),
+        (50229, 50229),
         (50267, 50267),
         (50268, 50268),
         (50269, 50269),
@@ -113,29 +113,29 @@ class AC500(BluettiDevice):
         scale=0.01,
     )
     g_i_p_local = field(
-        t=FieldType.UINT32,
+        t=FieldType.UINT16,
         address=50215,
         unit="W",
-        count=2,
+        count=1,
     )
     ac_o_p_local = field(
-        t=FieldType.UINT32,
+        t=FieldType.UINT16,
         address=50217,
         unit="W",
-        count=2,
+        count=1,
     )
     pv_i_p_local = field(
-        t=FieldType.UINT32,
+        t=FieldType.UINT16,
         address=50219,
         unit="W",
-        count=2,
+        count=1,
     )
     pv_i_e_local = field(
-        t=FieldType.UINT32,
+        t=FieldType.UINT16,
         address=50229,
         unit="kWh",
         scale=0.1,
-        count=2,
+        count=1,
     )
     pv_dc_count = nibble(50267, high=False)
 
