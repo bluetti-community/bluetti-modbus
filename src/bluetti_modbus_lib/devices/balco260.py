@@ -8,6 +8,8 @@ from ..fields import FieldType, dotted_version, field, nibble, reference_offset_
 
 
 class Balco260(BluettiDevice):
+    max_span = 20
+
     d_num_inverters = field(
         t=FieldType.UINT16,
         address=50001,
