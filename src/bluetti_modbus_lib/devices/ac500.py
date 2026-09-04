@@ -106,7 +106,7 @@ class AC500(BluettiDevice):
         t=FieldType.UINT16,
         address=50214,
         unit="Hz",
-        scale=0.1,
+        scale=0.01,
     )
     g_i_p_local = field(
         t=FieldType.UINT16,

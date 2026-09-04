@@ -1,10 +1,11 @@
 import requests
 
-# Beta: bluetti-registers' ac500-beta branch, tagged ac500-beta-1 - not a
+# Beta: bluetti-registers' ac500-beta branch, tagged ac500-beta-2 - not a
 # real bluetti-registers release. See devices/ac500.py's own generated-file
 # note and this branch's PR description for why AC500 stays off main until
-# ItsMe00007 confirms it against real hardware.
-tag = "ac500-beta-1"
+# ItsMe00007/gjniewenhuijse confirm it against real hardware. beta-2 fixes
+# g_i_f's scale (bluetti-official/bluetti-modbus-tcp-slave#5).
+tag = "ac500-beta-2"
 url = f"https://github.com/bluetti-community/bluetti-registers/releases/download/{tag}/modbus-tcp.json"
 
 output = "src/bluetti_modbus_lib/devices/"
