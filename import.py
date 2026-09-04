@@ -38,10 +38,45 @@ def get_type(t: str, name: str):
     if upper == "INT":
         return "INT16"
 
-    if name in ["b_i_e", "b_o_e"]:
+    if name in ["b_i_e", "b_o_e", *WIDE_UINT_FIELDS]:
         return "UINT32"
 
     return "UINT16"
+
+
+# bluetti-registers documents each of these as spanning 2 registers
+# (MULTI_REGISTER_FIELD_LENGTHS in that repo's fields.py), same as b_i_e/
+# b_o_e above - but field()'s UINT16 branch never actually reads the second
+# register (the `count` it's given is silently dropped, only ENUM/STRING
+# fields use it), so every one of these has been decoding only the low
+# 16 bits since bluetti-registers#6759c94 first documented the wider width.
+# Correct for a typical reading that fits in 16 bits (the dropped high word
+# is 0), silently wrong for any value that doesn't.
+#
+# Scoped to fields real Balco260 hardware has (EP2000 shares these same
+# names/addresses - see test_ep2000_shares_balco260s_confirmed_addresses -
+# so they're fixed there too "for free"), deliberately excluding EP2000-only
+# multi-register uint fields (g_1_p_active, d_p_active_target_l1, d_export_
+# limit, etc.) - those are SunSpec/DER-style registers, which commonly pack
+# a mantissa and a separate scale factor rather than one plain wide integer,
+# and EP2000 is still spec-derived, unconfirmed hardware (see the README) -
+# widening them the same way as these confirmed Balco260 fields would be a
+# guess, not a verified fix. b_error (length 3) is also left alone: there's
+# no 3-register FieldType, and it's an already-undecoded raw bitmap with no
+# displayed value to verify a fix against.
+WIDE_UINT_FIELDS = {
+    "g_i_p_local",
+    "ac_o_p_local",
+    "pv_i_p_local",
+    "pv_ac_p_local",
+    "g_i_e_local",
+    "g_o_e_local",
+    "ac_o_e_local",
+    "pv_i_e_local",
+    "pv_ac_e_local",
+    "b_protect",
+    "b_alarm_portable",
+}
 
 
 # Fields whose real decode is not a plain scaled register and are built by
