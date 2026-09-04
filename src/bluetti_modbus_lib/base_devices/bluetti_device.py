@@ -13,6 +13,19 @@ from modbus_connection.model import Component, RegisterField
 
 from ..exceptions import BluettiModbusConnectionError, BluettiModbusError
 
+# How many times a transient corrupted/truncated-reply error gets retried
+# before giving up - see async_update_with_retry's own docstring. Bumped
+# from 1 to 2 after real HA logs (bluetti-community/bluetti-modbus#29)
+# showed the single retry already in place wasn't always enough: 22
+# occurrences over ~4h on one live Balco260 got through it and surfaced as
+# coordinator errors, meaning both the original attempt and that one retry
+# failed back to back. Confirmed backend-independent (both tmodbus and
+# pymodbus observe the same truncated-frame pattern, just classify it
+# differently), so this isn't a client-library quirk to fix elsewhere.
+# Not proven sufficient either - a starting point pending extended
+# real-hardware monitoring, same as Balco260's max_span override.
+_TRANSIENT_RETRY_COUNT = 2
+
 
 class BluettiDevice(Component):
     max_gap = 5
@@ -49,25 +62,28 @@ class BluettiDevice(Component):
             raise BluettiModbusConnectionError(str(err)) from err
 
     async def async_update_with_retry(self) -> None:
-        """Refresh this device's values, retrying once on a transient failure.
+        """Refresh this device's values, retrying on a transient failure.
 
-        Two things are retried once here, both confirmed transient on real
+        Two things are retried here, both confirmed transient on real
         hardware rather than assumed:
 
         - Codes 5/6 (acknowledge / server device busy) mean the device
           accepted the request but wants more time - seen in practice on
           registers that otherwise read fine, so it's transient device
-          behavior, not a permanently bad address.
+          behavior, not a permanently bad address. Retried once.
         - A corrupted/truncated reply - ModbusProtocolError under tmodbus
           (bluetti-community/bluetti-modbus#29), or the same event
           classified as ModbusTimeoutError under pymodbus, which can't tell
           a corrupted reply apart from no reply at all. Persistent-connection
           testing against real Balco260/S Meter hardware (both backends)
-          showed this recovers cleanly on the very next read on the same
-          connection every time, with no reconnect needed - so one immediate
-          retry here avoids losing the whole poll cycle to what is, in
-          practice, a one-off glitch. A genuinely dead connection still fails
-          - just one attempt later, at up to 2x the timeout budget.
+          showed this recovers cleanly on a following read on the same
+          connection in the large majority of cases, with no reconnect
+          needed - so an immediate retry here avoids losing the whole poll
+          cycle to what is, in practice, usually a one-off glitch. Retried
+          up to ``_TRANSIENT_RETRY_COUNT`` times (see its own docstring for
+          why this isn't just one any more) - a genuinely dead connection
+          still fails, just later, at up to ``_TRANSIENT_RETRY_COUNT + 1``x
+          the timeout budget.
 
         Anything else (e.g. an illegal address/function code) is a permanent
         condition retrying can't fix, and is not retried here - callers that
@@ -82,13 +98,25 @@ class BluettiDevice(Component):
         """
         try:
             await self._async_update_with_timeout()
+            return
         except (AcknowledgeError, ServerDeviceBusyError):
             await self._async_update_with_timeout()
+            return
         except BluettiModbusConnectionError as err:
-            if isinstance(err.__cause__, (ModbusProtocolError, ModbusTimeoutError)):
-                await self._async_update_with_timeout()
-            else:
+            if not isinstance(err.__cause__, (ModbusProtocolError, ModbusTimeoutError)):
                 raise
+
+        for attempt in range(_TRANSIENT_RETRY_COUNT):
+            try:
+                await self._async_update_with_timeout()
+                return
+            except BluettiModbusConnectionError as err:
+                if not isinstance(
+                    err.__cause__, (ModbusProtocolError, ModbusTimeoutError)
+                ):
+                    raise
+                if attempt == _TRANSIENT_RETRY_COUNT - 1:
+                    raise
 
     async def _async_update_with_timeout(self) -> None:
         # One async_update() call reads several register blocks sequentially
