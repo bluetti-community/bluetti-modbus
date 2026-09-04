@@ -173,59 +173,59 @@ class EP2000(BluettiDevice):
         scale=0.1,
     )
     g_i_p_local = field(
-        t=FieldType.UINT16,
+        t=FieldType.UINT32,
         address=50215,
         unit="W",
         count=2,
     )
     ac_o_p_local = field(
-        t=FieldType.UINT16,
+        t=FieldType.UINT32,
         address=50217,
         unit="W",
         count=2,
     )
     pv_i_p_local = field(
-        t=FieldType.UINT16,
+        t=FieldType.UINT32,
         address=50219,
         unit="W",
         count=2,
     )
     pv_ac_p_local = field(
-        t=FieldType.UINT16,
+        t=FieldType.UINT32,
         address=50221,
         unit="W",
         count=2,
     )
     g_i_e_local = field(
-        t=FieldType.UINT16,
+        t=FieldType.UINT32,
         address=50223,
         unit="kWh",
         scale=0.1,
         count=2,
     )
     g_o_e_local = field(
-        t=FieldType.UINT16,
+        t=FieldType.UINT32,
         address=50225,
         unit="kWh",
         scale=0.1,
         count=2,
     )
     ac_o_e_local = field(
-        t=FieldType.UINT16,
+        t=FieldType.UINT32,
         address=50227,
         unit="kWh",
         scale=0.1,
         count=2,
     )
     pv_i_e_local = field(
-        t=FieldType.UINT16,
+        t=FieldType.UINT32,
         address=50229,
         unit="kWh",
         scale=0.1,
         count=2,
     )
     pv_ac_e_local = field(
-        t=FieldType.UINT16,
+        t=FieldType.UINT32,
         address=50231,
         unit="kWh",
         scale=0.1,
@@ -730,7 +730,7 @@ class EP2000(BluettiDevice):
         unit="Wh",
     )
     b_protect = field(
-        t=FieldType.UINT16,
+        t=FieldType.UINT32,
         address=51240,
         count=2,
     )
@@ -744,7 +744,7 @@ class EP2000(BluettiDevice):
         address=51245,
     )
     b_alarm_portable = field(
-        t=FieldType.UINT16,
+        t=FieldType.UINT32,
         address=51246,
         count=2,
     )
