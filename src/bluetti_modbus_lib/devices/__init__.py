@@ -1,3 +1,4 @@
+from .ac500 import AC500 as AC500
 from .balco260 import Balco260 as Balco260
 from .battery_pack import MAX_BATTERY_PACKS as MAX_BATTERY_PACKS
 from .battery_pack import PACK_INFO_FIELDS as PACK_INFO_FIELDS

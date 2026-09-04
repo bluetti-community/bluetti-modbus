@@ -5,9 +5,11 @@ from modbus_connection.model.fields import FloatField, NumberField, StringField
 
 from bluetti_modbus_lib.fields.custom_fields import (
     BluettiStringField,
+    BluettiStringFieldSwapped,
     FieldType,
     bit_flag,
     dotted_version,
+    dotted_version_2part,
     field,
     nibble,
     reference_offset_current,
@@ -33,6 +35,30 @@ def test_bluetti_string_field_decode_strips_null_padding():
     # "AB" packed little-endian into a single word, the rest zero-padded.
     words = [0x4241, 0x0000, 0x0000, 0x0000]
     assert f.decode(words) == "AB"
+
+
+def test_bluetti_string_field_swapped_round_trips_ascii():
+    f = BluettiStringFieldSwapped(0, count=4, stride=0, writable=False, force_fc16=False)
+
+    words = f.encode("SN123")
+    assert f.decode(words) == "SN123"
+
+
+def test_bluetti_string_field_swapped_decodes_the_ac500_d_inverter_type_regression():
+    # Real-hardware regression: AC500's d_inverter_type (50200) decoded to
+    # "CA05 0" with BluettiStringField's byte order - reproduced here by
+    # encoding the device's real, confirmed value ("AC500", from a real
+    # user's manual generic-Modbus config in bluetti-registers#13) with each
+    # register's first character in the high byte, then decoding with
+    # BluettiStringField's (swapped) byte order - see bluetti-official/
+    # bluetti-modbus-tcp-slave#5.
+    correct = BluettiStringFieldSwapped(0, count=6, stride=0, writable=False, force_fc16=False)
+    wrong = BluettiStringField(0, count=6, stride=0, writable=False, force_fc16=False)
+
+    words = correct.encode("AC500")
+
+    assert correct.decode(words) == "AC500"
+    assert wrong.decode(words) == "CA05\x000"
 
 
 def test_field_uint16_and_int16():
@@ -76,6 +102,13 @@ def test_field_string():
     assert reg.count == 8
 
 
+def test_field_string_swapped():
+    reg = field(FieldType.STRING_SWAPPED, 20, length=8)
+
+    assert isinstance(reg, BluettiStringFieldSwapped)
+    assert reg.count == 8
+
+
 def test_field_enum_decodes_the_raw_register_value():
     reg = field(FieldType.ENUM, 30, enum_type=_FakeStatus)
 
@@ -108,6 +141,20 @@ def test_dotted_version_decodes_major_minor_patch():
     assert reg.decode([14903, 7631]) == "50012.01.19"
     # Unpopulated on this hardware (b_ver_2/3/4) - still a valid decode.
     assert reg.decode([0, 0]) == "0.00.00"
+
+
+def test_dotted_version_2part_decodes_major_minor():
+    # Raw values captured from a real AC500 (registers 50210/50211 - ARM -
+    # and 50212/50213 - DSP), matching what the Bluetti app shows for the
+    # same firmware ("V4048.04" and "V4047.30" respectively) - see
+    # https://github.com/bluetti-community/bluetti-registers/issues/13.
+    # Confirmed on this one device so far, unlike dotted_version() above.
+    reg = dotted_version_2part(50210)
+
+    assert isinstance(reg, NumberField)
+    assert reg.count == 2
+    assert reg.decode([11588, 6]) == "4048.04"
+    assert reg.decode([11514, 6]) == "4047.30"
 
 
 def test_bit_flag_decodes_only_the_named_bit():

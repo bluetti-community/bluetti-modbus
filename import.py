@@ -1,6 +1,13 @@
 import requests
 
-tag = "0.0.34"
+# Beta: bluetti-registers' ac500-beta branch, tagged ac500-beta-8 - not a
+# real bluetti-registers release. See devices/ac500.py's own generated-file
+# note and PR #45's description (full chronological changelog across
+# beta-2 through beta-8) for why AC500 stays off main until ItsMe00007/
+# gjniewenhuijse confirm it against real hardware. beta-8: removed
+# pv_1_i_c/pv_2_i_c - never non-zero for 2 independent real AC500 owners
+# (bluetti-official/bluetti-modbus-tcp-slave#5).
+tag = "ac500-beta-8"
 url = f"https://github.com/bluetti-community/bluetti-registers/releases/download/{tag}/modbus-tcp.json"
 
 output = "src/bluetti_modbus_lib/devices/"
@@ -96,6 +103,7 @@ for d in schema:
     fields = ""
     uses_reference_offset_current = False
     uses_dotted_version = False
+    uses_dotted_version_2part = False
     uses_bit_flag = False
     uses_nibble = False
     uses_range = False
@@ -117,6 +125,16 @@ for d in schema:
             uses_dotted_version = True
             fields += f"""
     {f["name"]} = dotted_version({f["address"]})
+"""
+            continue
+
+        # 2-part "major*100 + minor" version - a different encoding than
+        # "VERSION" above, confirmed so far only on AC500 (bluetti-
+        # registers#13) - see dotted_version_2part()'s own docstring.
+        if str(f["content"]).upper() == "VERSION2":
+            uses_dotted_version_2part = True
+            fields += f"""
+    {f["name"]} = dotted_version_2part({f["address"]})
 """
             continue
 
@@ -172,10 +190,10 @@ for d in schema:
         # Modbus/protocol ones, and belong in whichever integration
         # consumes this library, not in the library itself.
 
-        if "length" in f and f["content"] == "string":
+        if "length" in f and f["content"] in ("string", "string_swapped"):
             fields += f"\n        length={f['length']},"
 
-        if "length" in f and f["content"] != "string":
+        if "length" in f and f["content"] not in ("string", "string_swapped"):
             fields += f"\n        count={f['length']},"
 
         # TODO enum building
@@ -189,6 +207,8 @@ for d in schema:
         extra_imports.append("reference_offset_current")
     if uses_dotted_version:
         extra_imports.append("dotted_version")
+    if uses_dotted_version_2part:
+        extra_imports.append("dotted_version_2part")
     if uses_bit_flag:
         extra_imports.append("bit_flag")
     if uses_nibble:
@@ -213,3 +233,43 @@ class {name}(BluettiDevice):
 
     with open(output + file_name, "w", encoding="utf-8") as f:
         f.write(content)
+
+    # AC500 needs every field read as its own isolated block: real hardware
+    # testing (bluetti-community/bluetti-modbus#45, comment on bluetti-
+    # official/bluetti-modbus-tcp-slave#5) showed BluettiDevice's default
+    # max_gap=5 block-batching still merges several of AC500's fields into
+    # one combined read spanning addresses this device gives no evidence
+    # for (e.g. 50010, confirmed "Illegal Data Address" per bluetti-
+    # registers#13) - the whole batch then times out even though every
+    # individually-declared field is fine on its own. register_ranges
+    # declares exactly the addresses each field actually reads, so
+    # modbus_connection's planner can never bridge across an address this
+    # device has no evidence for. Introspected from the freshly generated
+    # class rather than re-derived by hand here, so it can't drift from
+    # whatever field()/uint16()/etc. actually build.
+    if name == "AC500":
+        import importlib
+
+        # Imported (not read from a standalone file location) so its own
+        # relative imports (`from ..base_devices import ...`) resolve
+        # normally - this script only runs against an editable/installed
+        # checkout (see sync-devices.yml/python-publish.yml), so the
+        # package is always importable here.
+        module = importlib.import_module("bluetti_modbus_lib.devices.ac500")
+        module = importlib.reload(module)
+        instance = module.AC500(None)
+        ranges = sorted(
+            {
+                (field.address, field.address + field.count - 1)
+                for field in (instance.get_field(n) for n in instance.field_names())
+            }
+        )
+        ranges_literal = "".join(f"\n        ({lo}, {hi})," for lo, hi in ranges)
+        with open(output + file_name, encoding="utf-8") as f:
+            regenerated = f.read()
+        regenerated = regenerated.replace(
+            f"class {name}(BluettiDevice):\n",
+            f"class {name}(BluettiDevice):\n    register_ranges = ({ranges_literal}\n    )\n\n",
+        )
+        with open(output + file_name, "w", encoding="utf-8") as f:
+            f.write(regenerated)

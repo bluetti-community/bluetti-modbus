@@ -17,6 +17,34 @@ class BluettiStringField(StringField):
         return [int.from_bytes(raw[i : i + 2], "little") for i in range(0, len(raw), 2)]
 
 
+class BluettiStringFieldSwapped(StringField):
+    """A BluettiStringField with the 2 ASCII bytes within each register in the
+    opposite order - the first character of each pair in the register's high
+    byte, not the low byte.
+
+    Confirmed real-hardware regression: d_inverter_type (50200) on AC500
+    decoded to "CA05 0" with BluettiStringField's own byte order, matching
+    exactly what "AC500" (its real value, confirmed via a real user's manual
+    Modbus config in bluetti-registers#13) becomes when swapped this way -
+    verified by re-encoding "AC500" with each register's first character in
+    the high byte, then decoding with BluettiStringField's byte order, which
+    reproduces "CA05 0" exactly (bluetti-official/bluetti-modbus-tcp-slave#5).
+    Balco260's own d_inverter_type ("Balco260") already decodes correctly
+    with BluettiStringField as-is, so this is a real per-device difference,
+    not a universal fix - only use this for fields confirmed to need it.
+    """
+
+    def decode(self, words: list[int], scale_exponent: int | None = None) -> str:
+        raw = b"".join((w & 0xFFFF).to_bytes(2, "big") for w in words)
+        return raw.decode("ascii", errors="ignore").rstrip("\x00")
+
+    def encode(self, value: Any, scale_exponent: int | None = None) -> list[int]:
+        length = self.count
+        raw = str(value).encode("ascii", errors="ignore")[: length * 2]
+        raw = raw.ljust(length * 2, b"\x00")
+        return [int.from_bytes(raw[i : i + 2], "big") for i in range(0, len(raw), 2)]
+
+
 def uint16(
     address: int,
     *,
@@ -64,6 +92,19 @@ def bluetti_string(
     )
 
 
+def bluetti_string_swapped(
+    address: int,
+    length: int,
+) -> BluettiStringFieldSwapped:
+    return BluettiStringFieldSwapped(
+        address,
+        count=length,
+        stride=0,
+        writable=False,
+        force_fc16=False,
+    )
+
+
 def reference_offset_current(
     address: int,
     *,
@@ -100,6 +141,31 @@ def dotted_version(address: int) -> NumberField[Any]:
         minor = (raw // 100) % 100
         patch = raw % 100
         return f"{major}.{minor:02d}.{patch:02d}"
+
+    return NumberField(
+        address,
+        count=2,
+        convert=decode,
+        word_order="little",
+    )
+
+
+def dotted_version_2part(address: int) -> NumberField[Any]:
+    """A firmware/protocol version packed as major*100 + minor, unlike
+    dotted_version()'s 3-part major.minor.patch.
+
+    Confirmed against real AC500 hardware across 2 independent samples (ARM
+    and DSP firmware versions), matching what the Bluetti app shows - see
+    https://github.com/bluetti-community/bluetti-registers/issues/13. Unlike
+    dotted_version(), this is only confirmed on this one device so far, not
+    Bluetti-support-verified - see the "version2" content type this applies
+    to.
+    """
+
+    def decode(raw: int) -> str:
+        major = raw // 100
+        minor = raw % 100
+        return f"{major}.{minor:02d}"
 
     return NumberField(
         address,
@@ -167,6 +233,10 @@ class FieldType(Enum):
     UINT64 = "uint64"
     FLOAT32 = "float32"
     STRING = "str"
+    # ASCII bytes swapped within each register vs. STRING - see
+    # BluettiStringFieldSwapped's own docstring for the confirmed real-
+    # hardware evidence (AC500's d_inverter_type).
+    STRING_SWAPPED = "str_swapped"
     ENUM = "enum"
 
 
@@ -198,6 +268,8 @@ def field(
             )
         case FieldType.STRING:
             return bluetti_string(address, length)
+        case FieldType.STRING_SWAPPED:
+            return bluetti_string_swapped(address, length)
         case FieldType.ENUM:
             # Every real caller (balco260.py) passes enum_type for
             # FieldType.ENUM - the None default only exists because the
