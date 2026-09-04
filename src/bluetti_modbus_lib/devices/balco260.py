@@ -490,6 +490,10 @@ class Balco260(BluettiDevice):
         address=51206,
         count=4,
     )
+    b_ver_count = field(
+        t=FieldType.UINT16,
+        address=51210,
+    )
     b_ver_1 = dotted_version(51211)
 
     b_ver_2 = dotted_version(51213)
