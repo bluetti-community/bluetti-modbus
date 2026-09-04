@@ -195,3 +195,43 @@ class {name}(BluettiDevice):
 
     with open(output + file_name, "w", encoding="utf-8") as f:
         f.write(content)
+
+    # AC500 needs every field read as its own isolated block: real hardware
+    # testing (bluetti-community/bluetti-modbus#45, comment on bluetti-
+    # official/bluetti-modbus-tcp-slave#5) showed BluettiDevice's default
+    # max_gap=5 block-batching still merges several of AC500's fields into
+    # one combined read spanning addresses this device gives no evidence
+    # for (e.g. 50010, confirmed "Illegal Data Address" per bluetti-
+    # registers#13) - the whole batch then times out even though every
+    # individually-declared field is fine on its own. register_ranges
+    # declares exactly the addresses each field actually reads, so
+    # modbus_connection's planner can never bridge across an address this
+    # device has no evidence for. Introspected from the freshly generated
+    # class rather than re-derived by hand here, so it can't drift from
+    # whatever field()/uint16()/etc. actually build.
+    if name == "AC500":
+        import importlib
+
+        # Imported (not read from a standalone file location) so its own
+        # relative imports (`from ..base_devices import ...`) resolve
+        # normally - this script only runs against an editable/installed
+        # checkout (see sync-devices.yml/python-publish.yml), so the
+        # package is always importable here.
+        module = importlib.import_module("bluetti_modbus_lib.devices.ac500")
+        module = importlib.reload(module)
+        instance = module.AC500(None)
+        ranges = sorted(
+            {
+                (field.address, field.address + field.count - 1)
+                for field in (instance.get_field(n) for n in instance.field_names())
+            }
+        )
+        ranges_literal = "".join(f"\n        ({lo}, {hi})," for lo, hi in ranges)
+        with open(output + file_name, encoding="utf-8") as f:
+            regenerated = f.read()
+        regenerated = regenerated.replace(
+            f"class {name}(BluettiDevice):\n",
+            f"class {name}(BluettiDevice):\n    register_ranges = ({ranges_literal}\n    )\n\n",
+        )
+        with open(output + file_name, "w", encoding="utf-8") as f:
+            f.write(regenerated)
