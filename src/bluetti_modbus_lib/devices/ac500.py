@@ -32,14 +32,6 @@ class AC500(BluettiDevice):
         (50272, 50272),
         (50273, 50273),
         (50275, 50275),
-        (50276, 50276),
-        (50277, 50277),
-        (50278, 50278),
-        (50279, 50279),
-        (50280, 50280),
-        (50281, 50281),
-        (50282, 50282),
-        (50283, 50283),
         (51001, 51001),
         (51002, 51002),
         (51003, 51003),
@@ -176,50 +168,6 @@ class AC500(BluettiDevice):
     pv_2_i_c = field(
         t=FieldType.UINT16,
         address=50275,
-        unit="A",
-        scale=0.1,
-    )
-    pv_3_i_type = field(
-        t=FieldType.ENUM,
-        address=50276,
-        enum_type=PvType,
-    )
-    pv_3_i_p = field(
-        t=FieldType.UINT16,
-        address=50277,
-        unit="W",
-    )
-    pv_3_i_v = field(
-        t=FieldType.UINT16,
-        address=50278,
-        unit="V",
-        scale=0.1,
-    )
-    pv_3_i_c = field(
-        t=FieldType.UINT16,
-        address=50279,
-        unit="A",
-        scale=0.1,
-    )
-    pv_4_i_type = field(
-        t=FieldType.ENUM,
-        address=50280,
-        enum_type=PvType,
-    )
-    pv_4_i_p = field(
-        t=FieldType.UINT16,
-        address=50281,
-        unit="W",
-    )
-    pv_4_i_v = field(
-        t=FieldType.UINT16,
-        address=50282,
-        unit="V",
-        scale=0.1,
-    )
-    pv_4_i_c = field(
-        t=FieldType.UINT16,
-        address=50283,
         unit="A",
         scale=0.1,
     )
