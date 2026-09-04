@@ -190,10 +190,10 @@ for d in schema:
         # Modbus/protocol ones, and belong in whichever integration
         # consumes this library, not in the library itself.
 
-        if "length" in f and f["content"] == "string":
+        if "length" in f and f["content"] in ("string", "string_swapped"):
             fields += f"\n        length={f['length']},"
 
-        if "length" in f and f["content"] != "string":
+        if "length" in f and f["content"] not in ("string", "string_swapped"):
             fields += f"\n        count={f['length']},"
 
         # TODO enum building
