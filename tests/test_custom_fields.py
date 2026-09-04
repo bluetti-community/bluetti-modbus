@@ -8,6 +8,7 @@ from bluetti_modbus_lib.fields.custom_fields import (
     FieldType,
     bit_flag,
     dotted_version,
+    dotted_version_2part,
     field,
     nibble,
     reference_offset_current,
@@ -108,6 +109,20 @@ def test_dotted_version_decodes_major_minor_patch():
     assert reg.decode([14903, 7631]) == "50012.01.19"
     # Unpopulated on this hardware (b_ver_2/3/4) - still a valid decode.
     assert reg.decode([0, 0]) == "0.00.00"
+
+
+def test_dotted_version_2part_decodes_major_minor():
+    # Raw values captured from a real AC500 (registers 50210/50211 - ARM -
+    # and 50212/50213 - DSP), matching what the Bluetti app shows for the
+    # same firmware ("V4048.04" and "V4047.30" respectively) - see
+    # https://github.com/bluetti-community/bluetti-registers/issues/13.
+    # Confirmed on this one device so far, unlike dotted_version() above.
+    reg = dotted_version_2part(50210)
+
+    assert isinstance(reg, NumberField)
+    assert reg.count == 2
+    assert reg.decode([11588, 6]) == "4048.04"
+    assert reg.decode([11514, 6]) == "4047.30"
 
 
 def test_bit_flag_decodes_only_the_named_bit():

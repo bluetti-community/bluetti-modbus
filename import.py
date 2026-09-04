@@ -1,6 +1,10 @@
 import requests
 
-tag = "0.0.33"
+# Beta: bluetti-registers' ac500-beta branch, tagged ac500-beta-1 - not a
+# real bluetti-registers release. See devices/ac500.py's own generated-file
+# note and this branch's PR description for why AC500 stays off main until
+# ItsMe00007 confirms it against real hardware.
+tag = "ac500-beta-1"
 url = f"https://github.com/bluetti-community/bluetti-registers/releases/download/{tag}/modbus-tcp.json"
 
 output = "src/bluetti_modbus_lib/devices/"
@@ -61,6 +65,7 @@ for d in schema:
     fields = ""
     uses_reference_offset_current = False
     uses_dotted_version = False
+    uses_dotted_version_2part = False
     uses_bit_flag = False
     uses_nibble = False
     uses_range = False
@@ -82,6 +87,16 @@ for d in schema:
             uses_dotted_version = True
             fields += f"""
     {f["name"]} = dotted_version({f["address"]})
+"""
+            continue
+
+        # 2-part "major*100 + minor" version - a different encoding than
+        # "VERSION" above, confirmed so far only on AC500 (bluetti-
+        # registers#13) - see dotted_version_2part()'s own docstring.
+        if str(f["content"]).upper() == "VERSION2":
+            uses_dotted_version_2part = True
+            fields += f"""
+    {f["name"]} = dotted_version_2part({f["address"]})
 """
             continue
 
@@ -154,6 +169,8 @@ for d in schema:
         extra_imports.append("reference_offset_current")
     if uses_dotted_version:
         extra_imports.append("dotted_version")
+    if uses_dotted_version_2part:
+        extra_imports.append("dotted_version_2part")
     if uses_bit_flag:
         extra_imports.append("bit_flag")
     if uses_nibble:

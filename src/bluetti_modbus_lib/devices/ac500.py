@@ -1,0 +1,202 @@
+from ..base_devices import BluettiDevice
+from ..enums import *
+from ..fields import FieldType, dotted_version_2part, field, nibble
+
+# GENERATED FILE! DO NOT EDIT!
+
+
+class AC500(BluettiDevice):
+    ac_o_p_total = field(
+        t=FieldType.UINT16,
+        address=50002,
+        unit="W",
+    )
+    pv_i_p_total = field(
+        t=FieldType.UINT16,
+        address=50004,
+        unit="W",
+    )
+    g_i_p_total = field(
+        t=FieldType.UINT16,
+        address=50006,
+        unit="W",
+    )
+    d_inverter_total = field(
+        t=FieldType.UINT16,
+        address=50008,
+        unit="W",
+    )
+    ac_o_e_total = field(
+        t=FieldType.UINT16,
+        address=50012,
+        unit="kWh",
+        scale=0.1,
+    )
+    g_o_e_total = field(
+        t=FieldType.UINT16,
+        address=50018,
+        unit="kWh",
+        scale=0.1,
+    )
+    d_inverter_status = field(
+        t=FieldType.ENUM,
+        address=50022,
+        enum_type=InverterStatus,
+    )
+    d_inverter_warning = field(
+        t=FieldType.ENUM,
+        address=50023,
+        count=4,
+        enum_type=InverterWarning,
+    )
+    d_inverter_type = field(
+        t=FieldType.STRING,
+        address=50200,
+        length=6,
+    )
+    d_serial = field(
+        t=FieldType.UINT16,
+        address=50206,
+    )
+    d_ver_arm = dotted_version_2part(50210)
+
+    d_ver_dsp = dotted_version_2part(50212)
+
+    g_i_f = field(
+        t=FieldType.UINT16,
+        address=50214,
+        unit="Hz",
+        scale=0.1,
+    )
+    g_i_p_local = field(
+        t=FieldType.UINT16,
+        address=50215,
+        unit="W",
+        count=2,
+    )
+    ac_o_p_local = field(
+        t=FieldType.UINT16,
+        address=50217,
+        unit="W",
+        count=2,
+    )
+    pv_i_p_local = field(
+        t=FieldType.UINT16,
+        address=50219,
+        unit="W",
+        count=2,
+    )
+    pv_i_e_local = field(
+        t=FieldType.UINT16,
+        address=50229,
+        unit="kWh",
+        scale=0.1,
+        count=2,
+    )
+    pv_dc_count = nibble(50267, high=False)
+
+    pv_ac_count = nibble(50267, high=True)
+
+    pv_1_i_type = field(
+        t=FieldType.ENUM,
+        address=50268,
+        enum_type=PvType,
+    )
+    pv_1_i_p = field(
+        t=FieldType.UINT16,
+        address=50269,
+        unit="W",
+    )
+    pv_1_i_v = field(
+        t=FieldType.UINT16,
+        address=50270,
+        unit="V",
+        scale=0.1,
+    )
+    pv_1_i_c = field(
+        t=FieldType.UINT16,
+        address=50271,
+        unit="A",
+        scale=0.1,
+    )
+    pv_2_i_type = field(
+        t=FieldType.ENUM,
+        address=50272,
+        enum_type=PvType,
+    )
+    pv_2_i_p = field(
+        t=FieldType.UINT16,
+        address=50273,
+        unit="W",
+    )
+    pv_2_i_c = field(
+        t=FieldType.UINT16,
+        address=50275,
+        unit="A",
+        scale=0.1,
+    )
+    pv_3_i_type = field(
+        t=FieldType.ENUM,
+        address=50276,
+        enum_type=PvType,
+    )
+    pv_3_i_p = field(
+        t=FieldType.UINT16,
+        address=50277,
+        unit="W",
+    )
+    pv_3_i_v = field(
+        t=FieldType.UINT16,
+        address=50278,
+        unit="V",
+        scale=0.1,
+    )
+    pv_3_i_c = field(
+        t=FieldType.UINT16,
+        address=50279,
+        unit="A",
+        scale=0.1,
+    )
+    pv_4_i_type = field(
+        t=FieldType.ENUM,
+        address=50280,
+        enum_type=PvType,
+    )
+    pv_4_i_p = field(
+        t=FieldType.UINT16,
+        address=50281,
+        unit="W",
+    )
+    pv_4_i_v = field(
+        t=FieldType.UINT16,
+        address=50282,
+        unit="V",
+        scale=0.1,
+    )
+    pv_4_i_c = field(
+        t=FieldType.UINT16,
+        address=50283,
+        unit="A",
+        scale=0.1,
+    )
+    d_num_battery_packs = field(
+        t=FieldType.UINT16,
+        address=51001,
+    )
+    b_v_total = field(
+        t=FieldType.UINT16,
+        address=51002,
+        unit="V",
+        scale=0.1,
+    )
+    b_c_total = field(
+        t=FieldType.UINT16,
+        address=51003,
+        unit="A",
+        scale=0.1,
+    )
+    b_soc_total = field(
+        t=FieldType.UINT16,
+        address=51004,
+        unit="%",
+    )

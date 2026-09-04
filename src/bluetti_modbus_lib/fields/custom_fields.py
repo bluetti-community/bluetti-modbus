@@ -109,6 +109,31 @@ def dotted_version(address: int) -> NumberField[Any]:
     )
 
 
+def dotted_version_2part(address: int) -> NumberField[Any]:
+    """A firmware/protocol version packed as major*100 + minor, unlike
+    dotted_version()'s 3-part major.minor.patch.
+
+    Confirmed against real AC500 hardware across 2 independent samples (ARM
+    and DSP firmware versions), matching what the Bluetti app shows - see
+    https://github.com/bluetti-community/bluetti-registers/issues/13. Unlike
+    dotted_version(), this is only confirmed on this one device so far, not
+    Bluetti-support-verified - see the "version2" content type this applies
+    to.
+    """
+
+    def decode(raw: int) -> str:
+        major = raw // 100
+        minor = raw % 100
+        return f"{major}.{minor:02d}"
+
+    return NumberField(
+        address,
+        count=2,
+        convert=decode,
+        word_order="little",
+    )
+
+
 def bit_flag(address: int, *, bit: int) -> NumberField[Any]:
     """A single documented bit inside an otherwise-undocumented register.
 
