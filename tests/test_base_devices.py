@@ -251,10 +251,12 @@ async def test_async_update_with_retry_survives_a_slow_update_within_the_budget(
 @pytest.mark.asyncio
 async def test_b_soc_low_write_within_bounds_reaches_the_device():
     # b_soc_low (register 57016) is one of the two SOC-threshold fields
-    # bluetti-registers marks writeable, bounded 0-100 - see import.py's
-    # Range()-based writable=. Confirms the whole chain, not just that
-    # field() accepts the parameter: a real write actually lands on the
-    # register the mock holds.
+    # bluetti-registers marks writeable, bounded 5-90 on Balco260 (the
+    # official BLUETTI app's own SOC screen doesn't allow this discharge-
+    # stop threshold outside that range) - see import.py's Range()-based
+    # writable=. Confirms the whole chain, not just that field() accepts
+    # the parameter: a real write actually lands on the register the mock
+    # holds.
     device, mock_conn = _balco260_with_unit()
 
     await device.write("b_soc_low", 42)
@@ -266,10 +268,23 @@ async def test_b_soc_low_write_within_bounds_reaches_the_device():
 async def test_b_soc_low_write_above_the_bound_is_rejected():
     device, mock_conn = _balco260_with_unit()
 
+    # 95 - within the old, wider 0-100 range this field used to have, so
+    # this is a real regression check for the tightened 5-90 bound, not
+    # just any out-of-range value.
     with pytest.raises(RangeInvalid):
-        await device.write("b_soc_low", 101)
+        await device.write("b_soc_low", 95)
 
     # Rejected before it ever reaches the device - nothing was written.
+    assert 57016 not in mock_conn.for_unit(1).holding
+
+
+@pytest.mark.asyncio
+async def test_b_soc_low_write_below_the_bound_is_rejected():
+    device, mock_conn = _balco260_with_unit()
+
+    with pytest.raises(RangeInvalid):
+        await device.write("b_soc_low", 3)
+
     assert 57016 not in mock_conn.for_unit(1).holding
 
 

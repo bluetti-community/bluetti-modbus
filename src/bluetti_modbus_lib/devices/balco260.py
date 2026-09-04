@@ -605,7 +605,7 @@ class Balco260(BluettiDevice):
     b_soc_low = field(
         t=FieldType.UINT16,
         address=57016,
-        writable=Range(min=0, max=100),
+        writable=Range(min=5, max=90),
         unit="%",
     )
     b_soc_high = field(
