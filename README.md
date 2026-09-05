@@ -138,14 +138,31 @@ paths that define them.
 ### Multiple battery packs (BC200)
 
 A Balco 260 can have up to `MAX_BATTERY_PACKS` (5, confirmed by BLUETTI)
-BC200 packs attached - `device.values["d_num_battery_packs"]` (register
-51001) says how many are actually there. Pack 1's own data (`b_soc`, `b_v`,
-serial number, etc.) is already part of the main `Balco260` device's own
-fields - reading its own Modbus slave address covers pack 1. Packs 2 and up
-answer on their *own* slave address (2, 3, ...), confirmed by BLUETTI to
-apply to the entire "Each Pack Base Information" block, not just SOC/SOH
-(see `bluetti-community/bluetti-modbus#8`). `battery_pack()` builds a
-`Balco260` restricted to just that block, at a given pack's slave address:
+BC200 packs attached. Reading how many are actually there, and every
+"total"/aggregate field (`d_num_battery_packs`, `b_v_total`, `b_c_total`,
+`b_soc_total`, `b_soh_total`, `b_status`, `b_time_to_full_total`,
+`b_time_to_empty_total` - registers 51001-51008), needs a *second* Modbus
+unit at the aggregate slave address 250 (0xFA), confirmed by BLUETTI and
+by real-hardware testing (reading `d_num_battery_packs` at the device's own
+slave address always returns 0, regardless of how many packs are actually
+attached - only slave 250 reports the real count):
+
+```python
+from bluetti_modbus_lib import aggregate_pack_summary
+
+summary = aggregate_pack_summary(connection)
+await summary.async_update_with_retry()
+print(summary.values["d_num_battery_packs"], "packs")
+```
+
+`AGGREGATE_SUMMARY_FIELDS` lists the field names this covers.
+
+Pack 1's own per-pack data (`b_soc`, `b_v`, serial number, etc.) is already
+part of the main `Balco260` device's own fields - reading its own Modbus
+slave address covers pack 1. BLUETTI confirmed by email that packs 2 and up
+answer the same way, on their *own* slave address (2, 3, ...) - `battery_pack()`
+builds a `Balco260` restricted to just the "Each Pack Base Information"
+block, at a given pack's slave address:
 
 ```python
 from bluetti_modbus_lib import battery_pack
@@ -155,7 +172,14 @@ await pack2.async_update_with_retry()
 print(pack2.values["b_soc"], "%")
 ```
 
-`PACK_INFO_FIELDS` lists the field names this covers.
+`PACK_INFO_FIELDS` lists the field names this covers. **Not yet confirmed
+against real hardware beyond `b_soc`/`b_soh`**: testing on a Balco260 with 3
+real, app-confirmed BC200 packs found every other slave address (2 and up)
+reading a clean, error-free 0 for this block - identical to a second
+Balco260 with zero packs attached, i.e. not distinguishing a populated pack
+from an empty one the way `aggregate_pack_summary()` reliably does. Treat
+`battery_pack()` as unconfirmed beyond the two fields BLUETTI explicitly
+named until that's resolved.
 
 ## CLI
 
