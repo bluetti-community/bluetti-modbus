@@ -52,6 +52,25 @@ def test_field_uint32():
     assert reg.count == 2
 
 
+def test_field_int32_decodes_the_balco260_d_inverter_total_regression():
+    # Real-hardware regression (bluetti-registers#20): d_inverter_total
+    # (50008) is genuinely 2 registers and signed, not the single unsigned
+    # register this schema previously declared. A live Balco260 charging
+    # at ~1144W (43.5A x 26.3V, independently confirmed from b_c_total/
+    # b_v_total at the same moment) read registers 50008-50009 as
+    # [64336, 0xFFFF] - decoded as INT32 that's -1200W, matching the
+    # independently-computed charging power to within normal inverter
+    # conversion efficiency. The old single-register UINT16 read
+    # (register 50008 alone, 64336) was never anything but that
+    # register's raw low word.
+    reg = field(FieldType.INT32, 50008)
+
+    assert isinstance(reg, NumberField)
+    assert reg.count == 2
+    assert reg.signed is True
+    assert reg.decode([64336, 0xFFFF]) == -1200
+
+
 def test_field_uint64_decodes_a_real_serial_number():
     reg = field(FieldType.UINT64, 50206)
 

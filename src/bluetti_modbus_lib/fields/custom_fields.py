@@ -1,7 +1,14 @@
 from enum import Enum, unique
 from typing import Any
 
-from modbus_connection.model import RegisterField, WriteValidator, enum, float32, uint32
+from modbus_connection.model import (
+    RegisterField,
+    WriteValidator,
+    enum,
+    float32,
+    int32,
+    uint32,
+)
 from modbus_connection.model.fields import NumberField, StringField
 
 
@@ -163,6 +170,7 @@ def uint64(
 class FieldType(Enum):
     INT16 = "int16"
     UINT16 = "uint16"
+    INT32 = "int32"
     UINT32 = "uint32"
     UINT64 = "uint64"
     FLOAT32 = "float32"
@@ -186,6 +194,10 @@ def field(
             return int16(address, scale=scale, writable=writable, unit=unit)
         case FieldType.UINT16:
             return uint16(address, scale=scale, writable=writable, unit=unit)
+        case FieldType.INT32:
+            return int32(
+                address, scale=scale, writable=writable, unit=unit, word_order="little"
+            )
         case FieldType.UINT32:
             return uint32(
                 address, scale=scale, writable=writable, unit=unit, word_order="little"
