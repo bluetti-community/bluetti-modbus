@@ -42,6 +42,10 @@ sync weekly, so `main` never silently drifts from what it currently
 documents. See [CONTRIBUTING.md](CONTRIBUTING.md) for EP2000's verification
 status and this project's writable-field policy.
 
+Have a device model this doesn't support yet, or a value that looks wrong? See
+[HARDWARE_TESTING.md](HARDWARE_TESTING.md) - no coding experience required, including
+prompts you can hand to an AI assistant.
+
 ## Enabling Modbus TCP on your device
 
 Modbus TCP is off by default on Bluetti power stations that support it -
