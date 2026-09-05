@@ -2,6 +2,12 @@
 
 Contributions - bug reports, fixes, new fields, device coverage - are welcome.
 
+**Not a developer, or don't know Python?** You can still make a real contribution - this project
+has no static per-model register map, so every field it supports was confirmed against real
+hardware by someone in the community. See [HARDWARE_TESTING.md](HARDWARE_TESTING.md) for a
+no-coding-required guide to testing your own device, including prompts you can hand directly to
+an AI assistant. The rest of this document is for code changes.
+
 ## Before you start
 
 - `src/bluetti_modbus_lib/devices/balco260.py` and `ep2000.py` are
