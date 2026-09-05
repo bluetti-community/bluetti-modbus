@@ -15,59 +15,69 @@ class Balco260(BluettiDevice):
         address=50001,
     )
     ac_o_p_total = field(
-        t=FieldType.UINT16,
+        t=FieldType.UINT32,
         address=50002,
         unit="W",
+        count=2,
     )
     pv_i_p_total = field(
-        t=FieldType.UINT16,
+        t=FieldType.UINT32,
         address=50004,
         unit="W",
+        count=2,
     )
     g_i_p_total = field(
-        t=FieldType.UINT16,
+        t=FieldType.INT32,
         address=50006,
         unit="W",
+        count=2,
     )
     d_inverter_total = field(
-        t=FieldType.UINT16,
+        t=FieldType.INT32,
         address=50008,
         unit="W",
+        count=2,
     )
     pv_ac_p = field(
-        t=FieldType.UINT16,
+        t=FieldType.UINT32,
         address=50010,
         unit="W",
+        count=2,
     )
     ac_o_e_total = field(
-        t=FieldType.UINT16,
+        t=FieldType.UINT32,
         address=50012,
         unit="kWh",
         scale=0.1,
+        count=2,
     )
     pv_i_e_total = field(
-        t=FieldType.UINT16,
+        t=FieldType.UINT32,
         address=50014,
         unit="kWh",
         scale=0.1,
+        count=2,
     )
     g_i_e_total = field(
-        t=FieldType.UINT16,
+        t=FieldType.UINT32,
         address=50016,
         unit="kWh",
         scale=0.1,
+        count=2,
     )
     g_o_e_total = field(
-        t=FieldType.UINT16,
+        t=FieldType.UINT32,
         address=50018,
         unit="kWh",
         scale=0.1,
+        count=2,
     )
     pv_ac_e = field(
-        t=FieldType.UINT16,
+        t=FieldType.UINT32,
         address=50020,
         unit="kWh",
         scale=0.1,
+        count=2,
     )
     d_inverter_status = field(
         t=FieldType.ENUM,
@@ -106,7 +116,7 @@ class Balco260(BluettiDevice):
         scale=0.1,
     )
     g_i_p_local = field(
-        t=FieldType.UINT32,
+        t=FieldType.INT32,
         address=50215,
         unit="W",
         count=2,
@@ -185,7 +195,7 @@ class Balco260(BluettiDevice):
         scale=0.1,
     )
     g_1_i_c = field(
-        t=FieldType.UINT16,
+        t=FieldType.INT16,
         address=50237,
         unit="A",
         scale=0.1,
@@ -202,7 +212,7 @@ class Balco260(BluettiDevice):
         scale=0.1,
     )
     g_2_i_c = field(
-        t=FieldType.UINT16,
+        t=FieldType.INT16,
         address=50240,
         unit="A",
         scale=0.1,
@@ -219,7 +229,7 @@ class Balco260(BluettiDevice):
         scale=0.1,
     )
     g_3_i_c = field(
-        t=FieldType.UINT16,
+        t=FieldType.INT16,
         address=50243,
         unit="A",
         scale=0.1,

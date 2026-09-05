@@ -1,6 +1,6 @@
 import requests
 
-tag = "0.0.35"
+tag = "0.0.36"
 url = f"https://github.com/bluetti-community/bluetti-registers/releases/download/{tag}/modbus-tcp.json"
 
 output = "src/bluetti_modbus_lib/devices/"
@@ -29,7 +29,7 @@ def get_type(t: str, name: str):
         return upper
 
     if upper == "INT":
-        return "INT16"
+        return "INT32" if name in WIDE_INT_FIELDS else "INT16"
 
     if name in ["b_i_e", "b_o_e", *WIDE_UINT_FIELDS]:
         return "UINT32"
@@ -57,8 +57,16 @@ def get_type(t: str, name: str):
 # guess, not a verified fix. b_error (length 3) is also left alone: there's
 # no 3-register FieldType, and it's an already-undecoded raw bitmap with no
 # displayed value to verify a fix against.
+#
+# ac_o_p_total/pv_i_p_total/pv_ac_p/ac_o_e_total/pv_i_e_total/g_i_e_total/
+# g_o_e_total/pv_ac_e added against the official Cassandra register list
+# (bluetti-official/bluetti-modbus-tcp-slave's own
+# doc/Bluetti-Open-Modbus-TCP-register-list.xlsx) - the same "Inverter
+# Summary Information" 50002-50020 block g_i_p_local's own siblings sit in,
+# previously never checked against that document for these specific names.
+# g_i_p_local itself moved to WIDE_INT_FIELDS below - the official sheet
+# documents it signed, not unsigned.
 WIDE_UINT_FIELDS = {
-    "g_i_p_local",
     "ac_o_p_local",
     "pv_i_p_local",
     "pv_ac_p_local",
@@ -69,6 +77,26 @@ WIDE_UINT_FIELDS = {
     "pv_ac_e_local",
     "b_protect",
     "b_alarm_portable",
+    "ac_o_p_total",
+    "pv_i_p_total",
+    "pv_ac_p",
+    "ac_o_e_total",
+    "pv_i_e_total",
+    "g_i_e_total",
+    "g_o_e_total",
+    "pv_ac_e",
+}
+
+# Signed 32-bit equivalent of WIDE_UINT_FIELDS above - bluetti-registers
+# documents these as content "int", not "uint", per the same official
+# Cassandra register list. Real-world trigger: a live Balco260 diagnostics
+# dump showed d_inverter_total decode to 64923 (impossible for this device
+# class) while charging - a single-register unsigned read of what's
+# actually a 2-register signed value that goes negative in that mode.
+WIDE_INT_FIELDS = {
+    "g_i_p_total",
+    "d_inverter_total",
+    "g_i_p_local",
 }
 
 
