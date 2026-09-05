@@ -1,13 +1,16 @@
 import requests
 
-# Beta: bluetti-registers' ac500-beta branch, tagged ac500-beta-8 - not a
+# Beta: bluetti-registers' ac500-beta branch, tagged ac500-beta-11 - not a
 # real bluetti-registers release. See devices/ac500.py's own generated-file
 # note and PR #45's description (full chronological changelog across
-# beta-2 through beta-8) for why AC500 stays off main until ItsMe00007/
-# gjniewenhuijse confirm it against real hardware. beta-8: removed
-# pv_1_i_c/pv_2_i_c - never non-zero for 2 independent real AC500 owners
-# (bluetti-official/bluetti-modbus-tcp-slave#5).
-tag = "ac500-beta-8"
+# beta-2 through beta-11) for why AC500 stays off main until ItsMe00007/
+# gjniewenhuijse confirm it against real hardware. beta-9: d_inverter_type
+# byte order swapped (real AC500 decoded to "CA05 0" instead of "AC500").
+# beta-11: d_serial override removed - it's genuinely 4 registers like
+# every other device's "serial" content type, not a single UINT16; an
+# earlier beta briefly (beta-10, never released here) assumed a word-order
+# swap was also needed, but that was wrong - no override at all is correct.
+tag = "ac500-beta-11"
 url = f"https://github.com/bluetti-community/bluetti-registers/releases/download/{tag}/modbus-tcp.json"
 
 output = "src/bluetti_modbus_lib/devices/"

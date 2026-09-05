@@ -16,7 +16,7 @@ class AC500(BluettiDevice):
         (50022, 50022),
         (50023, 50026),
         (50200, 50205),
-        (50206, 50206),
+        (50206, 50209),
         (50210, 50211),
         (50212, 50213),
         (50214, 50214),
@@ -84,12 +84,12 @@ class AC500(BluettiDevice):
         enum_type=InverterWarning,
     )
     d_inverter_type = field(
-        t=FieldType.STRING,
+        t=FieldType.STRING_SWAPPED,
         address=50200,
         length=6,
     )
     d_serial = field(
-        t=FieldType.UINT16,
+        t=FieldType.UINT64,
         address=50206,
     )
     d_ver_arm = dotted_version_2part(50210)
