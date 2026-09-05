@@ -10,7 +10,14 @@ import requests
 # every other device's "serial" content type, not a single UINT16; an
 # earlier beta briefly (beta-10, never released here) assumed a word-order
 # swap was also needed, but that was wrong - no override at all is correct.
-tag = "ac500-beta-11"
+# beta-12: g_o_switch removed - two independent AC500 owners confirmed the
+# device has no grid-output/feed-in capability at all (it doesn't sense
+# grid voltage/frequency before delivering AC output, so it's island-mode
+# only; it can still be charged from the grid, hence g_i_switch staying).
+# Register 57010 is real but wasn't a grid-output switch - that was an
+# unconfirmed guess by analogy with Balco260/EP2000. See
+# bluetti-official/bluetti-modbus-tcp-slave#5.
+tag = "ac500-beta-12"
 url = f"https://github.com/bluetti-community/bluetti-registers/releases/download/{tag}/modbus-tcp.json"
 
 output = "src/bluetti_modbus_lib/devices/"
