@@ -299,7 +299,7 @@ class Balco260(BluettiDevice):
         enum_type=InverterStatus,
     )
     d_inverter_1_p = field(
-        t=FieldType.UINT16,
+        t=FieldType.INT16,
         address=50256,
         unit="W",
     )
@@ -321,7 +321,7 @@ class Balco260(BluettiDevice):
         enum_type=InverterStatus,
     )
     d_inverter_2_p = field(
-        t=FieldType.UINT16,
+        t=FieldType.INT16,
         address=50260,
         unit="W",
     )
@@ -343,7 +343,7 @@ class Balco260(BluettiDevice):
         enum_type=InverterStatus,
     )
     d_inverter_3_p = field(
-        t=FieldType.UINT16,
+        t=FieldType.INT16,
         address=50264,
         unit="W",
     )
