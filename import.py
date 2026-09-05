@@ -90,6 +90,21 @@ BIT_FLAG_FIELDS = {"d_status": 2}
 # name -> is the high nibble (bit4-7), not the low one (bit0-3).
 NIBBLE_FIELDS = {"pv_dc_count": False, "pv_ac_count": True}
 
+# Per-device override of BluettiDevice's default max_span=50 (max registers
+# per single block read) - real Balco260 hardware failed twice, months
+# apart, on the same naturally-batched 31-register block (50001-50031):
+# once as a cancelled request, once as a malformed/truncated response
+# (bluetti-community/bluetti-modbus#46's own read-plan investigation; see
+# that PR's sibling issue for the real tracebacks). BluettiDevice's own
+# docstring already notes "this device's Modbus TCP stack is known to
+# become unresponsive under load" - not address-specific, so this narrows
+# every large block, not just the one that happened to get reported.
+# Chosen with real headroom below the failing 31 (splits it into 20+11)
+# without fragmenting reads too far (10 blocks become 15) - not proven to
+# be the exact safe threshold, just a well-margined starting point pending
+# extended real-hardware monitoring (see this branch's PR description).
+MAX_SPAN_OVERRIDES = {"Balco260": 20}
+
 for d in schema:
     name = d["name"]
     file_name = str(name).lower() + ".py"
@@ -200,6 +215,10 @@ for d in schema:
     # package's own relative ones, with a blank line between the groups.
     range_import = "from probatio import Range\n\n" if uses_range else ""
 
+    max_span_line = ""
+    if name in MAX_SPAN_OVERRIDES:
+        max_span_line = f"    max_span = {MAX_SPAN_OVERRIDES[name]}\n\n"
+
     content = f"""{range_import}from ..base_devices import BluettiDevice
 from ..enums import *
 from ..fields import FieldType, {fields_import}
@@ -208,7 +227,7 @@ from ..fields import FieldType, {fields_import}
 
 
 class {name}(BluettiDevice):
-{fields.lstrip(chr(10))}
+{max_span_line}{fields.lstrip(chr(10))}
 """
 
     with open(output + file_name, "w", encoding="utf-8") as f:

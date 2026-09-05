@@ -124,18 +124,64 @@ async def test_async_update_with_retry_retries_once_after_a_pymodbus_timeout():
 
 
 @pytest.mark.asyncio
-async def test_async_update_with_retry_gives_up_after_a_second_corrupted_frame():
+async def test_async_update_with_retry_recovers_after_two_consecutive_corrupted_frames():
+    # Real HA logs (bluetti-community/bluetti-modbus#29) showed the original
+    # single retry wasn't always enough - two corrupted frames back to back
+    # on the same live Balco260. _TRANSIENT_RETRY_COUNT=2 means this now
+    # recovers instead of surfacing as a coordinator error.
     device = _balco260()
     corrupted = BluettiModbusConnectionError("read_holding_registers(53001, 12): ...")
     corrupted.__cause__ = ModbusProtocolError(
         "Expected response to start with function code and byte count"
     )
-    device.async_update = AsyncMock(side_effect=[corrupted, corrupted])  # type: ignore[method-assign]
+    device.async_update = AsyncMock(  # type: ignore[method-assign]
+        side_effect=[corrupted, corrupted, None]
+    )
+
+    await device.async_update_with_retry()
+
+    assert device.async_update.await_count == 3
+
+
+@pytest.mark.asyncio
+async def test_async_update_with_retry_stops_retrying_on_a_non_transient_error_mid_loop():
+    # Regression test: a transient failure that then turns into a permanent
+    # one (e.g. the device drops the connection for real, or a genuinely
+    # illegal address) must not keep consuming the retry budget - it should
+    # surface immediately, same as if it had been the very first failure.
+    device = _balco260()
+    corrupted = BluettiModbusConnectionError("read_holding_registers(53001, 12): ...")
+    corrupted.__cause__ = ModbusProtocolError(
+        "Expected response to start with function code and byte count"
+    )
+    permanent = BluettiModbusConnectionError("read_holding_registers(53001, 12): ...")
+    permanent.__cause__ = IllegalDataAddressError(2)
+    device.async_update = AsyncMock(  # type: ignore[method-assign]
+        side_effect=[corrupted, permanent]
+    )
+
+    with pytest.raises(BluettiModbusConnectionError) as exc_info:
+        await device.async_update_with_retry()
+
+    assert device.async_update.await_count == 2
+    assert exc_info.value is permanent
+
+
+@pytest.mark.asyncio
+async def test_async_update_with_retry_gives_up_after_a_third_corrupted_frame():
+    device = _balco260()
+    corrupted = BluettiModbusConnectionError("read_holding_registers(53001, 12): ...")
+    corrupted.__cause__ = ModbusProtocolError(
+        "Expected response to start with function code and byte count"
+    )
+    device.async_update = AsyncMock(  # type: ignore[method-assign]
+        side_effect=[corrupted, corrupted, corrupted]
+    )
 
     with pytest.raises(BluettiModbusConnectionError):
         await device.async_update_with_retry()
 
-    assert device.async_update.await_count == 2
+    assert device.async_update.await_count == 3
 
 
 @pytest.mark.asyncio
