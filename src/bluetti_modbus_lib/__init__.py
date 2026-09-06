@@ -1,6 +1,7 @@
 """Unofficial async client for Bluetti power stations over Modbus."""
 
 from .devices import (
+    AC500,
     AGGREGATE_SLAVE_ID,
     AGGREGATE_SUMMARY_FIELDS,
     EP2000,
@@ -17,6 +18,7 @@ from .exceptions import BluettiModbusConnectionError, BluettiModbusError
 from .modbus import BluettiModbusClient
 
 __all__ = [
+    "AC500",
     "AGGREGATE_SLAVE_ID",
     "AGGREGATE_SUMMARY_FIELDS",
     "EP2000",

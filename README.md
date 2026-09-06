@@ -32,6 +32,12 @@ Supported out of the box:
 - **EP2000**: the same Balco 260 register set plus a rated-capacity and
   EMS/grid-export control block - sourced from BLUETTI's own official
   register spec, not yet verified against real EP2000 hardware
+- **AC500**: a smaller register set (battery/PV/grid/AC totals, no BC260
+  expansion pack support yet - see the "Multiple battery packs" section
+  below), confirmed against real hardware by the community
+  (bluetti-official/bluetti-modbus-tcp-slave#5,
+  bluetti-community/bluetti-registers#13) but not yet confirmed by BLUETTI
+  support directly, unlike every other device here
 - **S Meter**: Bluetti's AC meter/CT accessory, confirmed against real
   hardware
 
@@ -135,10 +141,11 @@ Everything above (`get_device`, the device classes, `BluettiModbusError`,
 importable directly from `bluetti_modbus_lib`, not from the deeper module
 paths that define them.
 
-### Multiple battery packs (BC200)
+### Multiple battery packs (BC260)
 
+Balco 260 only, for now - see the note at the end of this section for AC500.
 A Balco 260 can have up to `MAX_BATTERY_PACKS` (5, confirmed by BLUETTI)
-BC200 packs attached. Reading how many are actually there, and every
+BC260 packs attached. Reading how many are actually there, and every
 "total"/aggregate field (`d_num_battery_packs`, `b_v_total`, `b_c_total`,
 `b_soc_total`, `b_soh_total`, `b_status`, `b_time_to_full_total`,
 `b_time_to_empty_total` - registers 51001-51008), needs a *second* Modbus
@@ -174,12 +181,19 @@ print(pack2.values["b_soc"], "%")
 
 `PACK_INFO_FIELDS` lists the field names this covers. **Not yet confirmed
 against real hardware beyond `b_soc`/`b_soh`**: testing on a Balco260 with 3
-real, app-confirmed BC200 packs found every other slave address (2 and up)
+real, app-confirmed BC260 packs found every other slave address (2 and up)
 reading a clean, error-free 0 for this block - identical to a second
 Balco260 with zero packs attached, i.e. not distinguishing a populated pack
 from an empty one the way `aggregate_pack_summary()` reliably does. Treat
 `battery_pack()` as unconfirmed beyond the two fields BLUETTI explicitly
 named until that's resolved.
+
+AC500 also has a `d_num_battery_packs` field, but real-hardware testing
+found it means something different there: it stays at a fixed value (the
+device's maximum supported packs) regardless of how many are actually
+attached, unlike Balco260's confirmed real-time count. `aggregate_pack_summary()`/
+`battery_pack()` are Balco260-only for now - AC500's own battery-pack
+support (it does have swappable packs, e.g. B300S) isn't modeled here yet.
 
 ## CLI
 
