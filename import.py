@@ -17,7 +17,12 @@ import requests
 # Register 57010 is real but wasn't a grid-output switch - that was an
 # unconfirmed guess by analogy with Balco260/EP2000. See
 # bluetti-official/bluetti-modbus-tcp-slave#5.
-tag = "ac500-beta-12"
+# beta-13: d_inverter_total removed - implausible 64917W reading on real
+# AC500 hardware in Grid-Connected Load mode, traced to this branch's
+# schema still declaring it "uint" instead of the "int"/2-register fix
+# already on main; removed per ItsMe00007's own suggestion rather than
+# guess a fix, see bluetti-official/bluetti-modbus-tcp-slave#5.
+tag = "ac500-beta-13"
 url = f"https://github.com/bluetti-community/bluetti-registers/releases/download/{tag}/modbus-tcp.json"
 
 output = "src/bluetti_modbus_lib/devices/"

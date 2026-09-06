@@ -10,7 +10,6 @@ class AC500(BluettiDevice):
         (50002, 50002),
         (50004, 50004),
         (50006, 50006),
-        (50008, 50008),
         (50012, 50012),
         (50018, 50018),
         (50022, 50022),
@@ -52,11 +51,6 @@ class AC500(BluettiDevice):
     g_i_p_total = field(
         t=FieldType.UINT16,
         address=50006,
-        unit="W",
-    )
-    d_inverter_total = field(
-        t=FieldType.UINT16,
-        address=50008,
         unit="W",
     )
     ac_o_e_total = field(
