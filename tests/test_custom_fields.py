@@ -38,7 +38,9 @@ def test_bluetti_string_field_decode_strips_null_padding():
 
 
 def test_bluetti_string_field_swapped_round_trips_ascii():
-    f = BluettiStringFieldSwapped(0, count=4, stride=0, writable=False, force_fc16=False)
+    f = BluettiStringFieldSwapped(
+        0, count=4, stride=0, writable=False, force_fc16=False
+    )
 
     words = f.encode("SN123")
     assert f.decode(words) == "SN123"
@@ -52,7 +54,9 @@ def test_bluetti_string_field_swapped_decodes_the_ac500_d_inverter_type_regressi
     # register's first character in the high byte, then decoding with
     # BluettiStringField's (swapped) byte order - see bluetti-official/
     # bluetti-modbus-tcp-slave#5.
-    correct = BluettiStringFieldSwapped(0, count=6, stride=0, writable=False, force_fc16=False)
+    correct = BluettiStringFieldSwapped(
+        0, count=6, stride=0, writable=False, force_fc16=False
+    )
     wrong = BluettiStringField(0, count=6, stride=0, writable=False, force_fc16=False)
 
     words = correct.encode("AC500")
