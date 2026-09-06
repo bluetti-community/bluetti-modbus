@@ -14,7 +14,7 @@ from bluetti_modbus_lib.devices.battery_pack import (
 
 def test_max_battery_packs_is_five():
     # BLUETTI confirmed by email (2026-09-03) that a single Balco260
-    # supports at most 5 BC200 packs.
+    # supports at most 5 BC260 packs.
     assert MAX_BATTERY_PACKS == 5
 
 
@@ -111,7 +111,7 @@ def test_aggregate_pack_summary_restricts_to_aggregate_fields():
 
 @pytest.mark.asyncio
 async def test_aggregate_pack_summary_reads_from_slave_250():
-    # Real-hardware regression: a Balco260 with 3 confirmed BC200 packs
+    # Real-hardware regression: a Balco260 with 3 confirmed BC260 packs
     # read d_num_battery_packs as 0 at its own slave address (1), and as 4
     # (1 main + 3 packs, matching the Bluetti app) at slave 250.
     conn = MockModbusConnection()

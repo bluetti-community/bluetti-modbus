@@ -5,10 +5,10 @@ from .balco260 import Balco260
 # BLUETTI confirmed by email (2026-08-29, to the maintainer) that b_soc/b_soh
 # (51221/51222) are per-pack values, read "using the corresponding slave
 # address, for example, slave address 1" - and confirmed again by email
-# (2026-09-03) that a single Balco260 supports at most 5 BC200 packs.
+# (2026-09-03) that a single Balco260 supports at most 5 BC260 packs.
 #
 # Real-hardware testing (2026-09-05, a Balco260 with 3 confirmed, app-active
-# BC200 packs) found this doesn't hold for the *rest* of the "Each Pack Base
+# BC260 packs) found this doesn't hold for the *rest* of the "Each Pack Base
 # Information" block the way BLUETTI's general description implied: slave
 # addresses 2 and up all read a clean, error-free 0 for these fields, on
 # this device *and* on a second Balco260 with zero packs attached - i.e. the
@@ -25,7 +25,7 @@ MAX_BATTERY_PACKS = 5
 # main device's own slave address. Real-hardware testing (2026-09-05)
 # confirmed this for the entire "Pack Summary Information" block (51001-
 # 51008, which also includes d_num_battery_packs): reading it at slave 250
-# on a Balco260 with 3 real BC200 packs correctly returned 4 (1 main + 3
+# on a Balco260 with 3 real BC260 packs correctly returned 4 (1 main + 3
 # packs, matching the Bluetti app's own count) for d_num_battery_packs,
 # where reading the same register at the device's own slave address always
 # read 0 regardless of how many packs were actually attached.
@@ -49,7 +49,7 @@ AGGREGATE_SUMMARY_FIELDS = _field_names_in_range(51001, 51008)
 
 
 def battery_pack(connection: ModbusConnection, slave_id: int) -> Balco260:
-    """A Balco260 component restricted to one BC200 pack's own registers.
+    """A Balco260 component restricted to one BC260 pack's own registers.
 
     Pack 1 is the same Modbus slave address as the main Balco260 device
     (already covered by its own fields). Packs 2 and up need their own
