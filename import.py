@@ -1,6 +1,6 @@
 import requests
 
-tag = "0.0.38"
+tag = "0.0.39"
 url = f"https://github.com/bluetti-community/bluetti-registers/releases/download/{tag}/modbus-tcp.json"
 
 output = "src/bluetti_modbus_lib/devices/"
@@ -14,7 +14,7 @@ def to_camel_case(snake_str):
     return "".join(x.capitalize() for x in snake_str.lower().split("_"))
 
 
-def get_type(t: str, name: str):
+def get_type(t: str, name: str, device_name: str):
     upper = t.upper()
 
     if upper == "BOOL":
@@ -28,6 +28,20 @@ def get_type(t: str, name: str):
     if upper != "UINT" and upper != "INT":
         return upper
 
+    # These 3 share field names (and the 32-bit widening below) with
+    # Balco260, where they're genuinely 2-register values confirmed on real
+    # hardware - but a 3-run register scan against a real AC500
+    # (bluetti-registers#13, ac500_Modbus_Registers_3_runs.csv) never once
+    # found the "+1" register (50003/50005/50007) responding, only the base
+    # address - and reading the pair as a block times out entirely on that
+    # same unit (bluetti-official/bluetti-modbus-tcp-slave#5). Scoped to
+    # AC500 and only these 3 names, not a blanket override: the same field
+    # names' widening is still correct on Balco260/EP2000, and AC500's
+    # other WIDE_UINT_FIELDS members (ac_o_e_total, g_o_e_total, ...)
+    # aren't known to have this problem.
+    if device_name == "AC500" and name in AC500_SINGLE_REGISTER_OVERRIDES:
+        return "INT16" if upper == "INT" else "UINT16"
+
     if upper == "INT":
         return "INT32" if name in WIDE_INT_FIELDS else "INT16"
 
@@ -35,6 +49,13 @@ def get_type(t: str, name: str):
         return "UINT32"
 
     return "UINT16"
+
+
+AC500_SINGLE_REGISTER_OVERRIDES = {
+    "ac_o_p_total",
+    "pv_i_p_total",
+    "g_i_p_total",
+}
 
 
 # bluetti-registers documents each of these as spanning 2 registers
@@ -192,7 +213,7 @@ for d in schema:
 
         fields += f"""
     {f["name"]} = field(
-        t=FieldType.{get_type(str(f["content"]), f["name"])},
+        t=FieldType.{get_type(str(f["content"]), f["name"], name)},
         address={f["address"]},"""
 
         # "writeable" is a real protocol fact bluetti-registers' own schema
