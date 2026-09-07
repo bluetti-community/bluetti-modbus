@@ -7,9 +7,9 @@ from ..fields import FieldType, dotted_version_2part, field, nibble
 
 class AC500(BluettiDevice):
     register_ranges = (
-        (50002, 50003),
-        (50004, 50005),
-        (50006, 50007),
+        (50002, 50002),
+        (50004, 50004),
+        (50006, 50006),
         (50012, 50013),
         (50018, 50019),
         (50022, 50022),
@@ -39,22 +39,19 @@ class AC500(BluettiDevice):
     )
 
     ac_o_p_total = field(
-        t=FieldType.UINT32,
+        t=FieldType.UINT16,
         address=50002,
         unit="W",
-        count=2,
     )
     pv_i_p_total = field(
-        t=FieldType.UINT32,
+        t=FieldType.UINT16,
         address=50004,
         unit="W",
-        count=2,
     )
     g_i_p_total = field(
-        t=FieldType.INT32,
+        t=FieldType.INT16,
         address=50006,
         unit="W",
-        count=2,
     )
     ac_o_e_total = field(
         t=FieldType.UINT32,
