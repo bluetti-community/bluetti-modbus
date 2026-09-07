@@ -1,6 +1,6 @@
 import requests
 
-tag = "0.0.39"
+tag = "0.0.40"
 url = f"https://github.com/bluetti-community/bluetti-registers/releases/download/{tag}/modbus-tcp.json"
 
 output = "src/bluetti_modbus_lib/devices/"
@@ -221,12 +221,17 @@ for d in schema:
         # probatio validator instead of a bare True, so an out-of-range
         # write is rejected before it ever reaches the device.
         #
-        # Balco260 only for now, even though EP2000 shares (and adds to)
-        # the same writeable fields in the schema - EP2000 is still
+        # Balco260 and AC500 only for now, even though EP2000 shares (and
+        # adds to) the same writeable fields in the schema - EP2000 is still
         # spec-derived, not verified against real hardware (see the
         # README), and writing to an unconfirmed device's control
         # registers is a materially bigger risk than reading from it.
-        if name == "Balco260" and f.get("writeable"):
+        # AC500's ac_o_switch/dc_o_switch are each independently confirmed
+        # writable on real hardware by a different tester (see
+        # bluetti-official/bluetti-modbus-tcp-slave#5) - g_i_switch isn't
+        # (confirmed non-functional there instead), so it no longer carries
+        # writeable: true in the schema at all.
+        if name in ("Balco260", "AC500") and f.get("writeable"):
             if "num_min" in f and "num_max" in f:
                 uses_range = True
                 fields += (
