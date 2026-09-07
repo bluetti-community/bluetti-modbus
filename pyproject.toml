@@ -21,7 +21,16 @@ classifiers = [
 # README.md. This package does not create or own a Modbus transport itself.
 # probatio validates writable fields' bounds (num_min/num_max from
 # bluetti-registers' schema) - see import.py's Range()-based writable=.
-dependencies = ["modbus-connection>=4.10.0", "probatio>=0.11.4"]
+#
+# !=4.11.0: that release's GitHub tag points at a stale side branch
+# (poll-example-resends-timeouts), 8 commits behind main at the time -
+# confirmed on PyPI itself: 4.11.0's own tmodbus extra requires only
+# tmodbus>=0.5.1, where 4.10.0 (and every commit since) requires >=0.6.1.
+# Nothing we call is among what's missing (ModbusUnit.disconnect(),
+# get_comm_event_counter()'s ready flag, FC08/FC0B/FC0C), but a release
+# that's confirmed to ship regressed metadata isn't one to resolve to by
+# default. Safe to drop this exclusion once upstream re-tags or yanks it.
+dependencies = ["modbus-connection>=4.10.0,!=4.11.0", "probatio>=0.11.4"]
 
 [project.optional-dependencies]
 # Concrete backend for the bluetti-modread CLI (pip install bluetti-modbus[cli]).
@@ -29,9 +38,12 @@ dependencies = ["modbus-connection>=4.10.0", "probatio>=0.11.4"]
 # testing against real Balco260/S Meter hardware: it correctly reports a
 # corrupted/truncated reply as ModbusProtocolError, where pymodbus reports
 # the identical event as a generic timeout (see #29 and CONTRIBUTING.md).
-cli = ["modbus-connection[tmodbus]>=4.10.0"]
+# tmodbus pinned explicitly (not just via modbus-connection[tmodbus]'s own
+# extra) so this stays correct even against the broken 4.11.0 release above,
+# whose own extra under-declares tmodbus>=0.5.1 instead of >=0.6.1.
+cli = ["modbus-connection[tmodbus]>=4.10.0,!=4.11.0", "tmodbus[async-serial]>=0.6.1"]
 # The previous default backend, still available for anyone who needs it.
-cli-pymodbus = ["modbus-connection[pymodbus]>=4.10.0"]
+cli-pymodbus = ["modbus-connection[pymodbus]>=4.10.0,!=4.11.0"]
 
 [project.urls]
 Homepage = "https://github.com/bluetti-community/bluetti-modbus"
