@@ -1,5 +1,6 @@
 from .ac500 import AC500 as AC500
 from .balco260 import Balco260 as Balco260
+from .balco500 import Balco500 as Balco500
 from .battery_pack import AGGREGATE_SLAVE_ID as AGGREGATE_SLAVE_ID
 from .battery_pack import AGGREGATE_SUMMARY_FIELDS as AGGREGATE_SUMMARY_FIELDS
 from .battery_pack import MAX_BATTERY_PACKS as MAX_BATTERY_PACKS

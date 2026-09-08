@@ -29,6 +29,12 @@ Supported out of the box:
 
 - **Balco 260**: battery voltage/current/SoC/SoH/cycle count, per-string PV,
   grid import/export, AC output, inverter status/fault/warning, and more
+- **Balco 500**: the exact same register set as Balco 260 - BLUETTI's own
+  official register spec files both under the same generic "BalcoXX" tab,
+  not a Balco260-specific one. Not yet verified against real Balco 500
+  hardware (no unit exists in this community yet), so every writable field
+  (switches, SoC thresholds) stays read-only here, same policy as EP2000
+  below
 - **EP2000**: the same Balco 260 register set plus a rated-capacity and
   EMS/grid-export control block - sourced from BLUETTI's own official
   register spec, not yet verified against real EP2000 hardware
@@ -234,8 +240,9 @@ follow the naming convention documented in
 Two different things in this library talk Modbus, for two different
 audiences:
 
-- `Balco260`, `EP2000`, and `SMeter` (`bluetti_modbus_lib.devices`) are the
-  integration surface: each takes a `ModbusUnit` supplied by the caller,
+- `AC500`, `Balco260`, `Balco500`, `EP2000`, and `SMeter`
+  (`bluetti_modbus_lib.devices`) are the integration surface: each takes a
+  `ModbusUnit` supplied by the caller,
   built from whichever backend and connection the caller already manages.
   This is what an application - a Home Assistant integration, for example -
   should build on.

@@ -1,4 +1,4 @@
-from bluetti_modbus_lib.devices import AC500, EP2000, Balco260, SMeter
+from bluetti_modbus_lib.devices import AC500, EP2000, Balco260, Balco500, SMeter
 from bluetti_modbus_lib.devices.getter import get_device
 
 
@@ -8,6 +8,37 @@ def test_get_device_ac500():
 
 def test_get_device_balco260():
     assert isinstance(get_device("balco260"), Balco260)
+
+
+def test_get_device_balco500():
+    assert isinstance(get_device("balco500"), Balco500)
+
+
+def test_balco500_field_set_is_identical_to_balco260():
+    # Unlike EP2000 (a superset) or AC500 (a narrower, independently
+    # confirmed set), Balco 500 is documented under the exact same "BalcoXX"
+    # tab as Balco260 in BLUETTI's own official register spec - not a
+    # separate section. Every field name and address should match exactly,
+    # not just overlap.
+    balco260 = get_device("balco260")
+    balco500 = get_device("balco500")
+    assert balco260 is not None
+    assert balco500 is not None
+
+    assert set(balco260.field_names()) == set(balco500.field_names())
+    for name in balco260.field_names():
+        assert balco500.get_field(name).address == balco260.get_field(name).address
+
+
+def test_balco500_writable_fields_stay_read_only_pending_confirmation():
+    # Same policy as EP2000: unconfirmed against real hardware, so nothing
+    # here is marked writable yet, even though the schema documents these
+    # as writable on Balco260 (see import.py's own device-name gate).
+    device = get_device("balco500")
+    assert device is not None
+
+    for name in ("ac_o_switch", "g_i_switch", "g_o_switch", "b_soc_low", "b_soc_high"):
+        assert device.get_field(name).writable is False
 
 
 def test_get_device_ep2000():
