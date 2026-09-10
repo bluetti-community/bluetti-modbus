@@ -81,9 +81,16 @@ class BluettiDevice(Component):
           needed - so an immediate retry here avoids losing the whole poll
           cycle to what is, in practice, usually a one-off glitch. Retried
           up to ``_TRANSIENT_RETRY_COUNT`` times (see its own docstring for
-          why this isn't just one any more) - a genuinely dead connection
-          still fails, just later, at up to ``_TRANSIENT_RETRY_COUNT + 1``x
-          the timeout budget.
+          why this isn't just one any more). If every one of those retries
+          still hits the same kind of error, that's no longer "a one-off
+          glitch" - retrying further on the same connection can't help a
+          link the device's own Modbus TCP stack has gotten stuck on (this
+          stack is known to become unresponsive under load - see
+          ``BluettiModbusClient.read``'s own comment). The connection is
+          dropped right before this last failure is raised, so whichever
+          request follows (a caller's own outer retry, or simply the next
+          poll cycle) opens a fresh one instead of repeating into the same
+          stuck link.
 
         Anything else (e.g. an illegal address/function code) is a permanent
         condition retrying can't fix, and is not retried here - callers that
@@ -116,6 +123,7 @@ class BluettiDevice(Component):
                 ):
                     raise
                 if attempt == _TRANSIENT_RETRY_COUNT - 1:
+                    await self.modbus_unit.disconnect()
                     raise
 
     async def _async_update_with_timeout(self) -> None:

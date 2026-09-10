@@ -169,7 +169,7 @@ async def test_async_update_with_retry_stops_retrying_on_a_non_transient_error_m
 
 @pytest.mark.asyncio
 async def test_async_update_with_retry_gives_up_after_a_third_corrupted_frame():
-    device = _balco260()
+    device, mock_conn = _balco260_with_unit()
     corrupted = BluettiModbusConnectionError("read_holding_registers(53001, 12): ...")
     corrupted.__cause__ = ModbusProtocolError(
         "Expected response to start with function code and byte count"
@@ -177,11 +177,55 @@ async def test_async_update_with_retry_gives_up_after_a_third_corrupted_frame():
     device.async_update = AsyncMock(  # type: ignore[method-assign]
         side_effect=[corrupted, corrupted, corrupted]
     )
+    unit = mock_conn.for_unit(1)
 
-    with pytest.raises(BluettiModbusConnectionError):
+    with (
+        patch.object(unit, "disconnect", AsyncMock()) as disconnect,
+        pytest.raises(BluettiModbusConnectionError),
+    ):
         await device.async_update_with_retry()
 
     assert device.async_update.await_count == 3
+    # Every retry hit the same kind of error - no reason left to believe
+    # this connection will recover on its own, so it's dropped here rather
+    # than left for the next attempt to get stuck on too.
+    disconnect.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_async_update_with_retry_does_not_disconnect_after_recovering():
+    # The far more common case: a transient error that DOES recover within
+    # the retry budget must not pay for a reconnect it doesn't need.
+    device, mock_conn = _balco260_with_unit()
+    corrupted = BluettiModbusConnectionError("read_holding_registers(53001, 12): ...")
+    corrupted.__cause__ = ModbusProtocolError(
+        "Expected response to start with function code and byte count"
+    )
+    device.async_update = AsyncMock(side_effect=[corrupted, None])  # type: ignore[method-assign]
+    unit = mock_conn.for_unit(1)
+    with patch.object(unit, "disconnect", AsyncMock()) as disconnect:
+        await device.async_update_with_retry()
+
+    disconnect.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_async_update_with_retry_does_not_disconnect_for_a_busy_device():
+    # AcknowledgeError/ServerDeviceBusyError mean the device answered - it's
+    # just not ready yet. That's a different signal from a stuck link, and
+    # disconnecting wouldn't help a device that's already responding.
+    device, mock_conn = _balco260_with_unit()
+    device.async_update = AsyncMock(  # type: ignore[method-assign]
+        side_effect=[AcknowledgeError(5), AcknowledgeError(5)]
+    )
+    unit = mock_conn.for_unit(1)
+    with (
+        patch.object(unit, "disconnect", AsyncMock()) as disconnect,
+        pytest.raises(AcknowledgeError),
+    ):
+        await device.async_update_with_retry()
+
+    disconnect.assert_not_awaited()
 
 
 @pytest.mark.asyncio
