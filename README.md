@@ -229,6 +229,10 @@ b_t_avg: 0 °C
 b_i_e: 23420 Wh
 ```
 
+The output ends with the number of Modbus block reads the whole update actually took (e.g.
+`15 Modbus block reads`) - a quick way to notice if a device's fields aren't pooling into
+reads as efficiently as expected.
+
 Note the two energy fields above: most cumulative energy fields
 (`ac_o_e_total`, etc.) are reported in kWh, but the battery charge/discharge
 ones (`b_i_e`, `b_o_e`) are in Wh - both correct as reported by the device,
