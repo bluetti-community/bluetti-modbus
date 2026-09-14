@@ -22,15 +22,17 @@ classifiers = [
 # probatio validates writable fields' bounds (num_min/num_max from
 # bluetti-registers' schema) - see import.py's Range()-based writable=.
 #
-# !=4.11.0: that release's GitHub tag points at a stale side branch
-# (poll-example-resends-timeouts), 8 commits behind main at the time -
-# confirmed on PyPI itself: 4.11.0's own tmodbus extra requires only
-# tmodbus>=0.5.1, where 4.10.0 (and every commit since) requires >=0.6.1.
-# Nothing we call is among what's missing (ModbusUnit.disconnect(),
-# get_comm_event_counter()'s ready flag, FC08/FC0B/FC0C), but a release
-# that's confirmed to ship regressed metadata isn't one to resolve to by
-# default. Safe to drop this exclusion once upstream re-tags or yanks it.
-dependencies = ["modbus-connection>=4.10.0,!=4.11.0", "probatio>=0.11.4"]
+# >=4.11.1: BluettiDevice.async_update_with_retry() drops the link after a
+# run of identical transient failures (see its docstring), and before
+# 4.11.1 ModbusUnit.disconnect()/close() tore the client down with no
+# regard for a request still on the wire - so that recovery could cut the
+# very reply it was waiting on. 4.11.1 holds the pacer's lock over the
+# teardown (bounded at half a second) so an answer about to land is
+# delivered and only a wedged request is cut. It also serializes requests
+# even with message spacing disabled. 4.11.0 itself was tagged from a stale
+# side branch (its tmodbus extra under-declared tmodbus>=0.5.1) and is now
+# yanked on PyPI, so the floor being above it is all the exclusion needed.
+dependencies = ["modbus-connection>=4.11.1", "probatio>=0.11.4"]
 
 [project.optional-dependencies]
 # Concrete backend for the bluetti-modread CLI (pip install bluetti-modbus[cli]).
@@ -39,11 +41,11 @@ dependencies = ["modbus-connection>=4.10.0,!=4.11.0", "probatio>=0.11.4"]
 # corrupted/truncated reply as ModbusProtocolError, where pymodbus reports
 # the identical event as a generic timeout (see #29 and CONTRIBUTING.md).
 # tmodbus pinned explicitly (not just via modbus-connection[tmodbus]'s own
-# extra) so this stays correct even against the broken 4.11.0 release above,
-# whose own extra under-declares tmodbus>=0.5.1 instead of >=0.6.1.
-cli = ["modbus-connection[tmodbus]>=4.10.0,!=4.11.0", "tmodbus[async-serial]>=0.6.1"]
+# extra): 4.10.0's fix for FC08 framing needs tmodbus>=0.6.1, and stating
+# it here keeps that true whatever an upstream extra happens to declare.
+cli = ["modbus-connection[tmodbus]>=4.11.1", "tmodbus[async-serial]>=0.6.1"]
 # The previous default backend, still available for anyone who needs it.
-cli-pymodbus = ["modbus-connection[pymodbus]>=4.10.0,!=4.11.0"]
+cli-pymodbus = ["modbus-connection[pymodbus]>=4.11.1"]
 
 [project.urls]
 Homepage = "https://github.com/bluetti-community/bluetti-modbus"
