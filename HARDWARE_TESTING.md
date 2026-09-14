@@ -140,6 +140,23 @@ app, starting/stopping charging) - a register that changes in response is a stro
 found the right one, the way `bluetti-community/bluetti-modbus-tcp-slave#5` found `dc_o_switch` at
 address 57005 by toggling DC output and watching which register flipped.
 
+**Keep scans to one register per request.** The template above does, and that is deliberate.
+On a real Balco 260 (2026-09-14, 57 addresses outside its documented range) the device
+answered every *1-register* read of an address it doesn't serve with a clean "illegal data
+address" exception - 57 out of 57 - while every *2-register* read of one that was tried (7 out
+of 7) got **no reply at all**. The link wasn't broken: the same device answered register 50001 immediately after each
+of those silences. So a timeout while scanning unknown addresses is how this firmware says
+"not here" to a multi-register request, not a sign the device is stuck - and a scan that reads
+two registers at a time will look like a string of link failures while learning nothing. Read
+a 32-bit field as two separate 1-register reads and combine the words yourself: the lower
+address holds the low word (`value = word[addr] + word[addr + 1] * 65536`), which is what
+every 32-bit field in this library assumes and what BLUETTI's own register list calls
+"little-end storage".
+
+This is also why "no response" in the template's output is worth splitting when you report it:
+a Modbus exception means the address is confirmed unserved; a timeout means you probably asked
+for more than one register.
+
 ## 5. Don't have this exact model? Adapt a similar one
 
 If your device shares a protocol family with one already supported (BLUETTI's AC500 and Balco260

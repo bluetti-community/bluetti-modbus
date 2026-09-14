@@ -257,6 +257,18 @@ audiences:
   should depend on - doing so would open a second, competing connection to
   the device instead of sharing one.
 
+One device behaviour shapes every read plan here, so it's worth knowing
+before changing one: a Balco 260 answers a 1-register read of an address it
+doesn't serve with an "illegal data address" exception, but a multi-register
+read touching such an address with **no reply at all** - a timeout, with the
+device otherwise alive (confirmed on real hardware, 2026-09-14: 57 of 57
+unserved addresses answered the 1-register way, 7 of 7 went silent the
+2-register way). That's why `Balco260` declares a narrow
+`max_span`, why `AC500` reads every field as its own isolated block, and why
+probing for an optional block (modbus-connection's `read_optional()`, or a
+scan of your own) only tells you anything if it never spans an address the
+device might not serve - see `HARDWARE_TESTING.md`, section 4.
+
 ## Related projects
 
 This library is the Modbus layer for Home Assistant integrations built on
