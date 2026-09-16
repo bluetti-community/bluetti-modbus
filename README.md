@@ -279,9 +279,8 @@ protocol error even though the write applied, so `BluettiDevice.write()`
 recognises such a confirmation and treats it as success, logging the echoed
 address - at debug when it is the one on file for that register (see
 `_INTERNAL_WRITE_ADDRESS` in `base_devices/bluetti_device.py`), at warning
-when it isn't, which is the signal to add or correct an entry. BLUETTI has
-confirmed the bug and plans the fix for their next firmware release (expected
-October 2026). The internal space itself is not served over Modbus TCP: a
+when it isn't, which is the signal to add or correct an entry. Reported to
+BLUETTI. The internal space itself is not served over Modbus TCP: a
 1-register read of any of 54 of its addresses is an illegal data address
 (confirmed on real hardware, 2026-09-16) - the translation exists for the
 documented registers only, so there is nothing to gain by addressing it
