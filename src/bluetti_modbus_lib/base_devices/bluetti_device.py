@@ -1,4 +1,6 @@
 import asyncio
+import logging
+import struct
 from collections.abc import KeysView
 from typing import Any, override
 
@@ -12,6 +14,34 @@ from modbus_connection.exceptions import (
 from modbus_connection.model import Component, RegisterField
 
 from ..exceptions import BluettiModbusConnectionError, BluettiModbusError
+
+_LOGGER = logging.getLogger(__name__)
+
+# Modbus function code 0x06, "Write Single Register" - see BluettiDevice.write.
+_WRITE_SINGLE_REGISTER_FUNCTION_CODE = 6
+
+# The address a Balco 260 echoes in a Write Single Register confirmation is
+# not the Modbus address that was written to but the same setting's address
+# in the device's own internal register space - the one the BLUETTI app
+# speaks ("ProtocolAddrV2" in the app's code, tabulated by
+# https://github.com/mikemccllstr/voltkeeper/blob/main/docs/source/protocol/modbus-registers.md
+# from app v3.0.9). The Modbus TCP slave evidently translates the write to
+# an internal one and builds the confirmation from that, so a strict Modbus
+# client sees a confirmation that doesn't match its request. Keyed by the
+# Modbus holding-register address written to. Every Balco 260 entry was
+# captured on real hardware (2026-09-16, all five of its writable
+# registers, each matching the table); 57005 exists on AC500 only and is
+# the table's entry for that setting, predicted from the same pattern
+# until seen on a real AC500 - see BluettiDevice.write for how an echo
+# that isn't on file is reported.
+_INTERNAL_WRITE_ADDRESS: dict[int, int] = {
+    57001: 2011,  # ac_o_switch - AC_SWITCH - captured on a real Balco 260
+    57005: 2012,  # dc_o_switch - DC_SWITCH - predicted (AC500 only)
+    57009: 2207,  # g_i_switch - CTRL_GRID - captured on a real Balco 260
+    57010: 2208,  # g_o_switch - CTRL_FEED - captured on a real Balco 260
+    57016: 2022,  # b_soc_low - SYS_LOW_POWER - captured on a real Balco 260
+    57017: 2023,  # b_soc_high - SYS_HIGH_POWER - captured on a real Balco 260
+}
 
 # How many times a transient corrupted/truncated-reply error gets retried
 # before giving up - see async_update_with_retry's own docstring. Bumped
@@ -44,6 +74,57 @@ class BluettiDevice(Component):
     def values(self) -> dict[str, Any]:
         """A copy of all field values decoded on the last update."""
         return dict(self._values)
+
+    @override
+    async def write(self, key: str, value: Any) -> None:
+        """Write one writable field, accepting BLUETTI's own confirmation of it.
+
+        A Balco 260 confirms a Write Single Register with the right function
+        code and value but the setting's address in its internal register
+        space instead of the Modbus one - see _INTERNAL_WRITE_ADDRESS. The
+        write has applied every time this was captured (the official BLUETTI
+        app shows the new value), so such a confirmation is treated as
+        success here rather than surfacing as the protocol error a strict
+        client makes of it. Which address was echoed is logged at debug when
+        it is the one on file for that register and at warning when it
+        isn't - the table is confirmed on a Balco 260, so a different echo is
+        worth reporting (a new device, or a new firmware) but not worth
+        failing a write the device did apply. Anything else - a different
+        function code or value, or a response shaped unlike a Write Single
+        Register confirmation - is a real failure and is raised unchanged.
+        """
+        try:
+            await super().write(key, value)
+        except ModbusProtocolError as err:
+            field = self.get_field(key)
+            echoed = _write_confirmation_address(err)
+            if (
+                field is None
+                or echoed is None
+                or echoed[1] != _written_word(field, value)
+            ):
+                raise
+            expected = _INTERNAL_WRITE_ADDRESS.get(field.address)
+            if echoed[0] == expected:
+                _LOGGER.debug(
+                    "Write to %s (%d) confirmed at internal register %d, as on file",
+                    key,
+                    field.address,
+                    echoed[0],
+                )
+                return
+            _LOGGER.warning(
+                "Write to %s (%d) applied; the device confirmed it at internal "
+                "register %d, %s - please report this echo so bluetti-modbus can "
+                "record it. %s",
+                key,
+                field.address,
+                echoed[0],
+                f"not the {expected} on file for this register"
+                if expected is not None
+                else "which is not on file for this register",
+                err,
+            )
 
     @override
     async def async_update(self, *, notify: bool = True) -> None:
@@ -156,3 +237,35 @@ class BluettiDevice(Component):
             raise
         except (ModbusError, TimeoutError) as err:
             raise BluettiModbusConnectionError(str(err)) from err
+
+
+def _write_confirmation_address(err: ModbusProtocolError) -> tuple[int, int] | None:
+    """The (address, value) a mismatched Write Single Register confirmation
+    carries, or None if the response isn't one - see BluettiDevice.write.
+
+    modbus_connection wraps tmodbus's InvalidResponseError, which keeps the
+    raw response, as the ModbusProtocolError's cause; a 0x06 confirmation is
+    exactly function code, address, value, five bytes big-endian.
+    """
+    response = getattr(err.__cause__, "response_bytes", None)
+    if not isinstance(response, bytes) or len(response) != 5:
+        return None
+    function_code: int
+    address: int
+    value: int
+    function_code, address, value = struct.unpack(">BHH", response)
+    if function_code != _WRITE_SINGLE_REGISTER_FUNCTION_CODE:
+        return None
+    return address, value
+
+
+def _written_word(field: RegisterField[Any], value: Any) -> int | None:
+    """The single register word modbus_connection put on the wire for value,
+    or None when the write couldn't have been a single register - the same
+    validator-then-encode steps its write_register_field takes, minus the
+    scale register none of BLUETTI's writable fields has.
+    """
+    if callable(field.writable):
+        value = field.writable(value)
+    words = field.encode(value)
+    return words[0] if len(words) == 1 else None
