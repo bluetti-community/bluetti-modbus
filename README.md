@@ -269,6 +269,18 @@ probing for an optional block (modbus-connection's `read_optional()`, or a
 scan of your own) only tells you anything if it never spans an address the
 device might not serve - see `HARDWARE_TESTING.md`, section 4.
 
+A second one shapes writes: a Balco 260 confirms a Write Single Register
+(function 0x06) with the right function code and value but **not the Modbus
+address it was asked to write** - the same setting's address in the device's
+own internal register space, the one the BLUETTI app speaks (57016 → 2022,
+57009 → 2207, and so on; confirmed on real hardware for all five of its
+writable registers, 2026-09-16). A strict Modbus client reports that as a
+protocol error even though the write applied, so `BluettiDevice.write()`
+recognises such a confirmation and treats it as success, logging the echoed
+address - at debug when it is the one on file for that register (see
+`_INTERNAL_WRITE_ADDRESS` in `base_devices/bluetti_device.py`), at warning
+when it isn't, which is the signal to add or correct an entry.
+
 ## Related projects
 
 This library is the Modbus layer for Home Assistant integrations built on

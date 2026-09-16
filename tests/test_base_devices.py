@@ -1,4 +1,6 @@
 import asyncio
+import logging
+import struct
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -387,3 +389,137 @@ async def test_ac_o_switch_is_writable_without_a_bound():
     await device.write("ac_o_switch", 1)
 
     assert mock_conn.for_unit(1).holding[57001] == 1
+
+
+def _mismatched_confirmation(
+    function_code: int, address: int, value: int
+) -> ModbusProtocolError:
+    """A ModbusProtocolError chained from tmodbus's InvalidResponseError, the
+    shape modbus_connection raises when a Write Single Register confirmation
+    doesn't match the request - carrying the device's actual response bytes.
+    """
+    from tmodbus.exceptions import InvalidResponseError
+
+    cause = InvalidResponseError(
+        "Expected response to match request",
+        response_bytes=struct.pack(">BHH", function_code, address, value),
+    )
+    err = ModbusProtocolError("write_register(...): Expected response to match request")
+    err.__cause__ = cause
+    return err
+
+
+def _balco260_whose_writes_confirm_as(
+    function_code: int, address: int, value: int
+) -> Balco260:
+    device = _balco260()
+    device.modbus_unit.write_register = AsyncMock(  # type: ignore[method-assign]
+        side_effect=_mismatched_confirmation(function_code, address, value)
+    )
+    return device
+
+
+@pytest.mark.asyncio
+async def test_write_accepts_a_confirmation_at_the_internal_address_on_file(caplog):
+    # Captured on a real Balco 260: the device confirms a write to 57016
+    # (b_soc_low) at 2022, its own internal address for that setting - see
+    # _INTERNAL_WRITE_ADDRESS. The write applied; the confirmation is just
+    # in the device's address space, so it is success, logged at debug.
+    device = _balco260_whose_writes_confirm_as(function_code=6, address=2022, value=20)
+
+    with caplog.at_level(logging.DEBUG, logger="bluetti_modbus_lib"):
+        await device.write("b_soc_low", 20)  # must not raise
+
+    assert "b_soc_low (57016) confirmed at internal register 2022" in caplog.text
+    assert not [r for r in caplog.records if r.levelno >= logging.WARNING]
+
+
+@pytest.mark.asyncio
+async def test_write_accepts_but_reports_a_confirmation_at_an_address_not_on_file(
+    caplog,
+):
+    # The table is confirmed on a Balco 260, so a different echo is news
+    # worth a warning (a new firmware, another device) - but the function
+    # code and value still say the device applied this write, so it is not
+    # a failure.
+    device = _balco260_whose_writes_confirm_as(function_code=6, address=2999, value=1)
+
+    with caplog.at_level(logging.WARNING, logger="bluetti_modbus_lib"):
+        await device.write("g_o_switch", 1)  # must not raise
+
+    assert "g_o_switch (57010) applied" in caplog.text
+    assert "internal register 2999, not the 2208 on file" in caplog.text
+
+
+@pytest.mark.asyncio
+async def test_write_accepts_but_reports_a_confirmation_for_a_register_without_an_entry(
+    caplog,
+):
+    # A field that is writable but whose Modbus address has no entry in the
+    # table at all (none of Balco 260's - so exercised through the table
+    # itself, missing the entry for this register).
+    device = _balco260_whose_writes_confirm_as(function_code=6, address=1234, value=1)
+
+    with (
+        patch.dict(
+            "bluetti_modbus_lib.base_devices.bluetti_device._INTERNAL_WRITE_ADDRESS",
+            {},
+            clear=True,
+        ),
+        caplog.at_level(logging.WARNING, logger="bluetti_modbus_lib"),
+    ):
+        await device.write("ac_o_switch", 1)  # must not raise
+
+    assert "internal register 1234, which is not on file" in caplog.text
+
+
+@pytest.mark.asyncio
+async def test_write_reraises_when_the_confirmed_value_differs():
+    # Same function code, same internal address, but a different value than
+    # the one written - not the known confirmation quirk, a real failure.
+    device = _balco260_whose_writes_confirm_as(function_code=6, address=2022, value=21)
+
+    with pytest.raises(ModbusProtocolError):
+        await device.write("b_soc_low", 20)
+
+
+@pytest.mark.asyncio
+async def test_write_reraises_when_the_function_code_differs():
+    device = _balco260_whose_writes_confirm_as(function_code=3, address=2022, value=20)
+
+    with pytest.raises(ModbusProtocolError):
+        await device.write("b_soc_low", 20)
+
+
+@pytest.mark.asyncio
+async def test_write_reraises_when_the_response_is_not_a_single_register_confirmation():
+    device = _balco260()
+    err = ModbusProtocolError("write_register(...): Expected response to match request")
+    err.__cause__ = ValueError("no response_bytes here")
+    device.modbus_unit.write_register = AsyncMock(side_effect=err)  # type: ignore[method-assign]
+
+    with pytest.raises(ModbusProtocolError):
+        await device.write("b_soc_low", 20)
+
+
+@pytest.mark.asyncio
+async def test_write_reraises_when_the_response_has_the_wrong_length():
+    from tmodbus.exceptions import InvalidResponseError
+
+    device = _balco260()
+    err = ModbusProtocolError("write_register(...): Expected response to match request")
+    err.__cause__ = InvalidResponseError("short", response_bytes=b"\x06\x07")
+    device.modbus_unit.write_register = AsyncMock(side_effect=err)  # type: ignore[method-assign]
+
+    with pytest.raises(ModbusProtocolError):
+        await device.write("b_soc_low", 20)
+
+
+@pytest.mark.asyncio
+async def test_write_reraises_for_a_field_that_does_not_exist():
+    # Component.write raises AttributeError for an unknown key before any
+    # Modbus traffic; the override must not get in the way of that.
+    device = _balco260()
+
+    with pytest.raises(AttributeError):
+        await device.write("not_a_real_field", 1)
