@@ -47,6 +47,16 @@ Supported out of the box:
   support directly, unlike every other device here
 - **S Meter**: Bluetti's AC meter/CT accessory, confirmed against real
   hardware
+- **AC200L / AC200L2**: a portable power station, not one of BLUETTI's
+  Modbus-documented grid-tie/hybrid-inverter models - `devices/ac200l.py`
+  isn't generated from `bluetti-registers` like the devices above, it's
+  hand-derived from AC500's own register set and corrected/confirmed
+  against real AC200L2 hardware by cross-referencing this library's raw
+  register reads against the same physical unit's simultaneous BLE
+  readings (see that file's own module docstring for exactly what was
+  confirmed vs. inferred). Grid frequency and total battery voltage needed
+  a different scale than AC500 uses for the same addresses; AC/DC output
+  switches are confirmed writable
 
 Field names, units, and register addresses come from
 [bluetti-registers][bluetti-registers] - `devices/balco260.py` is generated
