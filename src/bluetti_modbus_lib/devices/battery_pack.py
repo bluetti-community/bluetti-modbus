@@ -26,8 +26,9 @@ MAX_BATTERY_PACKS = 5
 # Balco260 the same day agrees as far as one pack can: 41 serves the "Each
 # Pack Base Information" block as zeros (an empty expansion slot - that
 # device's own built-in pack is read at slave 1), while 2 and 3 serve it as
-# zeros *alongside* the inverter status register, i.e. they look like
-# inverter slots, not pack slots. Not yet confirmed on multi-pack hardware:
+# zeros *alongside* the per-inverter PV charging power register (50219, the
+# one register of the "(Single)" inverter block a Balco260 does populate),
+# i.e. they look like inverter slots, not pack slots. Not yet confirmed on multi-pack hardware:
 # that needs a Balco260 with two or more BC260 packs read at 41, 42, ...
 # (bluetti-community/bluetti-modbus#55).
 EXPANSION_PACK_FIRST_SLAVE_ID = 41
