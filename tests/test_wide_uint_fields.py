@@ -16,12 +16,15 @@ _WIDE_FIELDS = (
     "b_protect",
     "b_alarm_portable",
 )
+# Balco260 no longer declares the "(Single)" inverter block except
+# pv_i_p_local - its firmware never populates the rest (bluetti-registers#30).
+_WIDE_FIELDS_BALCO260 = ("pv_i_p_local", "b_protect", "b_alarm_portable")
 
 
 def test_balco260_wide_uint_fields_read_both_registers():
     device = Balco260(None)
 
-    for name in _WIDE_FIELDS:
+    for name in _WIDE_FIELDS_BALCO260:
         field = device.get_field(name)
         assert field is not None, name
         assert field.count == 2, f"{name} should span 2 registers"
@@ -60,14 +63,14 @@ def test_ep2000_only_sunspec_style_fields_are_left_untouched():
         assert field.count == 1, f"{name} was widened unexpectedly"
 
 
-def test_g_i_p_local_decodes_both_registers_little_endian():
+def test_pv_i_p_local_decodes_both_registers_little_endian():
     # Direct proof the fix produces the right number, not just the right
     # count: a value that only fits across 2 registers (100_000 W - clearly
     # synthetic, but demonstrates the low+high combination that a value
     # under 65536 could never distinguish from the old, silently-truncated
     # behaviour).
     device = Balco260(None)
-    field = device.get_field("g_i_p_local")
+    field = device.get_field("pv_i_p_local")
     assert field is not None
 
     low = 100_000 & 0xFFFF

@@ -228,7 +228,6 @@ g_i_f: 50.0 Hz
 b_v: 27.1 V
 b_soc: 100 %
 b_cycle_count: 8
-b_t_avg: 0 °C
 b_i_e: 23420 Wh
 ```
 
