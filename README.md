@@ -173,27 +173,30 @@ print(summary.values["d_num_battery_packs"], "packs")
 
 Pack 1's own per-pack data (`b_soc`, `b_v`, serial number, etc.) is already
 part of the main `Balco260` device's own fields - reading its own Modbus
-slave address covers pack 1. BLUETTI confirmed by email that packs 2 and up
-answer the same way, on their *own* slave address (2, 3, ...) - `battery_pack()`
-builds a `Balco260` restricted to just the "Each Pack Base Information"
-block, at a given pack's slave address:
+slave address covers pack 1. Each BC260 expansion pack answers the same
+"Each Pack Base Information" block at its *own* slave address, and those
+addresses start at **41** (`EXPANSION_PACK_FIRST_SLAVE_ID`, per BLUETTI):
+pack 2 is at 41, pack 3 at 42, and so on - `pack_slave_id()` does that
+arithmetic, and `battery_pack()` builds a `Balco260` restricted to just that
+block at the given address:
 
 ```python
-from bluetti_modbus_lib import battery_pack
+from bluetti_modbus_lib import battery_pack, pack_slave_id
 
-pack2 = battery_pack(connection, 2)
+pack2 = battery_pack(connection, pack_slave_id(2))
 await pack2.async_update_with_retry()
 print(pack2.values["b_soc"], "%")
 ```
 
 `PACK_INFO_FIELDS` lists the field names this covers. **Not yet confirmed
-against real hardware beyond `b_soc`/`b_soh`**: testing on a Balco260 with 3
-real, app-confirmed BC260 packs found every other slave address (2 and up)
-reading a clean, error-free 0 for this block - identical to a second
-Balco260 with zero packs attached, i.e. not distinguishing a populated pack
-from an empty one the way `aggregate_pack_summary()` reliably does. Treat
-`battery_pack()` as unconfirmed beyond the two fields BLUETTI explicitly
-named until that's resolved.
+against multi-pack hardware**: an earlier reading of BLUETTI's description
+had the packs at slave 2, 3, ..., and testing on a Balco260 with 3 real,
+app-confirmed BC260 packs found those addresses reading a clean, error-free
+0 for the whole block - the same as a Balco260 with no pack attached. A
+slave-id sweep on a one-pack Balco260 agrees with 41 as far as one pack
+can (41 serves the block, as zeros - an empty slot); a Balco260 with two or
+more packs read at 41, 42, ... is what settles it
+(bluetti-community/bluetti-modbus#55).
 
 AC500 also has a `d_num_battery_packs` field, but real-hardware testing
 found it means something different there: it stays at a fixed value (the

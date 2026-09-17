@@ -5,10 +5,12 @@ from bluetti_modbus_lib.devices import Balco260
 from bluetti_modbus_lib.devices.battery_pack import (
     AGGREGATE_SLAVE_ID,
     AGGREGATE_SUMMARY_FIELDS,
+    EXPANSION_PACK_FIRST_SLAVE_ID,
     MAX_BATTERY_PACKS,
     PACK_INFO_FIELDS,
     aggregate_pack_summary,
     battery_pack,
+    pack_slave_id,
 )
 
 
@@ -16,6 +18,26 @@ def test_max_battery_packs_is_five():
     # BLUETTI confirmed by email (2026-09-03) that a single Balco260
     # supports at most 5 BC260 packs.
     assert MAX_BATTERY_PACKS == 5
+
+
+def test_expansion_packs_start_at_slave_41():
+    # BLUETTI's answer by email (2026-09-17): "for individual battery pack
+    # data, the unit ID starts from 41".
+    assert EXPANSION_PACK_FIRST_SLAVE_ID == 41
+
+
+def test_pack_slave_id_counts_from_the_first_expansion_pack():
+    # Pack 1 is the built-in pack at the device's own address; pack 2 is
+    # the first expansion pack, at 41, and they follow on from there.
+    assert pack_slave_id(2) == 41
+    assert pack_slave_id(3) == 42
+    assert pack_slave_id(MAX_BATTERY_PACKS + 1) == 41 + MAX_BATTERY_PACKS - 1
+
+
+@pytest.mark.parametrize("pack_num", [0, 1, MAX_BATTERY_PACKS + 2])
+def test_pack_slave_id_rejects_packs_that_have_no_expansion_slot(pack_num):
+    with pytest.raises(ValueError, match="pack_num must be"):
+        pack_slave_id(pack_num)
 
 
 def test_aggregate_slave_id_is_250():
@@ -64,7 +86,7 @@ def test_aggregate_summary_fields_includes_num_battery_packs_and_totals():
 def test_battery_pack_restricts_to_pack_info_fields():
     conn = MockModbusConnection()
 
-    pack = battery_pack(conn, 2)
+    pack = battery_pack(conn, pack_slave_id(2))
 
     assert set(pack.field_names()) == PACK_INFO_FIELDS
     # d_num_inverters (50001) is outside the pack-info block - not part of
@@ -76,9 +98,9 @@ def test_battery_pack_restricts_to_pack_info_fields():
 async def test_battery_pack_reads_from_its_own_slave_address():
     conn = MockModbusConnection()
     conn.for_unit(1).holding[51221] = 50  # b_soc, main unit / pack 1
-    conn.for_unit(2).holding[51221] = 85  # b_soc, pack 2's own slave address
+    conn.for_unit(41).holding[51221] = 85  # b_soc, pack 2's own slave address
 
-    pack2 = battery_pack(conn, 2)
+    pack2 = battery_pack(conn, pack_slave_id(2))
     await pack2.async_update_with_retry()
 
     assert pack2.values["b_soc"] == 85
@@ -87,11 +109,11 @@ async def test_battery_pack_reads_from_its_own_slave_address():
 @pytest.mark.asyncio
 async def test_battery_pack_2_and_3_are_independent():
     conn = MockModbusConnection()
-    conn.for_unit(2).holding[51221] = 85
-    conn.for_unit(3).holding[51221] = 60
+    conn.for_unit(41).holding[51221] = 85
+    conn.for_unit(42).holding[51221] = 60
 
-    pack2 = battery_pack(conn, 2)
-    pack3 = battery_pack(conn, 3)
+    pack2 = battery_pack(conn, pack_slave_id(2))
+    pack3 = battery_pack(conn, pack_slave_id(3))
     await pack2.async_update_with_retry()
     await pack3.async_update_with_retry()
 
