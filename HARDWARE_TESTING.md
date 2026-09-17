@@ -97,7 +97,24 @@ fields that should mathematically match, use that instead of guessing.
 
 ## 4. Scanning raw registers directly
 
-When you need to see what's actually on the wire - a suspected wrong address, a field that isn't
+For a Balco 260 - or any device of the Balco family - there is a ready-made, read-only probe in
+this repository: [`script/probe_unexplored_registers.py`](script/probe_unexplored_registers.py).
+It reads one register per request, backs off and checks the device is still alive after every
+timeout, and records in its own docstring what each block answered so far. Two runs are worth
+knowing about:
+
+```
+pip install "modbus-connection[tmodbus]" "tmodbus[async-serial]"
+python3 probe_unexplored_registers.py --host <device-ip>                                 # registers a Balco 260 is not documented to have
+python3 probe_unexplored_registers.py --host <device-ip> --sweep-units --max-timeouts 0  # which Modbus slave ids answer, and with which pack
+```
+
+The second one is what settles the multi-pack question (README, "Multiple battery packs"): on a
+Balco 260 with BC260 packs it prints, per slave id, the pack type, serial number, voltage and SOC
+that id serves. Stop anything else polling the device first (the Home Assistant integration entry
+in particular - disable it, re-enable it afterwards).
+
+When you need something the probe doesn't cover - a suspected wrong address, a field that isn't
 mapped at all yet, or hunting for something new (a switch, a missing sensor) - a small scanning
 script beats guessing. Here's a template (an AI assistant can adapt this for you - see the prompts
 below):

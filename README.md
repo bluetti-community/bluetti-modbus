@@ -196,7 +196,9 @@ app-confirmed BC260 packs found those addresses reading a clean, error-free
 slave-id sweep on a one-pack Balco260 agrees with 41 as far as one pack
 can (41 serves the block, as zeros - an empty slot); a Balco260 with two or
 more packs read at 41, 42, ... is what settles it
-(bluetti-community/bluetti-modbus#55).
+(bluetti-community/bluetti-modbus#55) - one run of
+`script/probe_unexplored_registers.py --sweep-units` (see HARDWARE_TESTING.md,
+"Scanning raw registers directly") prints exactly that.
 
 AC500 also has a `d_num_battery_packs` field, but real-hardware testing
 found it means something different there: it stays at a fixed value (the
