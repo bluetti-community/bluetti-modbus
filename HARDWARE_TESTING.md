@@ -107,12 +107,16 @@ knowing about:
 pip install "modbus-connection[tmodbus]" "tmodbus[async-serial]"
 python3 probe_unexplored_registers.py --host <device-ip>                                 # registers a Balco 260 is not documented to have
 python3 probe_unexplored_registers.py --host <device-ip> --sweep-units --max-timeouts 0  # which Modbus slave ids answer, and with which pack
+python3 probe_unexplored_registers.py --host <device-ip> --pack-block 1,41,42            # the whole pack block at those ids, side by side
 ```
 
 The second one is what settles the multi-pack question (README, "Multiple battery packs"): on a
-Balco 260 with BC260 packs it prints, per slave id, the pack type, serial number, voltage and SOC
-that id serves. Stop anything else polling the device first (the Home Assistant integration entry
-in particular - disable it, re-enable it afterwards).
+Balco 260 with BC260 packs it prints, per slave id, the pack type, serial number, voltage, current,
+SOC, SOH and cycle count that id serves. The third reads every field of the pack block (the same
+ones the built-in pack reports at slave 1) at the ids the sweep found, decoded the way the library
+decodes them - the check that an id serves a *whole* pack, not just a few registers. Stop anything
+else polling the device first (the Home Assistant integration entry in particular - disable it,
+re-enable it afterwards).
 
 When you need something the probe doesn't cover - a suspected wrong address, a field that isn't
 mapped at all yet, or hunting for something new (a switch, a missing sensor) - a small scanning

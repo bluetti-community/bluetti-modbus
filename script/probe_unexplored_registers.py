@@ -58,16 +58,16 @@ the device rejects. Strictly read-only (FC 0x03 only). Its blocks:
   "pack 2, falling back to pack 1" or "any id from 91 up is the pack block"
   is what the sweep below is for.
 - The sweep (--sweep-units, optionally with an explicit list of ids): one
-  register from each documented block (50001, 50219, 51001, 51219, 51221,
-  53011) plus the pack's type and serial number (51200, 51206) at every
-  slave id in the list, so a run shows which blocks each id serves and, on
+  register from each documented block (50001, 50219, 51001, 53011), the
+  pack's type and serial number (51200, 51206) and its voltage, current,
+  SOC, SOH and cycle count (51219-51223) at every slave id in the list, so a run shows which blocks each id serves and, on
   a system with two packs or more, which ids return *different* packs - a
   BC260 at its own id should read "BC260" and its own serial number, where
   an alias of the aggregate view repeats the built-in pack's "Balco260".
   The default list is sized for the largest supported system, a Balco 260
   with five BC260 packs: the documented-by-assumption ids 2-6, BLUETTI's
   41-46 (one past the last possible pack, to see an empty slot), the app's
-  balcony ids 91-96, plus 1, 31, 90 and 250 - 21 ids, about three minutes
+  balcony ids 91-96, plus 1, 31, 90 and 250 - 21 ids, about four minutes
   on a device that rejects unknown addresses quickly. --sweep-units alone
   probes only the sweep; add --blocks to probe other blocks in the same
   run. Run on the same
@@ -81,6 +81,16 @@ the device rejects. Strictly read-only (FC 0x03 only). Its blocks:
   0) and reject the rest, i.e. 90-94 look like aliases of the aggregate
   view. Only a system with two packs or more can show pack 2 at 42 (or
   anywhere else) - that run is what bluetti-modbus#55 is waiting for.
+- The pack block (--pack-block 1,41,42): the follow-up to a sweep, on the
+  ids that answered with a pack - every field of the "Each Pack Base
+  Information" block (51200-51249) as the library declares it for a Balco
+  260, read at each id and printed side by side, decoded the way the
+  library decodes it (type, serial number, firmware versions, voltage,
+  current, SOC, SOH, cycle count, cell/NTC counts, energies, protection
+  and alarm words). Include slave 1: that is the built-in pack, the
+  reference every other column should differ from field by field if the id
+  really serves another pack. 36 registers per id, about half a minute
+  each.
 
 Requires only the library the integration already uses:
 
@@ -356,7 +366,10 @@ SWEEP_FIELDS: list[tuple[str, int, int, str, str]] = [
     ("b_type", 51200, 6, "Pack Type", ""),
     ("b_serial", 51206, 4, "Pack Serial Number", ""),
     ("b_v", 51219, 1, "Pack Voltage", "V"),
+    ("b_c", 51220, 1, "Pack Current", "A"),
     ("b_soc", 51221, 1, "Pack SOC", "%"),
+    ("b_soh", 51222, 1, "Pack SOH", "%"),
+    ("b_cycle_count", 51223, 1, "Pack Cycle Count", ""),
     ("d_iot_ver", 53011, 1, "IOT Version", ""),
 ]
 DEFAULT_SWEEP_UNITS = "1,2,3,4,5,6,31,41,42,43,44,45,46,90,91,92,93,94,95,96,250"
@@ -377,6 +390,68 @@ def sweep_candidates(spec: str) -> list[tuple[str, int, int, str, str, str]]:
         ]
     CANDIDATES.extend(out)
     return out
+
+
+# The whole "Each Pack Base Information" block (51200-51249) as the library
+# declares it for a Balco 260 - what battery_pack() reads for an expansion
+# pack, and what the main device reads for its built-in one - for a
+# --pack-block run: every field at each given slave id, decoded the way the
+# library decodes it, side by side. (name, address, register count, kind)
+PACK_BLOCK_FIELDS: list[tuple[str, int, int, str]] = [
+    ("b_type", 51200, 6, "str"),
+    ("b_serial", 51206, 4, "u64"),
+    ("b_ver_count", 51210, 1, "u16"),
+    ("b_ver_1", 51211, 2, "ver"),
+    ("b_ver_2", 51213, 2, "ver"),
+    ("b_ver_3", 51215, 2, "ver"),
+    ("b_ver_4", 51217, 2, "ver"),
+    ("b_v", 51219, 1, "0.1V"),
+    ("b_c", 51220, 1, "cur"),
+    ("b_soc", 51221, 1, "u16"),
+    ("b_soh", 51222, 1, "u16"),
+    ("b_cycle_count", 51223, 1, "u16"),
+    ("b_cell_count", 51234, 1, "u16"),
+    ("b_ntc_count", 51235, 1, "u16"),
+    ("b_i_e", 51236, 2, "u32"),
+    ("b_o_e", 51238, 2, "u32"),
+    ("b_protect", 51240, 2, "u32"),
+    ("b_error", 51242, 1, "u16"),
+    ("b_alarm_residential", 51245, 1, "u16"),
+    ("b_alarm_portable", 51246, 2, "u32"),
+]
+
+
+def pack_block_candidates(spec: str) -> list[tuple[str, int, int, str, str, str]]:
+    """PACK_BLOCK_FIELDS at each slave id in spec, as blocks named packblock-<id>."""
+    out: list[tuple[str, int, int, str, str, str]] = []
+    for text in spec.split(","):
+        if not text.strip():
+            continue
+        slave = int(text)
+        block = f"packblock-{slave}"
+        BLOCK_UNIT[block] = slave
+        out += [
+            (f"u{slave}_{name}", address, count, kind, "", block)
+            for name, address, count, kind in PACK_BLOCK_FIELDS
+        ]
+    CANDIDATES.extend(out)
+    return out
+
+
+def _decode_pack_value(kind: str, words: list[int]) -> str:
+    """One pack-block value as the library would show it (little-endian words)."""
+    raw = sum(w << (16 * i) for i, w in enumerate(words))
+    if kind == "str":
+        text = b"".join((w & 0xFFFF).to_bytes(2, "little") for w in words)
+        return repr(text.decode("ascii", errors="replace").rstrip("\x00"))
+    if kind == "ver":
+        return f"{raw // 10000}.{(raw // 100) % 100:02d}.{raw % 100:02d}"
+    if kind == "0.1V":
+        return f"{raw / 10:.1f}V"
+    if kind == "cur":
+        # reference_offset_current(51220, reference=30000) in the library.
+        return f"{abs(raw - 30000) / 10:.1f}A ({raw})"
+    return str(raw)
 
 
 CONTROL_MODE_NAMES = {
@@ -703,6 +778,51 @@ class Prober:
                     "  "
                     + " ".join(c.rjust(w) for c, w in zip(row, widths, strict=True))
                 )
+        packs = [r for r in self.results if str(r["block"]).startswith("packblock-")]
+        if packs:
+            print(
+                "\n=== pack block per slave id (- illegal address, T timeout, ? other) ==="
+            )
+            blocks = list(dict.fromkeys(str(r["block"]) for r in packs))
+            rows = [["field", "addr"] + [str(BLOCK_UNIT[b]) for b in blocks]]
+            for name, address, count, kind in PACK_BLOCK_FIELDS:
+                cells = [name, str(address)]
+                for block in blocks:
+                    hit = next(
+                        (
+                            r
+                            for r in packs
+                            if r["block"] == block and r["address"] == address
+                        ),
+                        None,
+                    )
+                    if hit is None:
+                        cells.append("")
+                    elif hit["status"] in ("data", "zero"):
+                        words = [
+                            int(str(hit["words_hex"])[i : i + 4], 16)
+                            for i in range(0, 4 * count, 4)
+                        ]
+                        cells.append(_decode_pack_value(kind, words))
+                    elif hit["status"] == "partial":
+                        cells.append("part")
+                    elif hit["status"] == "illegal-address":
+                        cells.append("-")
+                    elif hit["status"] == "timeout":
+                        cells.append("T")
+                    else:
+                        cells.append("?")
+                rows.append(cells)
+            widths = [max(len(row[i]) for row in rows) for i in range(len(rows[0]))]
+            for row in rows:
+                print(
+                    "  "
+                    + row[0].ljust(widths[0])
+                    + " "
+                    + " ".join(
+                        c.rjust(w) for c, w in zip(row[1:], widths[1:], strict=True)
+                    )
+                )
         payload = {
             "device": "balco260",
             "host": self.args.host,
@@ -752,6 +872,14 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         help="read one register from each documented block at every one of these "
         f"comma-separated slave ids (default list: {DEFAULT_SWEEP_UNITS}); alone, "
         "probes only the sweep - see the module docstring",
+    )
+    p.add_argument(
+        "--pack-block",
+        metavar="IDS",
+        help='read the whole "Each Pack Base Information" block (51200-51249, every '
+        "field the library reads for a pack) at each of these comma-separated slave "
+        "ids and print them side by side, decoded - the follow-up to a sweep, on the "
+        "ids that answered; alone, probes only that",
     )
     p.add_argument(
         "--only",
@@ -804,11 +932,13 @@ def select_candidates(
 ) -> list[tuple[str, int, int, str, str, str]]:
     """Apply --blocks, then --only, then --skip, in that order."""
     candidates = [c for c in CANDIDATES if c[5] not in OPT_IN_BLOCKS]
-    if args.blocks or args.sweep_units:
+    if args.blocks or args.sweep_units or args.pack_block:
         wanted = _selector(args.blocks) if args.blocks else set()
         candidates = [c for c in CANDIDATES if c[5] in wanted]
     if args.sweep_units:
         candidates += sweep_candidates(args.sweep_units)
+    if args.pack_block:
+        candidates += pack_block_candidates(args.pack_block)
     if args.only:
         only = _selector(args.only)
         candidates = [c for c in candidates if _matches(c, only)]
