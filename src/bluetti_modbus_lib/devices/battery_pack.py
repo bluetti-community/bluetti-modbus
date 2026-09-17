@@ -16,8 +16,21 @@ from .balco260 import Balco260
 # not removed, since b_soc/b_soh's per-pack behavior at slave 1 (this
 # device's own default address) is independently correct - see
 # aggregate_pack_summary() below for the one part of the multi-pack story
-# that *is* confirmed against real hardware.
+# that *is* confirmed against real hardware, and EXPANSION_PACK_FIRST_SLAVE_ID
+# for why slave 2 and up were the wrong addresses to ask.
 MAX_BATTERY_PACKS = 5
+
+# BLUETTI's answer (by email, 2026-09-17) to the finding above: "for
+# individual battery pack data, the unit ID starts from 41" - the expansion
+# packs were never at slave 2, 3, ... A slave-id sweep on a one-pack
+# Balco260 the same day agrees as far as one pack can: 41 serves the "Each
+# Pack Base Information" block as zeros (an empty expansion slot - that
+# device's own built-in pack is read at slave 1), while 2 and 3 serve it as
+# zeros *alongside* the inverter status register, i.e. they look like
+# inverter slots, not pack slots. Not yet confirmed on multi-pack hardware:
+# that needs a Balco260 with two or more BC260 packs read at 41, 42, ...
+# (bluetti-community/bluetti-modbus#55).
+EXPANSION_PACK_FIRST_SLAVE_ID = 41
 
 # BLUETTI confirmed by email (2026-08-29) that b_soc_total/b_soh_total
 # (51004/51005) and b_c_total (51003) are aggregate values across every
@@ -48,16 +61,37 @@ PACK_INFO_FIELDS = _field_names_in_range(51200, 51249)
 AGGREGATE_SUMMARY_FIELDS = _field_names_in_range(51001, 51008)
 
 
+def pack_slave_id(pack_num: int) -> int:
+    """The Modbus slave address of battery pack number pack_num.
+
+    Pack 1 is the Balco260's built-in pack, read at the device's own slave
+    address as part of its own fields; pack 2 is the first BC260 expansion
+    pack, at EXPANSION_PACK_FIRST_SLAVE_ID, pack 3 the next one at the
+    following address, and so on up to MAX_BATTERY_PACKS expansion packs.
+    This is the numbering d_num_battery_packs (read at AGGREGATE_SLAVE_ID)
+    counts in: 4 for a Balco260 with three BC260 packs.
+    """
+    if not 2 <= pack_num <= MAX_BATTERY_PACKS + 1:
+        msg = (
+            f"pack_num must be 2..{MAX_BATTERY_PACKS + 1} (pack 1 is the built-in "
+            f"pack at the device's own slave address), got {pack_num}"
+        )
+        raise ValueError(msg)
+    return EXPANSION_PACK_FIRST_SLAVE_ID + pack_num - 2
+
+
 def battery_pack(connection: ModbusConnection, slave_id: int) -> Balco260:
     """A Balco260 component restricted to one BC260 pack's own registers.
 
     Pack 1 is the same Modbus slave address as the main Balco260 device
     (already covered by its own fields). Packs 2 and up need their own
     component, restricted to just the "Each Pack Base Information" block, at
-    their own slave address - this is what this function builds. See
-    MAX_BATTERY_PACKS' own comment for this mechanism's actual confirmed
-    scope - it does not currently extend to every field in that block on
-    real hardware, only b_soc/b_soh at slave 1.
+    their own slave address - this is what this function builds; get that
+    address from pack_slave_id(), not from the pack number itself (see
+    EXPANSION_PACK_FIRST_SLAVE_ID's own comment). See MAX_BATTERY_PACKS' own
+    comment for this mechanism's actual confirmed scope - it does not
+    currently extend to every field in that block on real hardware, only
+    b_soc/b_soh at slave 1.
     """
     device = Balco260(connection.for_unit(slave_id))
     device.restrict_fields(PACK_INFO_FIELDS)

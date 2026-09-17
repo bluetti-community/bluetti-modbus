@@ -5,6 +5,7 @@ from .devices import (
     AGGREGATE_SLAVE_ID,
     AGGREGATE_SUMMARY_FIELDS,
     EP2000,
+    EXPANSION_PACK_FIRST_SLAVE_ID,
     MAX_BATTERY_PACKS,
     PACK_INFO_FIELDS,
     Balco260,
@@ -13,6 +14,7 @@ from .devices import (
     aggregate_pack_summary,
     battery_pack,
     get_device,
+    pack_slave_id,
 )
 from .enums import InverterFault, InverterStatus, InverterWarning, PackChargingStatus
 from .exceptions import BluettiModbusConnectionError, BluettiModbusError
@@ -23,6 +25,7 @@ __all__ = [
     "AGGREGATE_SLAVE_ID",
     "AGGREGATE_SUMMARY_FIELDS",
     "EP2000",
+    "EXPANSION_PACK_FIRST_SLAVE_ID",
     "MAX_BATTERY_PACKS",
     "PACK_INFO_FIELDS",
     "Balco260",
@@ -38,4 +41,5 @@ __all__ = [
     "aggregate_pack_summary",
     "battery_pack",
     "get_device",
+    "pack_slave_id",
 ]
