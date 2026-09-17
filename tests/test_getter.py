@@ -24,8 +24,26 @@ def test_balco500_shares_balco260s_addresses_for_every_field_it_has():
     assert balco260 is not None
     assert balco500 is not None
 
-    assert set(balco500.field_names()) <= set(balco260.field_names())
-    for name in balco500.field_names():
+    # Balco260 dropped twelve registers its firmware never populates
+    # (bluetti-registers#30, confirmed by BLUETTI) - Balco500 keeps them
+    # until its own hardware says otherwise, so they are the only fields
+    # allowed to be on Balco500 and not on Balco260.
+    only_on_balco500 = set(balco500.field_names()) - set(balco260.field_names())
+    assert only_on_balco500 == {
+        "ac_o_e_local",
+        "ac_o_p_local",
+        "b_t_avg",
+        "b_time_to_empty",
+        "b_time_to_full",
+        "d_self_consumption",
+        "g_i_e_local",
+        "g_i_p_local",
+        "g_o_e_local",
+        "pv_ac_e_local",
+        "pv_ac_p_local",
+        "pv_i_e_local",
+    }
+    for name in set(balco500.field_names()) - only_on_balco500:
         assert balco500.get_field(name).address == balco260.get_field(name).address
 
 

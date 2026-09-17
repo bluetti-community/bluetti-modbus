@@ -115,69 +115,11 @@ class Balco260(BluettiDevice):
         unit="Hz",
         scale=0.1,
     )
-    g_i_p_local = field(
-        t=FieldType.INT32,
-        address=50215,
-        unit="W",
-        count=2,
-    )
-    ac_o_p_local = field(
-        t=FieldType.UINT32,
-        address=50217,
-        unit="W",
-        count=2,
-    )
     pv_i_p_local = field(
         t=FieldType.UINT32,
         address=50219,
         unit="W",
         count=2,
-    )
-    pv_ac_p_local = field(
-        t=FieldType.UINT32,
-        address=50221,
-        unit="W",
-        count=2,
-    )
-    g_i_e_local = field(
-        t=FieldType.UINT32,
-        address=50223,
-        unit="kWh",
-        scale=0.1,
-        count=2,
-    )
-    g_o_e_local = field(
-        t=FieldType.UINT32,
-        address=50225,
-        unit="kWh",
-        scale=0.1,
-        count=2,
-    )
-    ac_o_e_local = field(
-        t=FieldType.UINT32,
-        address=50227,
-        unit="kWh",
-        scale=0.1,
-        count=2,
-    )
-    pv_i_e_local = field(
-        t=FieldType.UINT32,
-        address=50229,
-        unit="kWh",
-        scale=0.1,
-        count=2,
-    )
-    pv_ac_e_local = field(
-        t=FieldType.UINT32,
-        address=50231,
-        unit="kWh",
-        scale=0.1,
-        count=2,
-    )
-    d_self_consumption = field(
-        t=FieldType.UINT16,
-        address=50233,
-        unit="%",
     )
     d_phase_count = field(
         t=FieldType.UINT16,
@@ -536,11 +478,6 @@ class Balco260(BluettiDevice):
         t=FieldType.UINT16,
         address=51223,
     )
-    b_t_avg = field(
-        t=FieldType.INT16,
-        address=51224,
-        unit="°C",
-    )
     b_cell_count = field(
         t=FieldType.UINT16,
         address=51234,
@@ -577,16 +514,6 @@ class Balco260(BluettiDevice):
         t=FieldType.UINT32,
         address=51246,
         count=2,
-    )
-    b_time_to_full = field(
-        t=FieldType.UINT16,
-        address=51248,
-        unit="min",
-    )
-    b_time_to_empty = field(
-        t=FieldType.UINT16,
-        address=51249,
-        unit="min",
     )
     d_iot_model = field(
         t=FieldType.STRING,
