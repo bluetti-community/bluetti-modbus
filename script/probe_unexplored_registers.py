@@ -81,6 +81,16 @@ the device rejects. Strictly read-only (FC 0x03 only). Its blocks:
   0) and reject the rest, i.e. 90-94 look like aliases of the aggregate
   view. Only a system with two packs or more can show pack 2 at 42 (or
   anywhere else) - that run is what bluetti-modbus#55 is waiting for.
+  First multi-pack run, 2026-09-17, a Balco 260 with two BC260 attached:
+  slave 41 answered the pack block as zeros *except the serial number* -
+  a real one, different from the built-in pack's and with a different
+  prefix - while 42-46 were all zeros and the pack count at 250 read 1;
+  90-96 and 250 repeated the built-in pack field for field (serial
+  included), which settles those as aliases of the aggregate view. So 41
+  is where an expansion pack lives, but the device was counting no pack
+  beyond the built-in one at that moment - whether the packs were asleep,
+  off or not recognised is the open question, to be rerun with the packs
+  known to be active in the app.
 - The pack block (--pack-block 1,41,42): the follow-up to a sweep, on the
   ids that answered with a pack - every field of the "Each Pack Base
   Information" block (51200-51249) as the library declares it for a Balco
@@ -438,6 +448,11 @@ def pack_block_candidates(spec: str) -> list[tuple[str, int, int, str, str, str]
     return out
 
 
+def _words_of(words_hex: str) -> list[int]:
+    """The registers back from a record's words_hex ("6ab3 f24d 025f 0000")."""
+    return [int(w, 16) for w in words_hex.split()]
+
+
 def _decode_pack_value(kind: str, words: list[int]) -> str:
     """One pack-block value as the library would show it (little-endian words)."""
     raw = sum(w << (16 * i) for i, w in enumerate(words))
@@ -715,6 +730,19 @@ class Prober:
         return 0
 
     def report(self) -> None:
+        # The results file first: it is the point of the run, and a
+        # formatting slip in the tables below must never cost it (it did
+        # once - 2026-09-17, multi-register values in the sweep matrix).
+        payload = {
+            "device": "balco260",
+            "host": self.args.host,
+            "unit": self.args.unit,
+            "probed_at": datetime.now(UTC).isoformat(timespec="seconds"),
+            "results": self.results,
+        }
+        with open(self.args.output, "w") as f:
+            json.dump(payload, f, indent=2)
+        print(f"\nfull results written to {self.args.output}")
         by_status: dict[str, list[str]] = {}
         for r in self.results:
             by_status.setdefault(str(r["status"]), []).append(str(r["name"]))
@@ -756,10 +784,7 @@ class Prober:
                     elif hit["status"] in ("data", "zero"):
                         # Little-endian word order for the multi-register
                         # serial number, as bluetti_modbus_lib decodes it.
-                        words = [
-                            int(str(hit["words_hex"])[i : i + 4], 16)
-                            for i in range(0, 4 * count, 4)
-                        ]
+                        words = _words_of(str(hit["words_hex"]))
                         cells.append(
                             str(sum(w << (16 * i) for i, w in enumerate(words)))
                         )
@@ -799,10 +824,7 @@ class Prober:
                     if hit is None:
                         cells.append("")
                     elif hit["status"] in ("data", "zero"):
-                        words = [
-                            int(str(hit["words_hex"])[i : i + 4], 16)
-                            for i in range(0, 4 * count, 4)
-                        ]
+                        words = _words_of(str(hit["words_hex"]))
                         cells.append(_decode_pack_value(kind, words))
                     elif hit["status"] == "partial":
                         cells.append("part")
@@ -823,16 +845,7 @@ class Prober:
                         c.rjust(w) for c, w in zip(row[1:], widths[1:], strict=True)
                     )
                 )
-        payload = {
-            "device": "balco260",
-            "host": self.args.host,
-            "unit": self.args.unit,
-            "probed_at": datetime.now(UTC).isoformat(timespec="seconds"),
-            "results": self.results,
-        }
-        with open(self.args.output, "w") as f:
-            json.dump(payload, f, indent=2)
-        print(f"\nfull results written to {self.args.output}")
+        print(f"\n(full results in {self.args.output})")
 
 
 def parse_args(argv: list[str]) -> argparse.Namespace:
