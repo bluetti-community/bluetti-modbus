@@ -1,3 +1,6 @@
+from collections.abc import Mapping
+from typing import Any
+
 from modbus_connection import ModbusConnection
 
 from .balco260 import Balco260
@@ -8,16 +11,10 @@ from .balco260 import Balco260
 # (2026-09-03) that a single Balco260 supports at most 5 BC260 packs.
 #
 # Real-hardware testing (2026-09-05, a Balco260 with 3 confirmed, app-active
-# BC260 packs) found this doesn't hold for the *rest* of the "Each Pack Base
-# Information" block the way BLUETTI's general description implied: slave
-# addresses 2 and up all read a clean, error-free 0 for these fields, on
-# this device *and* on a second Balco260 with zero packs attached - i.e. the
-# same "empty" response regardless of how many real packs exist. Kept here,
-# not removed, since b_soc/b_soh's per-pack behavior at slave 1 (this
-# device's own default address) is independently correct - see
-# aggregate_pack_summary() below for the one part of the multi-pack story
-# that *is* confirmed against real hardware, and EXPANSION_PACK_FIRST_SLAVE_ID
-# for why slave 2 and up were the wrong addresses to ask.
+# BC260 packs) found slave addresses 2 and up reading a clean, error-free 0
+# for the whole "Each Pack Base Information" block - which turned out to be
+# the wrong addresses, not missing data: the packs live at 41 and up, see
+# EXPANSION_PACK_FIRST_SLAVE_ID.
 MAX_BATTERY_PACKS = 5
 
 # BLUETTI's answer (by email, 2026-09-17) to the finding above: "for
@@ -28,9 +25,18 @@ MAX_BATTERY_PACKS = 5
 # device's own built-in pack is read at slave 1), while 2 and 3 serve it as
 # zeros *alongside* the per-inverter PV charging power register (50219, the
 # one register of the "(Single)" inverter block a Balco260 does populate),
-# i.e. they look like inverter slots, not pack slots. Not yet confirmed on multi-pack hardware:
-# that needs a Balco260 with two or more BC260 packs read at 41, 42, ...
-# (bluetti-community/bluetti-modbus#55).
+# i.e. they look like inverter slots, not pack slots. Confirmed on
+# multi-pack hardware on 2026-09-18 (bluetti-community/bluetti-modbus#55): a
+# Balco260 with three BC260 packs answered the whole block at 42 and 43
+# with each pack's own type string ("BC260"), serial number, voltage, SOC,
+# SOH, cycle count, firmware version and energies - different from each
+# other and from the built-in pack at slave 1 - with d_num_battery_packs
+# reading 4 at the aggregate slave. Slot 41 on that same unit, and on a
+# second Balco260 with no active pack, answered a serial number and zeros
+# for everything else: a pack the inverter knows but that is not reporting
+# (asleep, off, or unplugged since) - see pack_is_reporting(). 90-96 and
+# 250 repeat the built-in pack field for field: aliases of the aggregate
+# view, not packs.
 EXPANSION_PACK_FIRST_SLAVE_ID = 41
 
 # BLUETTI confirmed by email (2026-08-29) that b_soc_total/b_soh_total
@@ -81,6 +87,20 @@ def pack_slave_id(pack_num: int) -> int:
     return EXPANSION_PACK_FIRST_SLAVE_ID + pack_num - 2
 
 
+def pack_is_reporting(values: Mapping[str, Any]) -> bool:
+    """Whether a pack's read carries live data, or just its serial number.
+
+    Real multi-pack hardware (2026-09-18, #55) showed a slot whose pack
+    the inverter still knows - the serial number is served - but that
+    reports nothing else: type string empty, voltage, SOC, SOH, cycle count,
+    versions and energies all 0. Such a pack must not be shown as "0 %, 0 V"
+    (or, worse, as 3000 A: b_c's raw 0 is 30000 below its reference); a
+    consumer treats it as absent until it reports. A reporting pack always
+    has its type string and a non-zero voltage.
+    """
+    return bool(values.get("b_type")) or bool(values.get("b_v"))
+
+
 def battery_pack(connection: ModbusConnection, slave_id: int) -> Balco260:
     """A Balco260 component restricted to one BC260 pack's own registers.
 
@@ -90,9 +110,8 @@ def battery_pack(connection: ModbusConnection, slave_id: int) -> Balco260:
     their own slave address - this is what this function builds; get that
     address from pack_slave_id(), not from the pack number itself (see
     EXPANSION_PACK_FIRST_SLAVE_ID's own comment). See MAX_BATTERY_PACKS' own
-    comment for this mechanism's actual confirmed scope - it does not
-    currently extend to every field in that block on real hardware, only
-    b_soc/b_soh at slave 1.
+    comment for how this was confirmed, and pack_is_reporting() for the one
+    thing to check on the values before showing them.
     """
     device = Balco260(connection.for_unit(slave_id))
     device.restrict_fields(PACK_INFO_FIELDS)
