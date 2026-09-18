@@ -231,9 +231,9 @@ for a new model, report both:
   both service types means the device does not announce itself at all (the AC200L2, for one)
   and is added by hand.
 
-Where to send it: discovery (service name, matcher) is a hassio-bluetti-modbus matter; the
-messages themselves, as a record of what the device knows, belong on that model's tracking
-issue in bluetti-registers. Either is fine - it gets moved if needed.
+Where to send it: [hassio-bluetti-modbus issues](https://github.com/bluetti-community/hassio-bluetti-modbus/issues)
+- both discovery and what the device's web page reports are Home Assistant integration
+matters, not register data.
 
 ## 6. Don't have this exact model? Adapt a similar one
 
