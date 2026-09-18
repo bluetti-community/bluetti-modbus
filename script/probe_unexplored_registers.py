@@ -90,7 +90,13 @@ the device rejects. Strictly read-only (FC 0x03 only). Its blocks:
   is where an expansion pack lives, but the device was counting no pack
   beyond the built-in one at that moment - whether the packs were asleep,
   off or not recognised is the open question, to be rerun with the packs
-  known to be active in the app.
+  known to be active in the app. Settled 2026-09-18 on a Balco 260 with
+  three BC260 packs: 42 and 43 answered the whole block with each pack's
+  own type ("BC260"), serial, voltage, SOC, SOH, cycle count, firmware and
+  energies, 250 counted 4 - the packs are at 41 and up, as BLUETTI said;
+  41 on that unit, and on a second unit with no pack attached, served a
+  serial number and zeros for everything else (a pack the inverter knows
+  but that is not reporting) - see the library's pack_is_reporting().
 - The pack block (--pack-block 1,41,42): the follow-up to a sweep, on the
   ids that answered with a pack - every field of the "Each Pack Base
   Information" block (51200-51249) as the library declares it for a Balco
