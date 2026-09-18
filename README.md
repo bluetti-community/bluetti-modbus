@@ -200,17 +200,21 @@ await pack2.async_update_with_retry()
 print(pack2.values["b_soc"], "%")
 ```
 
-`PACK_INFO_FIELDS` lists the field names this covers. **Not yet confirmed
-against multi-pack hardware**: an earlier reading of BLUETTI's description
-had the packs at slave 2, 3, ..., and testing on a Balco260 with 3 real,
-app-confirmed BC260 packs found those addresses reading a clean, error-free
-0 for the whole block - the same as a Balco260 with no pack attached. A
-slave-id sweep on a one-pack Balco260 agrees with 41 as far as one pack
-can (41 serves the block, as zeros - an empty slot); a Balco260 with two or
-more packs read at 41, 42, ... is what settles it
-(bluetti-community/bluetti-modbus#55) - one run of
-`script/probe_unexplored_registers.py --sweep-units` (see HARDWARE_TESTING.md,
-"Scanning raw registers directly") prints exactly that.
+`PACK_INFO_FIELDS` lists the field names this covers. Confirmed on a
+Balco260 with three BC260 packs (2026-09-18, bluetti-community/bluetti-modbus#55):
+slaves 42 and 43 answered the whole block with each pack's own type string,
+serial number, voltage, SOC, SOH, cycle count, firmware version and energies.
+An earlier reading of BLUETTI's description had the packs at slave 2, 3,
+..., which read as zeros - wrong addresses, not missing data.
+
+One thing to check before showing a pack's values: a slot the inverter still
+knows can answer its serial number and **zeros for everything else** - a
+pack asleep, off, or unplugged since (seen on slot 41 of that same unit, and
+on a Balco260 with no active pack at all). `pack_is_reporting(values)` tells
+the two apart (type string present, or a non-zero voltage); until it is
+True, treat the pack as absent rather than as "0 %, 0 V" - its current in
+particular would otherwise decode to 3000 A, 0 being 30000 below its
+reference.
 
 AC500 also has a `d_num_battery_packs` field, but real-hardware testing
 found it means something different there: it stays at a fixed value (the

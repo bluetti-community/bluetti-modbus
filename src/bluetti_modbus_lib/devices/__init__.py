@@ -9,6 +9,7 @@ from .battery_pack import MAX_BATTERY_PACKS as MAX_BATTERY_PACKS
 from .battery_pack import PACK_INFO_FIELDS as PACK_INFO_FIELDS
 from .battery_pack import aggregate_pack_summary as aggregate_pack_summary
 from .battery_pack import battery_pack as battery_pack
+from .battery_pack import pack_is_reporting as pack_is_reporting
 from .battery_pack import pack_slave_id as pack_slave_id
 from .ep2000 import EP2000 as EP2000
 from .getter import *

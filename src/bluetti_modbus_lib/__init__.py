@@ -15,6 +15,7 @@ from .devices import (
     aggregate_pack_summary,
     battery_pack,
     get_device,
+    pack_is_reporting,
     pack_slave_id,
 )
 from .enums import InverterFault, InverterStatus, InverterWarning, PackChargingStatus
@@ -43,5 +44,6 @@ __all__ = [
     "aggregate_pack_summary",
     "battery_pack",
     "get_device",
+    "pack_is_reporting",
     "pack_slave_id",
 ]

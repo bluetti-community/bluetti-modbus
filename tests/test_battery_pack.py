@@ -10,6 +10,7 @@ from bluetti_modbus_lib.devices.battery_pack import (
     PACK_INFO_FIELDS,
     aggregate_pack_summary,
     battery_pack,
+    pack_is_reporting,
     pack_slave_id,
 )
 
@@ -144,3 +145,34 @@ async def test_aggregate_pack_summary_reads_from_slave_250():
     await summary.async_update_with_retry()
 
     assert summary.values["d_num_battery_packs"] == 4
+
+
+def test_a_reporting_pack_has_its_type_string_and_a_voltage():
+    # Slot 42 of a Balco260 with three BC260 packs (2026-09-18, #55).
+    assert pack_is_reporting(
+        {"b_type": "BC260", "b_serial": 2610110280905, "b_v": 27.2}
+    )
+
+
+def test_a_silent_pack_answers_its_serial_number_and_zeros():
+    # Slot 41 of that same unit: the inverter knows the pack, the pack
+    # reports nothing - and b_c's raw 0 would decode to 3000 A.
+    values = {
+        "b_type": "",
+        "b_serial": 2615112301352,
+        "b_v": 0.0,
+        "b_c": 3000.0,
+        "b_soc": 0,
+    }
+    assert not pack_is_reporting(values)
+
+
+def test_an_empty_slot_is_not_reporting():
+    assert not pack_is_reporting({"b_type": "", "b_serial": 0, "b_v": 0.0})
+    assert not pack_is_reporting({})
+
+
+def test_a_pack_whose_type_string_read_failed_still_counts_by_its_voltage():
+    # Slot 43 of that unit answered a transient timeout on the type string
+    # in one run while voltage, SOC and cycles came through.
+    assert pack_is_reporting({"b_v": 27.1, "b_soc": 79})
