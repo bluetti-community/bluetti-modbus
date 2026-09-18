@@ -1,5 +1,9 @@
-from bluetti_modbus_lib.devices import AC500, EP2000, Balco260, Balco500, SMeter
+from bluetti_modbus_lib.devices import AC200L, AC500, EP2000, Balco260, Balco500, SMeter
 from bluetti_modbus_lib.devices.getter import get_device
+
+
+def test_get_device_ac200l():
+    assert isinstance(get_device("ac200l"), AC200L)
 
 
 def test_get_device_ac500():
