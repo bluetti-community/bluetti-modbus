@@ -20,27 +20,33 @@ _LOGGER = logging.getLogger(__name__)
 # Modbus function code 0x06, "Write Single Register" - see BluettiDevice.write.
 _WRITE_SINGLE_REGISTER_FUNCTION_CODE = 6
 
-# The address a Balco 260 echoes in a Write Single Register confirmation is
-# not the Modbus address that was written to but the same setting's address
-# in the device's own internal register space - the one the BLUETTI app
-# speaks ("ProtocolAddrV2" in the app's code, tabulated by
+# The address a BLUETTI device echoes in a Write Single Register confirmation
+# is not the Modbus address that was written to but the same setting's
+# address in the device's own internal register space - the one the BLUETTI
+# app speaks ("ProtocolAddrV2" in the app's code, tabulated by
 # https://github.com/mikemccllstr/voltkeeper/blob/main/docs/source/protocol/modbus-registers.md
 # from app v3.0.9). The Modbus TCP slave evidently translates the write to
 # an internal one and builds the confirmation from that, so a strict Modbus
-# client sees a confirmation that doesn't match its request. Keyed by the
-# Modbus holding-register address written to. Every Balco 260 entry was
-# captured on real hardware (2026-09-16, all five of its writable
-# registers, each matching the table); 57005 exists on AC500 only and is
-# the table's entry for that setting, predicted from the same pattern
-# until seen on a real AC500 - see BluettiDevice.write for how an echo
-# that isn't on file is reported.
-_INTERNAL_WRITE_ADDRESS: dict[int, int] = {
-    57001: 2011,  # ac_o_switch - AC_SWITCH - captured on a real Balco 260
-    57005: 2012,  # dc_o_switch - DC_SWITCH - predicted (AC500 only)
-    57009: 2207,  # g_i_switch - CTRL_GRID - captured on a real Balco 260
-    57010: 2208,  # g_o_switch - CTRL_FEED - captured on a real Balco 260
-    57016: 2022,  # b_soc_low - SYS_LOW_POWER - captured on a real Balco 260
-    57017: 2023,  # b_soc_high - SYS_HIGH_POWER - captured on a real Balco 260
+# client sees a confirmation that doesn't match its request. That internal
+# space differs between product families - a Balco 260 confirms its AC
+# output switch at 2011, an AC200L2 its DC output switch at 3008, nowhere
+# near the 2012 the Balco family's map would predict - so the table is
+# keyed by device class name, then by the Modbus holding-register address
+# written to, and holds only captured echoes: every Balco 260 entry from
+# 2026-09-16 (all five of its writable registers), the AC200L one from
+# 2026-09-18 (bluetti-modbus#78). A device or register with no entry gets
+# its echo accepted and reported - see BluettiDevice.write.
+_INTERNAL_WRITE_ADDRESS: dict[str, dict[int, int]] = {
+    "Balco260": {
+        57001: 2011,  # ac_o_switch - AC_SWITCH
+        57009: 2207,  # g_i_switch - CTRL_GRID
+        57010: 2208,  # g_o_switch - CTRL_FEED
+        57016: 2022,  # b_soc_low - SYS_SOC_LOW_CAPACITY
+        57017: 2023,  # b_soc_high - SYS_SOC_HIGH_CAPACITY
+    },
+    "AC200L": {
+        57005: 3008,  # dc_o_switch - captured on a real AC200L2
+    },
 }
 
 # How many times a transient corrupted/truncated-reply error gets retried
@@ -87,9 +93,9 @@ class BluettiDevice(Component):
         success here rather than surfacing as the protocol error a strict
         client makes of it. Which address was echoed is logged at debug when
         it is the one on file for that register and at warning when it
-        isn't - the table is confirmed on a Balco 260, so a different echo is
-        worth reporting (a new device, or a new firmware) but not worth
-        failing a write the device did apply. Anything else - a different
+        isn't - the table holds only captured echoes, so a different one is
+        worth reporting (a new device, a new register, or a new firmware) but
+        not worth failing a write the device did apply. Anything else - a different
         function code or value, or a response shaped unlike a Write Single
         Register confirmation - is a real failure and is raised unchanged.
         """
@@ -104,7 +110,9 @@ class BluettiDevice(Component):
                 or echoed[1] != _written_word(field, value)
             ):
                 raise
-            expected = _INTERNAL_WRITE_ADDRESS.get(field.address)
+            expected = _INTERNAL_WRITE_ADDRESS.get(type(self).__name__, {}).get(
+                field.address
+            )
             if echoed[0] == expected:
                 _LOGGER.debug(
                     "Write to %s (%d) confirmed at internal register %d, as on file",

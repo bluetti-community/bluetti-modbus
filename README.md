@@ -290,13 +290,14 @@ A second one shapes writes: a Balco 260 confirms a Write Single Register
 address it was asked to write** - the same setting's address in the device's
 own internal register space, the one the BLUETTI app speaks (57016 → 2022,
 57009 → 2207, and so on; confirmed on real hardware for all five of its
-writable registers, 2026-09-16). A strict Modbus client reports that as a
-protocol error even though the write applied, so `BluettiDevice.write()`
-recognises such a confirmation and treats it as success, logging the echoed
-address - at debug when it is the one on file for that register (see
-`_INTERNAL_WRITE_ADDRESS` in `base_devices/bluetti_device.py`), at warning
-when it isn't, which is the signal to add or correct an entry. Reported to
-BLUETTI. The internal space itself is not served over Modbus TCP: a
+writable registers, 2026-09-16). An AC200L2 does the same with its own,
+different internal map (57005 → 3008, 2026-09-18). A strict Modbus client
+reports that as a protocol error even though the write applied, so
+`BluettiDevice.write()` recognises such a confirmation and treats it as
+success, logging the echoed address - at debug when it is the one on file
+for that device and register (see `_INTERNAL_WRITE_ADDRESS` in
+`base_devices/bluetti_device.py`, keyed by device), at warning when it
+isn't, which is the signal to add an entry. Reported to BLUETTI. The internal space itself is not served over Modbus TCP: a
 1-register read of any of 54 of its addresses is an illegal data address
 (confirmed on real hardware, 2026-09-16) - the translation exists for the
 documented registers only, so there is nothing to gain by addressing it

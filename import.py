@@ -1,6 +1,6 @@
 import requests
 
-tag = "ac200l-beta-2"
+tag = "0.0.43"
 url = f"https://github.com/bluetti-community/bluetti-registers/releases/download/{tag}/modbus-tcp.json"
 
 output = "src/bluetti_modbus_lib/devices/"
