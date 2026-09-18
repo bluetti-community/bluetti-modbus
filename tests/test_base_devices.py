@@ -14,7 +14,7 @@ from modbus_connection.exceptions import (
 from modbus_connection.mock import MockModbusConnection
 from probatio.error import RangeInvalid
 
-from bluetti_modbus_lib.devices import Balco260
+from bluetti_modbus_lib.devices import AC200L, Balco260
 from bluetti_modbus_lib.exceptions import BluettiModbusConnectionError
 
 
@@ -452,6 +452,43 @@ async def test_write_accepts_but_reports_a_confirmation_at_an_address_not_on_fil
 
 
 @pytest.mark.asyncio
+async def test_write_looks_the_echo_up_per_device(caplog):
+    # Captured on a real AC200L2 (bluetti-modbus#78): its DC output switch
+    # (57005) confirms at 3008 - nowhere near what the Balco family's
+    # internal map would say. The table is keyed by device, so this is the
+    # entry on file for an AC200L and logs at debug, not warning.
+    device = AC200L(MockModbusConnection().for_unit(1))
+    device.modbus_unit.write_register = AsyncMock(  # type: ignore[method-assign]
+        side_effect=_mismatched_confirmation(6, 3008, 1)
+    )
+
+    with caplog.at_level(logging.DEBUG, logger="bluetti_modbus_lib"):
+        await device.write("dc_o_switch", 1)  # must not raise
+
+    assert "dc_o_switch (57005) confirmed at internal register 3008" in caplog.text
+    assert not [r for r in caplog.records if r.levelno >= logging.WARNING]
+
+
+@pytest.mark.asyncio
+async def test_write_reports_an_echo_for_a_device_with_no_entries_at_all(caplog):
+    # A device class the table does not know (nothing captured on it yet):
+    # the echo is accepted and reported as not on file, never raised.
+    device = _balco260_whose_writes_confirm_as(function_code=6, address=2011, value=1)
+
+    with (
+        patch.dict(
+            "bluetti_modbus_lib.base_devices.bluetti_device._INTERNAL_WRITE_ADDRESS",
+            {},
+            clear=True,
+        ),
+        caplog.at_level(logging.WARNING, logger="bluetti_modbus_lib"),
+    ):
+        await device.write("ac_o_switch", 1)  # must not raise
+
+    assert "internal register 2011, which is not on file" in caplog.text
+
+
+@pytest.mark.asyncio
 async def test_write_accepts_but_reports_a_confirmation_for_a_register_without_an_entry(
     caplog,
 ):
@@ -463,7 +500,7 @@ async def test_write_accepts_but_reports_a_confirmation_for_a_register_without_a
     with (
         patch.dict(
             "bluetti_modbus_lib.base_devices.bluetti_device._INTERNAL_WRITE_ADDRESS",
-            {},
+            {"Balco260": {}},
             clear=True,
         ),
         caplog.at_level(logging.WARNING, logger="bluetti_modbus_lib"),
