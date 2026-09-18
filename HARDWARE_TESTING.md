@@ -178,7 +178,64 @@ This is also why "no response" in the template's output is worth splitting when 
 a Modbus exception means the address is confirmed unserved; a timeout means you probably asked
 for more than one register.
 
-## 5. Don't have this exact model? Adapt a similar one
+## 5. What the device's own web page knows (mDNS name, Modbus TCP status, firmware)
+
+Every BLUETTI device that speaks Modbus TCP also serves its own local web page - the
+"Bluetti Manager" you used to turn Modbus TCP on. That page is not a static site: it talks
+to the device over a WebSocket, as JSON messages, and those messages carry things the Modbus
+registers never expose - the device's mDNS hostname, whether Modbus TCP is enabled and on
+which port, firmware versions, network status. Reading them takes nothing but a browser.
+
+This is how two things in this project were settled: the S Meter's `getConfig`/`getVersion`
+messages (which the Home Assistant integration now uses during discovery), and the Balco 260's
+mDNS *hostname* (`blhems-<MAC>`, from `getNetworkStatusRsp`) turning out to be a different thing
+from the mDNS *service name* ("Bluetti HEMS") that discovery actually matches on.
+
+### How
+
+1. Open `http://<device-ip>/` in a desktop browser and open the developer tools **before**
+   logging in (F12, or right-click → Inspect). Go to the **Network** tab and set its filter to
+   **WS** (WebSocket).
+2. Log in (`admin`, your BLUETTI app account password - blank if you never set one). A single
+   WebSocket connection appears in the list, to `ws://<device-ip>/8`. Click it, then open its
+   **Messages** tab (Firefox: **Response**).
+3. Walk through the page - the network status page, Settings → Modbus TCP, the firmware/about
+   page. Each screen sends a request like `{"type": "getConfig", "data": {}}` and gets a
+   `{"type": "getConfigRsp", "data": {...}}` back. Known so far:
+   - `getConfigRsp` → `data.modbus_tcp.enable` / `.port` (S Meter: confirmed; this is what the
+     integration checks before offering a discovered S Meter)
+   - `getVersionRsp` → `data.firmwares[].version`
+   - `getNetworkStatusRsp` → `data.mdns_hostname`, plus IP/MAC details (Balco 260: confirmed)
+
+   On a Balco 260 the connection needs the token the page obtains at login - which is why you
+   log in through the page rather than scripting it; the S Meter answers without any.
+4. Copy the frames you want to report (right-click a message → Copy). **Redact** serial numbers,
+   MAC addresses and the login token before posting.
+
+Read only. Do not script writes against this API: it is undocumented, unconfirmed by BLUETTI,
+and can change or disappear with a firmware update - which is also why the integration only
+ever uses it best-effort, never as a requirement.
+
+### What it tells you, and what it doesn't
+
+The hostname in `getNetworkStatusRsp` is the device's *DNS* name. Home Assistant's discovery
+matches on the mDNS *service instance name*, which is announced separately and can look
+nothing like it (Balco 260: hostname `blhems-<MAC>`, service `_http._tcp` "Bluetti HEMS"). So
+for a new model, report both:
+
+- the WebSocket messages above (types and `data` keys, values redacted);
+- an actual mDNS browse from a machine on the same network:
+  `avahi-browse -rt _bluetti._tcp` and `avahi-browse -rt _http._tcp` (Linux),
+  `dns-sd -B _bluetti._tcp` / `dns-sd -B _http._tcp` (macOS), or a few lines of
+  python-zeroconf on the Home Assistant host (an AI assistant can write them). No result on
+  both service types means the device does not announce itself at all (the AC200L2, for one)
+  and is added by hand.
+
+Where to send it: discovery (service name, matcher) is a hassio-bluetti-modbus matter; the
+messages themselves, as a record of what the device knows, belong on that model's tracking
+issue in bluetti-registers. Either is fine - it gets moved if needed.
+
+## 6. Don't have this exact model? Adapt a similar one
 
 If your device shares a protocol family with one already supported (BLUETTI's AC500 and Balco260
 share most of the same "EBOX" register layout, for example), the fastest path is usually:
@@ -193,7 +250,7 @@ This is exactly how AC500 support started (`bluetti-registers#13`): a user prune
 register list down to what their AC500 actually answered, refined it with ChatGPT's help, and
 reported back the open questions.
 
-## 6. Using an AI assistant
+## 7. Using an AI assistant
 
 You do not need to already know Python, Modbus, or this codebase - an AI assistant genuinely
 can write and explain all of the above for you, and interpret the raw numbers you get back. Below
@@ -263,7 +320,7 @@ Here's my raw notes/data - please turn it into a clean issue report:
 <PASTE YOUR NOTES, SCREENSHOTS DESCRIPTIONS, RAW SCAN OUTPUT, ETC. HERE>
 ```
 
-## 7. What makes a great report
+## 8. What makes a great report
 
 Two real examples from this project's history, worth reading before you post:
 
