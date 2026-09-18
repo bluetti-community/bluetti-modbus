@@ -47,6 +47,18 @@ Supported out of the box:
   support directly, unlike every other device here
 - **S Meter**: Bluetti's AC meter/CT accessory, confirmed against real
   hardware
+- **AC200L / AC200L2** (beta): a portable power station, absent from
+  BLUETTI's official Modbus register list. Its profile
+  (bluetti-registers#31) was derived from AC500's register set and
+  confirmed against a real **AC200L2** by cross-checking this library's
+  raw reads against the same unit's simultaneous BLE readings
+  (bluetti-modbus#76, by @awrede): device type, powers, firmware
+  versions, switch states, SOC and SOC thresholds match; grid frequency
+  and total battery voltage need different scales than AC500 at the same
+  addresses. Energies and PV fields are carried over unverified; the DC
+  output switch is confirmed writable, the AC one writable at the owner's
+  request. The device names itself "AC200L" - nothing yet says an
+  original AC200L exposes Modbus TCP at all
 
 Field names, units, and register addresses come from
 [bluetti-registers][bluetti-registers] - `devices/balco260.py` is generated

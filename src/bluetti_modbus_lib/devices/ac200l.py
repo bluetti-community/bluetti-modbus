@@ -5,7 +5,7 @@ from ..fields import FieldType, dotted_version_2part, field, nibble
 # GENERATED FILE! DO NOT EDIT!
 
 
-class AC500(BluettiDevice):
+class AC200L(BluettiDevice):
     register_ranges = (
         (50002, 50002),
         (50004, 50004),
@@ -29,13 +29,13 @@ class AC500(BluettiDevice):
         (50270, 50270),
         (50272, 50272),
         (50273, 50273),
-        (51001, 51001),
         (51002, 51002),
         (51003, 51003),
         (51004, 51004),
         (57001, 57001),
         (57005, 57005),
-        (57009, 57009),
+        (57016, 57016),
+        (57017, 57017),
     )
 
     ac_o_p_total = field(
@@ -98,7 +98,7 @@ class AC500(BluettiDevice):
         t=FieldType.UINT16,
         address=50214,
         unit="Hz",
-        scale=0.01,
+        scale=0.1,
     )
     g_i_p_local = field(
         t=FieldType.UINT16,
@@ -155,21 +155,17 @@ class AC500(BluettiDevice):
         address=50273,
         unit="W",
     )
-    d_num_battery_packs = field(
-        t=FieldType.UINT16,
-        address=51001,
-    )
     b_v_total = field(
         t=FieldType.UINT16,
         address=51002,
         unit="V",
-        scale=0.1,
+        scale=0.01,
     )
     b_c_total = field(
         t=FieldType.UINT16,
         address=51003,
         unit="A",
-        scale=0.1,
+        scale=0.01,
     )
     b_soc_total = field(
         t=FieldType.UINT16,
@@ -186,7 +182,13 @@ class AC500(BluettiDevice):
         address=57005,
         writable=True,
     )
-    g_i_switch = field(
+    b_soc_low = field(
         t=FieldType.UINT16,
-        address=57009,
+        address=57016,
+        unit="%",
+    )
+    b_soc_high = field(
+        t=FieldType.UINT16,
+        address=57017,
+        unit="%",
     )

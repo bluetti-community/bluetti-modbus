@@ -2,6 +2,7 @@ from typing import cast
 
 from modbus_connection import ModbusUnit
 
+from .ac200l import AC200L
 from .ac500 import AC500
 from .balco260 import Balco260
 from .balco500 import Balco500
@@ -11,12 +12,14 @@ from .smeter import SMeter
 
 def get_device(
     d: str, unit: ModbusUnit | None = None
-) -> AC500 | Balco260 | Balco500 | EP2000 | SMeter | None:
+) -> AC200L | AC500 | Balco260 | Balco500 | EP2000 | SMeter | None:
     # unit=None is a real, supported call (e.g. sensor.py inspects a
     # device's fields without a live connection) - Component.__init__ only
     # stores the reference, it doesn't dereference it, so this is safe even
     # though ModbusUnit itself isn't declared Optional there.
     unit = cast(ModbusUnit, unit)
+    if d == "ac200l":
+        return AC200L(unit)
     if d == "ac500":
         return AC500(unit)
     if d == "balco260":

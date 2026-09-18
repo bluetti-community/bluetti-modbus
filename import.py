@@ -1,6 +1,6 @@
 import requests
 
-tag = "0.0.42"
+tag = "ac200l-beta-2"
 url = f"https://github.com/bluetti-community/bluetti-registers/releases/download/{tag}/modbus-tcp.json"
 
 output = "src/bluetti_modbus_lib/devices/"
@@ -39,7 +39,10 @@ def get_type(t: str, name: str, device_name: str):
     # names' widening is still correct on Balco260/EP2000, and AC500's
     # other WIDE_UINT_FIELDS members (ac_o_e_total, g_o_e_total, ...)
     # aren't known to have this problem.
-    if device_name == "AC500" and name in AC500_SINGLE_REGISTER_OVERRIDES:
+    if (
+        device_name in SINGLE_REGISTER_TOTALS_DEVICES
+        and name in AC500_SINGLE_REGISTER_OVERRIDES
+    ):
         return "INT16" if upper == "INT" else "UINT16"
 
     if upper == "INT":
@@ -56,6 +59,18 @@ AC500_SINGLE_REGISTER_OVERRIDES = {
     "pv_i_p_total",
     "g_i_p_total",
 }
+# AC200L (confirmed on an AC200L2, bluetti-community/bluetti-modbus#76)
+# shares AC500's register layout for these three, read as single registers
+# against the same unit's BLE readings - and, like AC500, has no official
+# register list to confirm the "+1" register from.
+SINGLE_REGISTER_TOTALS_DEVICES = {"AC500", "AC200L"}
+
+# Devices whose fields are read one isolated block each rather than batched
+# with max_gap=5 (see the register_ranges step below): AC500 - and AC200L,
+# which has no official register list either, and on which widening a read
+# across an unconfirmed address took the coordinator down in exactly the
+# same way during its own development (bluetti-modbus#76).
+ISOLATED_RANGE_DEVICES = {"AC500", "AC200L"}
 
 
 # bluetti-registers documents each of these as spanning 2 registers
@@ -231,7 +246,11 @@ for d in schema:
         # bluetti-official/bluetti-modbus-tcp-slave#5) - g_i_switch isn't
         # (confirmed non-functional there instead), so it no longer carries
         # writeable: true in the schema at all.
-        if name in ("Balco260", "AC500") and f.get("writeable"):
+        # AC200L: dc_o_switch write confirmed on real hardware by its owner,
+        # ac_o_switch writeable at that owner's explicit request
+        # (bluetti-modbus#76); its b_soc_low/b_soc_high carry no writeable
+        # flag in the schema at all (bluetti-registers' AC200L overrides).
+        if name in ("Balco260", "AC500", "AC200L") and f.get("writeable"):
             if "num_min" in f and "num_max" in f:
                 uses_range = True
                 fields += (
@@ -313,7 +332,7 @@ class {name}(BluettiDevice):
     # device has no evidence for. Introspected from the freshly generated
     # class rather than re-derived by hand here, so it can't drift from
     # whatever field()/uint16()/etc. actually build.
-    if name == "AC500":
+    if name in ISOLATED_RANGE_DEVICES:
         import importlib
 
         # Imported (not read from a standalone file location) so its own
@@ -321,9 +340,11 @@ class {name}(BluettiDevice):
         # normally - this script only runs against an editable/installed
         # checkout (see sync-devices.yml/python-publish.yml), so the
         # package is always importable here.
-        module = importlib.import_module("bluetti_modbus_lib.devices.ac500")
+        module = importlib.import_module(
+            "bluetti_modbus_lib.devices." + file_name.removesuffix(".py")
+        )
         module = importlib.reload(module)
-        instance = module.AC500(None)
+        instance = getattr(module, name)(None)
         ranges = sorted(
             {
                 (field.address, field.address + field.count - 1)
