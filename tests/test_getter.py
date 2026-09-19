@@ -1,4 +1,12 @@
-from bluetti_modbus_lib.devices import AC200L, AC500, EP2000, Balco260, Balco500, SMeter
+from bluetti_modbus_lib.devices import (
+    AC200L,
+    AC500,
+    EP2000,
+    Balco260,
+    Balco500,
+    EP500Pro,
+    SMeter,
+)
 from bluetti_modbus_lib.devices.getter import get_device
 
 
@@ -16,6 +24,31 @@ def test_get_device_balco260():
 
 def test_get_device_balco500():
     assert isinstance(get_device("balco500"), Balco500)
+
+
+def test_get_device_ep500pro():
+    assert isinstance(get_device("ep500pro"), EP500Pro)
+
+
+def test_ep500pro_is_ac500s_register_set_read_only():
+    # EP500Pro's profile is AC500's register set, read on a real unit with
+    # the AC500 class (bluetti-registers#35): same fields, same addresses,
+    # same decode - the only intended difference is that nothing is writable
+    # until the owner has tested a write. Catches the generated file drifting
+    # from that on either side.
+    ac500 = get_device("ac500")
+    ep500pro = get_device("ep500pro")
+    assert ac500 is not None
+    assert ep500pro is not None
+
+    assert set(ep500pro.field_names()) == set(ac500.field_names())
+    assert ep500pro.register_ranges == ac500.register_ranges
+
+    def writable(device):
+        return {n for n in device.field_names() if device.get_field(n).writable}
+
+    assert writable(ac500) == {"ac_o_switch", "dc_o_switch"}
+    assert writable(ep500pro) == set()
 
 
 def test_balco500_shares_balco260s_addresses_for_every_field_it_has():
