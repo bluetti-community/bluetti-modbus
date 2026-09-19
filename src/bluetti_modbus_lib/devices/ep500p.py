@@ -5,7 +5,7 @@ from ..fields import FieldType, dotted_version_2part, field, nibble
 # GENERATED FILE! DO NOT EDIT!
 
 
-class EP500Pro(BluettiDevice):
+class EP500P(BluettiDevice):
     register_ranges = (
         (50002, 50002),
         (50004, 50004),
@@ -36,6 +36,8 @@ class EP500Pro(BluettiDevice):
         (57001, 57001),
         (57005, 57005),
         (57009, 57009),
+        (57016, 57016),
+        (57017, 57017),
     )
 
     ac_o_p_total = field(
@@ -179,12 +181,24 @@ class EP500Pro(BluettiDevice):
     ac_o_switch = field(
         t=FieldType.UINT16,
         address=57001,
+        writable=True,
     )
     dc_o_switch = field(
         t=FieldType.UINT16,
         address=57005,
+        writable=True,
     )
     g_i_switch = field(
         t=FieldType.UINT16,
         address=57009,
+    )
+    b_soc_low = field(
+        t=FieldType.UINT16,
+        address=57016,
+        unit="%",
+    )
+    b_soc_high = field(
+        t=FieldType.UINT16,
+        address=57017,
+        unit="%",
     )

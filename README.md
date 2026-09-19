@@ -59,13 +59,16 @@ Supported out of the box:
   output switch is confirmed writable, the AC one writable at the owner's
   request. The device names itself "AC200L" - nothing yet says an
   original AC200L exposes Modbus TCP at all
-- **EP500Pro** (beta, read-only): a home backup station on which Modbus
-  TCP appeared with IoT firmware 9041.17, absent from BLUETTI's official
-  Modbus register list. Its profile (bluetti-registers#35) is AC500's
-  register set, read on a real unit by @TobiGitHubi with the AC500 class:
-  device type (`EP500P`), SOC, AC/PV powers and firmware versions match
-  the app. Energies, PV fields and the SOC thresholds are carried over
-  unverified, and nothing is writable until its owner has tested a write
+- **EP500P** (beta) - the BLUETTI EP500Pro, named here after the type
+  string the device gives at 50200, as AC200L is: a home backup station
+  on which Modbus TCP appeared with IoT firmware 9041.17, absent from
+  BLUETTI's official Modbus register list. Its profile
+  (bluetti-registers#35) is AC500's register set plus the read-only SOC
+  thresholds, read on two real units by @TobiGitHubi and @BOPOHOP: device
+  type, SOC, AC/PV powers, grid frequency and firmware versions match the
+  app, and the AC/DC output switches switch the outputs (writable).
+  Energies and PV fields are carried over unverified; grid charging is a
+  read-only state until its effect has been seen
 
 Field names, units, and register addresses come from
 [bluetti-registers][bluetti-registers] - `devices/balco260.py` is generated
@@ -232,7 +235,7 @@ read at any unit id other than 1 (2, 41-46, 250 were tried) got no reply
 and froze the device's Modbus TCP stack until a power cycle
 (bluetti-registers#13, 2026-09-19), so its B300S packs, if they are
 reachable at all, are not reachable the Balco 260 way. Never address
-another unit id on an AC500 or an EP500Pro.
+another unit id on an AC500 or an EP500P.
 
 ## CLI
 
@@ -276,7 +279,7 @@ follow the naming convention documented in
 Two different things in this library talk Modbus, for two different
 audiences:
 
-- `AC200L`, `AC500`, `Balco260`, `Balco500`, `EP2000`, `EP500Pro`, and `SMeter`
+- `AC200L`, `AC500`, `Balco260`, `Balco500`, `EP2000`, `EP500P`, and `SMeter`
   (`bluetti_modbus_lib.devices`) are the integration surface: each takes a
   `ModbusUnit` supplied by the caller,
   built from whichever backend and connection the caller already manages.
@@ -305,8 +308,8 @@ unit id other than 1 got no reply and **froze its Modbus TCP stack until a
 power cycle** - toggling Modbus TCP on the device's web page did not
 recover it (bluetti-registers#13, 2026-09-19). A Balco 260 ignores an
 unknown unit id and carries on. So nothing in this library, and nothing
-built on it, may address another unit id on an AC500 or an EP500Pro (an
-EP500Pro given the same requests went silent per connection rather than
+built on it, may address another unit id on an AC500 or an EP500P (an
+EP500P given the same requests went silent per connection rather than
 freezing, and answered nothing at those ids either); unit-1 reads of
 unserved *addresses* are answered with a clean "illegal data address"
 there, as on a Balco 260.

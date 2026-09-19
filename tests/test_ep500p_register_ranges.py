@@ -1,4 +1,4 @@
-from bluetti_modbus_lib.devices.ep500pro import EP500Pro
+from bluetti_modbus_lib.devices.ep500p import EP500P
 
 
 def test_every_field_is_its_own_read_block():
@@ -7,9 +7,9 @@ def test_every_field_is_its_own_read_block():
     # may bridge an address the device hasn't confirmed (import.py's
     # ISOLATED_RANGE_DEVICES). Real-hardware evidence on *this* device: the
     # EP2000 profile's 50-register batch got no reply at all from an
-    # EP500Pro, while the AC500 profile's one-field blocks all read
+    # EP500P, while the AC500 profile's one-field blocks all read
     # (bluetti-registers#35).
-    device = EP500Pro(None)
+    device = EP500P(None)
 
     plan = device._build_plan()
 

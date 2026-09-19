@@ -1,6 +1,6 @@
 import requests
 
-tag = "ep500pro-beta-1"
+tag = "ep500p-beta-2"
 url = f"https://github.com/bluetti-community/bluetti-registers/releases/download/{tag}/modbus-tcp.json"
 
 output = "src/bluetti_modbus_lib/devices/"
@@ -62,20 +62,20 @@ AC500_SINGLE_REGISTER_OVERRIDES = {
 # AC200L (confirmed on an AC200L2, bluetti-community/bluetti-modbus#76)
 # shares AC500's register layout for these three, read as single registers
 # against the same unit's BLE readings - and, like AC500, has no official
-# register list to confirm the "+1" register from. EP500Pro (read on a real
-# unit with the AC500 profile, bluetti-registers#35) carries AC500's
+# register list to confirm the "+1" register from. EP500P (read on two real
+# units with the AC500 profile, bluetti-registers#35) carries AC500's
 # overrides for the same reason.
-SINGLE_REGISTER_TOTALS_DEVICES = {"AC500", "AC200L", "EP500Pro"}
+SINGLE_REGISTER_TOTALS_DEVICES = {"AC500", "AC200L", "EP500P"}
 
 # Devices whose fields are read one isolated block each rather than batched
 # with max_gap=5 (see the register_ranges step below): AC500 - and AC200L,
 # which has no official register list either, and on which widening a read
 # across an unconfirmed address took the coordinator down in exactly the
-# same way during its own development (bluetti-modbus#76). EP500Pro: same
+# same way during its own development (bluetti-modbus#76). EP500P: same
 # situation - AC500's register set read on a unit BLUETTI's list doesn't
 # cover, and a 50-register batch (the EP2000 profile) timed out on it
 # (bluetti-registers#35).
-ISOLATED_RANGE_DEVICES = {"AC500", "AC200L", "EP500Pro"}
+ISOLATED_RANGE_DEVICES = {"AC500", "AC200L", "EP500P"}
 
 
 # bluetti-registers documents each of these as spanning 2 registers
@@ -255,10 +255,11 @@ for d in schema:
         # ac_o_switch writeable at that owner's explicit request
         # (bluetti-modbus#76); its b_soc_low/b_soc_high carry no writeable
         # flag in the schema at all (bluetti-registers' AC200L overrides).
-        # EP500Pro: read-only until its owner tests a write - the schema
-        # carries no writeable flag for it (bluetti-registers#35), and it's
-        # deliberately absent from this tuple as a second guard.
-        if name in ("Balco260", "AC500", "AC200L") and f.get("writeable"):
+        # EP500P: ac_o_switch/dc_o_switch switch the outputs on real hardware
+        # (bluetti-registers#35, its second owner); b_soc_low/b_soc_high
+        # refuse a write there and g_i_switch's effect is unseen, so the
+        # schema carries no writeable flag for those (EP500P overrides).
+        if name in ("Balco260", "AC500", "AC200L", "EP500P") and f.get("writeable"):
             if "num_min" in f and "num_max" in f:
                 uses_range = True
                 fields += (
