@@ -5,18 +5,18 @@ Reads, one field at a time, registers outside BLUETTI's official Balco 260
 list and reports which ones answer with data, which read as zero, and which
 the device rejects. Strictly read-only (FC 0x03 only).
 
-Written for the Balco 260. On an AC500 or an EP500Pro (--device ac500 /
-ep500pro) it only ever talks to unit id 1, and refuses everything else:
+Written for the Balco 260. On an AC500 or an EP500P (--device ac500 /
+ep500p) it only ever talks to unit id 1, and refuses everything else:
 on a real AC500 (bluetti-registers#13, 2026-09-19) a single-register read
 at any other unit id - 2, 41 to 46, 250 - got no reply and **froze the
 unit's Modbus TCP stack until a power cycle**; disabling and re-enabling
 Modbus TCP on the device's web page did not recover it, and the same
-reads done by hand, without this script, froze it again. An EP500Pro
+reads done by hand, without this script, froze it again. An EP500P
 given the same requests the same day went silent per TCP connection
 instead (a fresh connection worked again) and answered nothing at those
 unit ids either. A Balco 260 ignores an unknown unit id and carries on;
 that family does not. The liveness register is also per device: 50001 is
-not served on an AC500 or an EP500Pro.
+not served on an AC500 or an EP500P.
 
 Its blocks:
 
@@ -186,19 +186,19 @@ from modbus_connection.tmodbus import ModbusConnection
 # The liveness check, read before probing and after every link recovery: a
 # register in the device's own documented range, with the range of values
 # it can plausibly hold (None: any answer will do). Balco 260: 50001
-# "Number of Inverters" (uint, 1~10). AC500 / EP500Pro: 50002 "Total AC
+# "Number of Inverters" (uint, 1~10). AC500 / EP500P: 50002 "Total AC
 # Output Power" - 50001 is not served there (bluetti-registers#13).
 SANITY: dict[str, tuple[int, range | None]] = {
     "balco260": (50001, range(1, 11)),
     "ac500": (50002, None),
-    "ep500pro": (50002, None),
+    "ep500p": (50002, None),
 }
 
 # Devices on which a request to any unit id other than 1 froze the Modbus
 # TCP stack until a power cycle (AC500, bluetti-registers#13, 2026-09-19;
-# EP500Pro is the same register family and is not risked). Every option
+# EP500P is the same register family and is not risked). Every option
 # that would address another unit id is refused for them in main().
-UNIT_1_ONLY_DEVICES = frozenset({"ac500", "ep500pro"})
+UNIT_1_ONLY_DEVICES = frozenset({"ac500", "ep500p"})
 
 # (name, address, register count, what declares it, unit, block)
 #
@@ -891,7 +891,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         choices=sorted(SANITY),
         default="balco260",
         help="which device this is (default balco260): picks the liveness register, and "
-        "on an AC500 / EP500Pro refuses any request to a unit id other than 1 - see the "
+        "on an AC500 / EP500P refuses any request to a unit id other than 1 - see the "
         "module docstring for why",
     )
     p.add_argument("--unit", type=int, default=1, help="Modbus unit id (default 1)")
