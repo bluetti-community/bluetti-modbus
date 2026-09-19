@@ -121,7 +121,9 @@ re-enable it afterwards).
 **Not on an AC500 or an EP500Pro.** On a real AC500 (bluetti-registers#13, 2026-09-19) a
 single-register read at any unit id other than 1 - 2, 41 to 46, 250 - got no reply and **froze the
 unit's Modbus TCP stack until a power cycle**; disabling and re-enabling Modbus TCP on the web
-page did not bring it back, and the same reads done by hand, without the probe, froze it again. A
+page did not bring it back, and the same reads done by hand, without the probe, froze it again. An
+EP500Pro given the same requests the same day answered them with silence and took new requests on
+a fresh TCP connection - less severe, still nothing gained: nothing answered at those unit ids. A
 Balco 260 shrugs an unknown unit id off; this family does not. Pass `--device ac500` (or
 `ep500pro`): the probe then uses a liveness register that family serves (50001 is not one) and
 refuses `--sweep-units`, `--pack-block`, `--unit` and every block that addresses another unit id.

@@ -11,9 +11,12 @@ on a real AC500 (bluetti-registers#13, 2026-09-19) a single-register read
 at any other unit id - 2, 41 to 46, 250 - got no reply and **froze the
 unit's Modbus TCP stack until a power cycle**; disabling and re-enabling
 Modbus TCP on the device's web page did not recover it, and the same
-reads done by hand, without this script, froze it again. A Balco 260
-ignores an unknown unit id and carries on; that family does not. The
-liveness register is also per device: 50001 is not served on an AC500.
+reads done by hand, without this script, froze it again. An EP500Pro
+given the same requests the same day went silent per TCP connection
+instead (a fresh connection worked again) and answered nothing at those
+unit ids either. A Balco 260 ignores an unknown unit id and carries on;
+that family does not. The liveness register is also per device: 50001 is
+not served on an AC500 or an EP500Pro.
 
 Its blocks:
 

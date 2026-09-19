@@ -305,9 +305,11 @@ unit id other than 1 got no reply and **froze its Modbus TCP stack until a
 power cycle** - toggling Modbus TCP on the device's web page did not
 recover it (bluetti-registers#13, 2026-09-19). A Balco 260 ignores an
 unknown unit id and carries on. So nothing in this library, and nothing
-built on it, may address another unit id on an AC500 or an EP500Pro (the
-same register family, not risked); unit-1 reads of unserved *addresses*
-are answered with a clean "illegal data address" there, as on a Balco 260.
+built on it, may address another unit id on an AC500 or an EP500Pro (an
+EP500Pro given the same requests went silent per connection rather than
+freezing, and answered nothing at those ids either); unit-1 reads of
+unserved *addresses* are answered with a clean "illegal data address"
+there, as on a Balco 260.
 
 A second one shapes writes: a Balco 260 confirms a Write Single Register
 (function 0x06) with the right function code and value but **not the Modbus
