@@ -118,6 +118,17 @@ decodes them - the check that an id serves a *whole* pack, not just a few regist
 else polling the device first (the Home Assistant integration entry in particular - disable it,
 re-enable it afterwards).
 
+**Not on an AC500 or an EP500Pro.** On a real AC500 (bluetti-registers#13, 2026-09-19) a
+single-register read at any unit id other than 1 - 2, 41 to 46, 250 - got no reply and **froze the
+unit's Modbus TCP stack until a power cycle**; disabling and re-enabling Modbus TCP on the web
+page did not bring it back, and the same reads done by hand, without the probe, froze it again. A
+Balco 260 shrugs an unknown unit id off; this family does not. Pass `--device ac500` (or
+`ep500pro`): the probe then uses a liveness register that family serves (50001 is not one) and
+refuses `--sweep-units`, `--pack-block`, `--unit` and every block that addresses another unit id.
+Unit-1 reads of unserved *addresses* are fine there - both AC500 testers' scans got clean
+"illegal data address" answers - so the plain run still works. Write your own scan for one of
+these? Same rule: `unit_id=1`, nothing else.
+
 When you need something the probe doesn't cover - a suspected wrong address, a field that isn't
 mapped at all yet, or hunting for something new (a switch, a missing sensor) - a small scanning
 script beats guessing. Here's a template (an AI assistant can adapt this for you - see the prompts

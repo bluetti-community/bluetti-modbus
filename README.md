@@ -227,8 +227,12 @@ AC500 also has a `d_num_battery_packs` field, but real-hardware testing
 found it means something different there: it stays at a fixed value (the
 device's maximum supported packs) regardless of how many are actually
 attached, unlike Balco260's confirmed real-time count. `aggregate_pack_summary()`/
-`battery_pack()` are Balco260-only for now - AC500's own battery-pack
-support (it does have swappable packs, e.g. B300S) isn't modeled here yet.
+`battery_pack()` are Balco260-only - and must stay so: on a real AC500 a
+read at any unit id other than 1 (2, 41-46, 250 were tried) got no reply
+and froze the device's Modbus TCP stack until a power cycle
+(bluetti-registers#13, 2026-09-19), so its B300S packs, if they are
+reachable at all, are not reachable the Balco 260 way. Never address
+another unit id on an AC500 or an EP500Pro.
 
 ## CLI
 
@@ -295,6 +299,15 @@ unserved addresses answered the 1-register way, 7 of 7 went silent the
 probing for an optional block (modbus-connection's `read_optional()`, or a
 scan of your own) only tells you anything if it never spans an address the
 device might not serve - see `HARDWARE_TESTING.md`, section 4.
+
+An AC500 is less forgiving still: a single-register read at any Modbus
+unit id other than 1 got no reply and **froze its Modbus TCP stack until a
+power cycle** - toggling Modbus TCP on the device's web page did not
+recover it (bluetti-registers#13, 2026-09-19). A Balco 260 ignores an
+unknown unit id and carries on. So nothing in this library, and nothing
+built on it, may address another unit id on an AC500 or an EP500Pro (the
+same register family, not risked); unit-1 reads of unserved *addresses*
+are answered with a clean "illegal data address" there, as on a Balco 260.
 
 A second one shapes writes: a Balco 260 confirms a Write Single Register
 (function 0x06) with the right function code and value but **not the Modbus

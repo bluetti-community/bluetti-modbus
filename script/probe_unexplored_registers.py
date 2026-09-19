@@ -3,7 +3,19 @@
 
 Reads, one field at a time, registers outside BLUETTI's official Balco 260
 list and reports which ones answer with data, which read as zero, and which
-the device rejects. Strictly read-only (FC 0x03 only). Its blocks:
+the device rejects. Strictly read-only (FC 0x03 only).
+
+Written for the Balco 260. On an AC500 or an EP500Pro (--device ac500 /
+ep500pro) it only ever talks to unit id 1, and refuses everything else:
+on a real AC500 (bluetti-registers#13, 2026-09-19) a single-register read
+at any other unit id - 2, 41 to 46, 250 - got no reply and **froze the
+unit's Modbus TCP stack until a power cycle**; disabling and re-enabling
+Modbus TCP on the device's web page did not recover it, and the same
+reads done by hand, without this script, froze it again. A Balco 260
+ignores an unknown unit id and carries on; that family does not. The
+liveness register is also per device: 50001 is not served on an AC500.
+
+Its blocks:
 
 - The EP2000 blocks (summary-ext, per-phase, der-status, ems-control,
   battery-control): every register bluetti-registers declares for EP2000 but
@@ -116,6 +128,7 @@ Run it from a machine on the same LAN as the device:
 
     python3 probe_unexplored_registers.py --host 192.168.1.50
     python3 probe_unexplored_registers.py --host 192.168.1.50 --sweep-units --max-timeouts 0
+    python3 probe_unexplored_registers.py --host 192.168.1.50 --device ac500   # unit 1 only
 
 Before running, disable the Bluetti Modbus integration entry in Home
 Assistant (or stop anything else polling the device): the Balco 260 accepts
@@ -167,11 +180,22 @@ from modbus_connection.exceptions import (
 )
 from modbus_connection.tmodbus import ModbusConnection
 
-# Register 50001 "Number of Inverters" (uint, 1~10) is in every Balco 260's
-# documented range - used as the liveness check before probing and after
-# every link recovery.
-SANITY_ADDRESS = 50001
-SANITY_RANGE = range(1, 11)
+# The liveness check, read before probing and after every link recovery: a
+# register in the device's own documented range, with the range of values
+# it can plausibly hold (None: any answer will do). Balco 260: 50001
+# "Number of Inverters" (uint, 1~10). AC500 / EP500Pro: 50002 "Total AC
+# Output Power" - 50001 is not served there (bluetti-registers#13).
+SANITY: dict[str, tuple[int, range | None]] = {
+    "balco260": (50001, range(1, 11)),
+    "ac500": (50002, None),
+    "ep500pro": (50002, None),
+}
+
+# Devices on which a request to any unit id other than 1 froze the Modbus
+# TCP stack until a power cycle (AC500, bluetti-registers#13, 2026-09-19;
+# EP500Pro is the same register family and is not risked). Every option
+# that would address another unit id is refused for them in main().
+UNIT_1_ONLY_DEVICES = frozenset({"ac500", "ep500pro"})
 
 # (name, address, register count, what declares it, unit, block)
 #
@@ -533,14 +557,15 @@ class Prober:
         self.results: list[dict[str, object]] = []
 
     async def sanity(self) -> bool:
+        address, plausible = SANITY[self.args.device]
         try:
-            words = await self.unit.read_holding_registers(SANITY_ADDRESS, 1)
+            words = await self.unit.read_holding_registers(address, 1)
         except ModbusError as err:
             print(f"  liveness check failed: {type(err).__name__}: {err}")
             return False
-        ok = words[0] in SANITY_RANGE
+        ok = plausible is None or words[0] in plausible
         print(
-            f"  liveness check: register {SANITY_ADDRESS} = {words[0]} ({'ok' if ok else 'unexpected'})"
+            f"  liveness check: register {address} = {words[0]} ({'ok' if ok else 'unexpected'})"
         )
         return ok
 
@@ -740,7 +765,7 @@ class Prober:
         # formatting slip in the tables below must never cost it (it did
         # once - 2026-09-17, multi-register values in the sweep matrix).
         payload = {
-            "device": "balco260",
+            "device": self.args.device,
             "host": self.args.host,
             "unit": self.args.unit,
             "probed_at": datetime.now(UTC).isoformat(timespec="seconds"),
@@ -856,8 +881,16 @@ class Prober:
 
 def parse_args(argv: list[str]) -> argparse.Namespace:
     p = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    p.add_argument("--host", help="IP address of the Balco 260")
+    p.add_argument("--host", help="IP address of the device")
     p.add_argument("--port", type=int, default=502)
+    p.add_argument(
+        "--device",
+        choices=sorted(SANITY),
+        default="balco260",
+        help="which device this is (default balco260): picks the liveness register, and "
+        "on an AC500 / EP500Pro refuses any request to a unit id other than 1 - see the "
+        "module docstring for why",
+    )
     p.add_argument("--unit", type=int, default=1, help="Modbus unit id (default 1)")
     p.add_argument(
         "--timeout", type=float, default=5.0, help="seconds to wait for each reply"
@@ -991,9 +1024,25 @@ def main(argv: list[str]) -> int:
     if not args.host:
         print("--host is required (or use --list)")
         return 2
+    if args.device in UNIT_1_ONLY_DEVICES:
+        other_units = {args.unit} | {
+            BLOCK_UNIT[c[5]] for c in candidates if c[5] in BLOCK_UNIT
+        }
+        if args.sweep_units:
+            other_units |= {int(u) for u in args.sweep_units.split(",") if u.strip()}
+        if args.pack_block:
+            other_units |= {int(u) for u in args.pack_block.split(",") if u.strip()}
+        other_units.discard(1)
+        if other_units:
+            print(
+                f"refusing: on an {args.device.upper()} a request to a unit id other than 1 "
+                f"(here {sorted(other_units)}) froze the device's Modbus TCP stack until a "
+                "power cycle - see the module docstring (bluetti-registers#13). Unit 1 only."
+            )
+            return 2
     if not args.yes:
         print(
-            "The Balco 260 accepts very few simultaneous Modbus TCP connections.\n"
+            "The device accepts very few simultaneous Modbus TCP connections.\n"
             "Disable the Bluetti Modbus integration entry in Home Assistant (and stop\n"
             "anything else polling this device) before continuing."
         )
