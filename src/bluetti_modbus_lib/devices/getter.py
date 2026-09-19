@@ -6,13 +6,14 @@ from .ac200l import AC200L
 from .ac500 import AC500
 from .balco260 import Balco260
 from .balco500 import Balco500
+from .ep500pro import EP500Pro
 from .ep2000 import EP2000
 from .smeter import SMeter
 
 
 def get_device(
     d: str, unit: ModbusUnit | None = None
-) -> AC200L | AC500 | Balco260 | Balco500 | EP2000 | SMeter | None:
+) -> AC200L | AC500 | Balco260 | Balco500 | EP2000 | EP500Pro | SMeter | None:
     # unit=None is a real, supported call (e.g. sensor.py inspects a
     # device's fields without a live connection) - Component.__init__ only
     # stores the reference, it doesn't dereference it, so this is safe even
@@ -28,6 +29,8 @@ def get_device(
         return Balco500(unit)
     if d == "ep2000":
         return EP2000(unit)
+    if d == "ep500pro":
+        return EP500Pro(unit)
     if d == "smeter":
         return SMeter(unit)
     else:

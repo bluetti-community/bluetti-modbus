@@ -59,6 +59,13 @@ Supported out of the box:
   output switch is confirmed writable, the AC one writable at the owner's
   request. The device names itself "AC200L" - nothing yet says an
   original AC200L exposes Modbus TCP at all
+- **EP500Pro** (beta, read-only): a home backup station on which Modbus
+  TCP appeared with IoT firmware 9041.17, absent from BLUETTI's official
+  Modbus register list. Its profile (bluetti-registers#35) is AC500's
+  register set, read on a real unit by @TobiGitHubi with the AC500 class:
+  device type (`EP500P`), SOC, AC/PV powers and firmware versions match
+  the app. Energies, PV fields and the SOC thresholds are carried over
+  unverified, and nothing is writable until its owner has tested a write
 
 Field names, units, and register addresses come from
 [bluetti-registers][bluetti-registers] - `devices/balco260.py` is generated
@@ -265,7 +272,7 @@ follow the naming convention documented in
 Two different things in this library talk Modbus, for two different
 audiences:
 
-- `AC500`, `Balco260`, `Balco500`, `EP2000`, and `SMeter`
+- `AC200L`, `AC500`, `Balco260`, `Balco500`, `EP2000`, `EP500Pro`, and `SMeter`
   (`bluetti_modbus_lib.devices`) are the integration surface: each takes a
   `ModbusUnit` supplied by the caller,
   built from whichever backend and connection the caller already manages.
