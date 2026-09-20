@@ -1,6 +1,6 @@
 import requests
 
-tag = "fp-beta-1"
+tag = "fp-beta-2"
 url = f"https://github.com/bluetti-community/bluetti-registers/releases/download/{tag}/modbus-tcp.json"
 
 output = "src/bluetti_modbus_lib/devices/"
