@@ -73,10 +73,13 @@ Supported out of the box:
   type string the device gives at 50200: on the Modbus side a Balco-family
   device, whose real US unit answered the whole Balco 260 profile
   (bluetti-registers#38, by @MadPB) with values matching the app - energy
-  totals, SOC, thresholds, time to empty to the minute. Balco 260's
-  register set under its own name, with the pack voltage at 0.01 V, signed
-  per-phase grid power, the "(Single)" local fields and a DC output switch
-  register. Nothing writable until a write has been tested
+  totals, SOC, thresholds, time to empty to the minute - and the whole
+  Balco 500 profile too, so the twelve registers the Balco 260 never fills
+  are served here, several of them populated. BLUETTI's full BalcoXX set
+  under its own name, with the pack voltage at 0.01 V, signed per-phase
+  grid power, `b_c` a magnitude with `b_status` giving the direction, and
+  a DC output switch register. Nothing writable until a write has been
+  tested
 
 Field names, units, and register addresses come from
 [bluetti-registers][bluetti-registers] - `devices/balco260.py` is generated

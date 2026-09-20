@@ -35,26 +35,27 @@ def test_get_device_fp():
     assert isinstance(get_device("fp"), FP)
 
 
-def test_fp_is_balco260s_register_set_plus_dc_switch_and_locals_read_only():
-    # A real FridgePower answered the whole Balco 260 profile
-    # (bluetti-registers#38): same fields, same addresses, plus the DC
-    # output switch and the "(Single)" local fields that unit populates -
-    # and nothing writable, no write having been tested there. The
-    # Balco 260's own max_span stays with it: its plan is the one that
-    # read the unit in full. Catches the generated file drifting from that.
+def test_fp_is_the_full_balco_set_plus_dc_switch_read_only():
+    # A real FridgePower answered the whole Balco 260 profile and then the
+    # whole Balco 500 one - BLUETTI's full BalcoXX set, the twelve
+    # registers the Balco 260 never fills included (bluetti-registers#38,
+    # #40): same fields, same addresses, same widths, plus the DC output
+    # switch - and nothing writable, no write having been tested there.
+    # The Balco 260's own max_span stays with it out of caution: that
+    # device's Modbus stack failed on wide blocks months apart, and one
+    # good read at 50 on a sibling proves nothing about that. Catches the
+    # generated file drifting from that.
+    balco500 = get_device("balco500")
     balco260 = get_device("balco260")
     fp = get_device("fp")
-    assert balco260 is not None
+    assert balco500 is not None and balco260 is not None
     assert fp is not None
 
-    assert set(fp.field_names()) == set(balco260.field_names()) | {
-        "dc_o_switch",
-        "g_i_p_local",
-        "ac_o_p_local",
-        "pv_i_e_local",
-    }
-    for name in balco260.field_names():
-        assert fp.get_field(name).address == balco260.get_field(name).address, name
+    assert set(fp.field_names()) >= set(balco500.field_names()) | {"dc_o_switch"}
+    assert set(fp.field_names()) >= set(balco260.field_names())
+    for name in balco500.field_names():
+        assert fp.get_field(name).address == balco500.get_field(name).address, name
+        assert fp.get_field(name).count == balco500.get_field(name).count, name
     assert fp.max_span == balco260.max_span == 20
     assert not [n for n in fp.field_names() if fp.get_field(n).writable]
     # The unit's pack voltage is 0.01 V, not the Balco 260's 0.1 (raw 2007
