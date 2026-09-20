@@ -66,12 +66,12 @@ def test_fp_is_the_full_balco_set_plus_dc_switch_read_only():
     assert fp.get_field("g_i_p_local").signed
 
 
-def test_ep500p_is_ac500s_register_set_plus_read_only_thresholds():
+def test_ep500p_is_ac500s_register_set_with_read_only_thresholds():
     # EP500P's profile is AC500's register set, read on two real units with
     # the AC500 class (bluetti-registers#35): same fields, same addresses,
-    # same decode, plus the SOC thresholds at AC200L's addresses - which
-    # refuse a write on this device, so they are read-only, unlike Balco
-    # 260's. The two output switches are the only writable fields (switched
+    # same decode, including the SOC thresholds at AC200L's addresses -
+    # which refuse a write on this device, so they are read-only, unlike
+    # Balco 260's. The two output switches are the only writable fields (switched
     # on real hardware); g_i_switch is not, unlike AC500's - it reads a real
     # state there. Catches the generated file drifting from that.
     ac500 = get_device("ac500")
@@ -79,11 +79,10 @@ def test_ep500p_is_ac500s_register_set_plus_read_only_thresholds():
     assert ac500 is not None
     assert ep500p is not None
 
-    assert set(ep500p.field_names()) == set(ac500.field_names()) | {
-        "b_soc_low",
-        "b_soc_high",
-    }
-    assert set(ep500p.register_ranges) > set(ac500.register_ranges)
+    # AC500 gained the same two thresholds later (bluetti-registers#41), so
+    # the two sets are now identical, and so are their read plans.
+    assert set(ep500p.field_names()) == set(ac500.field_names())
+    assert ep500p.register_ranges == ac500.register_ranges
 
     def writable(device):
         return {n for n in device.field_names() if device.get_field(n).writable}
