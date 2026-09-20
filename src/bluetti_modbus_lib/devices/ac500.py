@@ -36,6 +36,8 @@ class AC500(BluettiDevice):
         (57001, 57001),
         (57005, 57005),
         (57009, 57009),
+        (57016, 57016),
+        (57017, 57017),
     )
 
     ac_o_p_total = field(
@@ -189,4 +191,14 @@ class AC500(BluettiDevice):
     g_i_switch = field(
         t=FieldType.UINT16,
         address=57009,
+    )
+    b_soc_low = field(
+        t=FieldType.UINT16,
+        address=57016,
+        unit="%",
+    )
+    b_soc_high = field(
+        t=FieldType.UINT16,
+        address=57017,
+        unit="%",
     )

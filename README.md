@@ -39,9 +39,10 @@ Supported out of the box:
 - **EP2000**: the same Balco 260 register set plus a rated-capacity and
   EMS/grid-export control block - sourced from BLUETTI's own official
   register spec, not yet verified against real EP2000 hardware
-- **AC500**: a smaller register set (battery/PV/grid/AC totals, no BC260
-  expansion pack support yet - see the "Multiple battery packs" section
-  below), confirmed against real hardware by the community
+- **AC500**: a smaller register set (battery/PV/grid/AC totals, the
+  "Customized UPS" SOC thresholds read-only, no per-pack data - see the
+  "Multiple battery packs" section below), confirmed against real
+  hardware by the community
   (bluetti-official/bluetti-modbus-tcp-slave#5,
   bluetti-community/bluetti-registers#13) but not yet confirmed by BLUETTI
   support directly, unlike every other device here
@@ -246,9 +247,13 @@ attached, unlike Balco260's confirmed real-time count. `aggregate_pack_summary()
 `battery_pack()` are Balco260-only - and must stay so: on a real AC500 a
 read at any unit id other than 1 (2, 41-46, 250 were tried) got no reply
 and froze the device's Modbus TCP stack until a power cycle
-(bluetti-registers#13, 2026-09-19), so its B300S packs, if they are
-reachable at all, are not reachable the Balco 260 way. Never address
-another unit id on an AC500 or an EP500P.
+(bluetti-registers#13, 2026-09-19). Never address another unit id on an
+AC500 or an EP500P. What that family serves at 51200-51249 on unit 1 is
+a *window* onto whichever pack the BLUETTI app has selected - zeros until
+the app looks at a pack, then that pack's BMS version, voltage, SOC and
+SOH - and the selector behind it is not reachable over Modbus TCP (a
+write to it is refused, 2026-09-20), so per-pack data cannot be read from
+these devices until BLUETTI exposes it.
 
 ## CLI
 
