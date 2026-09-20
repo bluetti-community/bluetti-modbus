@@ -1,6 +1,6 @@
 import requests
 
-tag = "ep500p-beta-2"
+tag = "fp-beta-1"
 url = f"https://github.com/bluetti-community/bluetti-registers/releases/download/{tag}/modbus-tcp.json"
 
 output = "src/bluetti_modbus_lib/devices/"
@@ -172,7 +172,11 @@ NIBBLE_FIELDS = {"pv_dc_count": False, "pv_ac_count": True}
 # without fragmenting reads too far (10 blocks become 15) - not proven to
 # be the exact safe threshold, just a well-margined starting point pending
 # extended real-hardware monitoring (see this branch's PR description).
-MAX_SPAN_OVERRIDES = {"Balco260": 20}
+# FP (FridgePower) shares the Balco 260's register set and IoT module and
+# answered the Balco 260 plan - built with this same override - in full on
+# real hardware (bluetti-registers#38); it keeps the override rather than
+# being the first Balco-family device read with 50-register blocks.
+MAX_SPAN_OVERRIDES = {"Balco260": 20, "FP": 20}
 
 for d in schema:
     name = d["name"]

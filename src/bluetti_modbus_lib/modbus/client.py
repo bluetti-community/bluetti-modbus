@@ -10,6 +10,7 @@ from ..devices import (
     AC500,
     EP500P,
     EP2000,
+    FP,
     Balco260,
     Balco500,
     SMeter,
@@ -68,9 +69,9 @@ class BluettiModbusClient:
         device = get_device(device_type, self.conn.for_unit(1))
         if device is None:
             raise ValueError(f"Unsupported device type: {device_type!r}")
-        self.device: AC200L | AC500 | Balco260 | Balco500 | EP2000 | EP500P | SMeter = (
-            device
-        )
+        self.device: (
+            AC200L | AC500 | FP | Balco260 | Balco500 | EP2000 | EP500P | SMeter
+        ) = device
 
     async def aclose(self) -> None:
         """Close the connection permanently. Call when actually done with this client."""
