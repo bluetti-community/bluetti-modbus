@@ -69,6 +69,14 @@ Supported out of the box:
   app, and the AC/DC output switches switch the outputs (writable).
   Energies and PV fields are carried over unverified; grid charging is a
   read-only state until its effect has been seen
+- **FP** (beta, read-only) - the BLUETTI FridgePower, named here after the
+  type string the device gives at 50200: on the Modbus side a Balco-family
+  device, whose real US unit answered the whole Balco 260 profile
+  (bluetti-registers#38, by @MadPB) with values matching the app - energy
+  totals, SOC, thresholds, time to empty to the minute. Balco 260's
+  register set under its own name, with the pack voltage at 0.01 V, signed
+  per-phase grid power, the "(Single)" local fields and a DC output switch
+  register. Nothing writable until a write has been tested
 
 Field names, units, and register addresses come from
 [bluetti-registers][bluetti-registers] - `devices/balco260.py` is generated
@@ -281,7 +289,7 @@ follow the naming convention documented in
 Two different things in this library talk Modbus, for two different
 audiences:
 
-- `AC200L`, `AC500`, `Balco260`, `Balco500`, `EP2000`, `EP500P`, and `SMeter`
+- `AC200L`, `AC500`, `Balco260`, `Balco500`, `EP2000`, `EP500P`, `FP`, and `SMeter`
   (`bluetti_modbus_lib.devices`) are the integration surface: each takes a
   `ModbusUnit` supplied by the caller,
   built from whichever backend and connection the caller already manages.

@@ -3,6 +3,7 @@ from bluetti_modbus_lib.devices import (
     AC500,
     EP500P,
     EP2000,
+    FP,
     Balco260,
     Balco500,
     SMeter,
@@ -28,6 +29,40 @@ def test_get_device_balco500():
 
 def test_get_device_ep500p():
     assert isinstance(get_device("ep500p"), EP500P)
+
+
+def test_get_device_fp():
+    assert isinstance(get_device("fp"), FP)
+
+
+def test_fp_is_balco260s_register_set_plus_dc_switch_and_locals_read_only():
+    # A real FridgePower answered the whole Balco 260 profile
+    # (bluetti-registers#38): same fields, same addresses, plus the DC
+    # output switch and the "(Single)" local fields that unit populates -
+    # and nothing writable, no write having been tested there. The
+    # Balco 260's own max_span stays with it: its plan is the one that
+    # read the unit in full. Catches the generated file drifting from that.
+    balco260 = get_device("balco260")
+    fp = get_device("fp")
+    assert balco260 is not None
+    assert fp is not None
+
+    assert set(fp.field_names()) == set(balco260.field_names()) | {
+        "dc_o_switch",
+        "g_i_p_local",
+        "ac_o_p_local",
+        "pv_i_e_local",
+    }
+    for name in balco260.field_names():
+        assert fp.get_field(name).address == balco260.get_field(name).address, name
+    assert fp.max_span == balco260.max_span == 20
+    assert not [n for n in fp.field_names() if fp.get_field(n).writable]
+    # The unit's pack voltage is 0.01 V, not the Balco 260's 0.1 (raw 2007
+    # = 20.07 V for a 6-cell pack); its per-phase grid power is signed.
+    assert fp.get_field("b_v_total").scale == 0.01
+    assert fp.get_field("b_v").scale == 0.01
+    assert fp.get_field("g_1_i_p").signed and not balco260.get_field("g_1_i_p").signed
+    assert fp.get_field("g_i_p_local").signed
 
 
 def test_ep500p_is_ac500s_register_set_plus_read_only_thresholds():
