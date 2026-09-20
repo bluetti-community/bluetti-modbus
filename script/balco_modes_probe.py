@@ -46,9 +46,13 @@ decompiled.
 Run on a real Balco 260 on 2026-09-20 (IoT 50012.01.x): step 1, every
 address "illegal data address" under FC 0x03 and under FC 0x04 alike (the
 function code is accepted, the space is not exposed there either); step 2,
-FC 0x06 2005 <- 2 refused with "illegal data address" - the gateway does
-not forward a write addressed at the internal space, only translates the
-documented ones.
+FC 0x06 2005 <- 2 refused with "illegal data address", and the same value
+as a one-register FC 0x10 refused the same way. The gateway does not
+forward a read or a write addressed at the internal space under any of
+the four function codes - it only translates the documented registers.
+The TCP route to the working modes and the scheduler table is closed on
+this firmware; what is left is BLUETTI mapping them into the documented
+range, or the app's own transports (BLE, the cloud's MQTT tunnel).
 """
 
 from __future__ import annotations
