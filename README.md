@@ -320,7 +320,9 @@ address it was asked to write** - the same setting's address in the device's
 own internal register space, the one the BLUETTI app speaks (57016 → 2022,
 57009 → 2207, and so on; confirmed on real hardware for all five of its
 writable registers, 2026-09-16). An AC200L2 does the same with its own,
-different internal map (57005 → 3008, 2026-09-18). A strict Modbus client
+different internal map (57005 → 3008, 2026-09-18), and an EP500Pro
+confirms the same switch at the same 3008 (2026-09-20) - the portable
+stations share one internal map, the Balco family another. A strict Modbus client
 reports that as a protocol error even though the write applied, so
 `BluettiDevice.write()` recognises such a confirmation and treats it as
 success, logging the echoed address - at debug when it is the one on file
