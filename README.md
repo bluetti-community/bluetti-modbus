@@ -217,12 +217,14 @@ serial number, voltage, SOC, SOH, cycle count, firmware version and energies.
 An earlier reading of BLUETTI's description had the packs at slave 2, 3,
 ..., which read as zeros - wrong addresses, not missing data.
 
-One thing to check before showing a pack's values: a slot the inverter still
-knows can answer its serial number and **zeros for everything else** - a
-pack asleep, off, or unplugged since (seen on slot 41 of that same unit, and
-on a Balco260 with no active pack at all). `pack_is_reporting(values)` tells
-the two apart (type string present, or a non-zero voltage); until it is
-True, treat the pack as absent rather than as "0 %, 0 V" - its current in
+One thing to check before showing a pack's values: a slot can answer its
+serial number and **zeros for everything else** (seen on slot 41 of that
+same unit, and on a Balco260 with no pack attached at all). BLUETTI has
+confirmed this as a firmware issue and plans a fix, and has said a future
+firmware will also list the unit ids in use and the serial number behind
+each - until then `pack_is_reporting(values)` tells a reporting pack from
+such a slot (type string present, or a non-zero voltage); while it is
+False, treat the pack as absent rather than as "0 %, 0 V" - its current in
 particular would otherwise decode to 3000 A, 0 being 30000 below its
 reference.
 

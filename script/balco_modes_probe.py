@@ -51,8 +51,9 @@ as a one-register FC 0x10 refused the same way. The gateway does not
 forward a read or a write addressed at the internal space under any of
 the four function codes - it only translates the documented registers.
 The TCP route to the working modes and the scheduler table is closed on
-this firmware; what is left is BLUETTI mapping them into the documented
-range, or the app's own transports (BLE, the cloud's MQTT tunnel).
+this firmware. Asked, BLUETTI said it has no plans at present to expose
+these settings over Modbus TCP (2026-09-20); what is left is the app's
+own transports (BLE, the cloud's MQTT tunnel), or that position changing.
 """
 
 from __future__ import annotations

@@ -32,11 +32,12 @@ MAX_BATTERY_PACKS = 5
 # SOH, cycle count, firmware version and energies - different from each
 # other and from the built-in pack at slave 1 - with d_num_battery_packs
 # reading 4 at the aggregate slave. Slot 41 on that same unit, and on a
-# second Balco260 with no active pack, answered a serial number and zeros
-# for everything else: a pack the inverter knows but that is not reporting
-# (asleep, off, or unplugged since) - see pack_is_reporting(). 90-96 and
-# 250 repeat the built-in pack field for field: aliases of the aggregate
-# view, not packs.
+# second Balco260 with no pack attached, answered a serial number and zeros
+# for everything else - a firmware issue BLUETTI has since confirmed and
+# plans to fix (2026-09-20); until then see pack_is_reporting(). BLUETTI
+# has also said a future firmware will list the unit ids in use and the
+# serial number behind each. 90-96 and 250 repeat the built-in pack field
+# for field: aliases of the aggregate view, not packs.
 EXPANSION_PACK_FIRST_SLAVE_ID = 41
 
 # BLUETTI confirmed by email (2026-08-29) that b_soc_total/b_soh_total
@@ -90,13 +91,13 @@ def pack_slave_id(pack_num: int) -> int:
 def pack_is_reporting(values: Mapping[str, Any]) -> bool:
     """Whether a pack's read carries live data, or just its serial number.
 
-    Real multi-pack hardware (2026-09-18, #55) showed a slot whose pack
-    the inverter still knows - the serial number is served - but that
-    reports nothing else: type string empty, voltage, SOC, SOH, cycle count,
-    versions and energies all 0. Such a pack must not be shown as "0 %, 0 V"
-    (or, worse, as 3000 A: b_c's raw 0 is 30000 below its reference); a
-    consumer treats it as absent until it reports. A reporting pack always
-    has its type string and a non-zero voltage.
+    Real multi-pack hardware (2026-09-18, #55) showed a slot that serves a
+    serial number but reports nothing else: type string empty, voltage,
+    SOC, SOH, cycle count, versions and energies all 0 - a firmware issue
+    BLUETTI has confirmed and plans to fix. Such a slot must not be shown
+    as "0 %, 0 V" (or, worse, as 3000 A: b_c's raw 0 is 30000 below its
+    reference); a consumer treats it as absent until it reports. A
+    reporting pack always has its type string and a non-zero voltage.
     """
     return bool(values.get("b_type")) or bool(values.get("b_v"))
 
