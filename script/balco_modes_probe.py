@@ -33,11 +33,22 @@ events) or 2029.
     pip install "modbus-connection[tmodbus]"
     python3 balco_modes_probe.py --host 192.168.1.50                       # step 1
     python3 balco_modes_probe.py --host 192.168.1.50 --write-mode 2 --yes  # step 2
+    python3 balco_modes_probe.py --host 192.168.1.50 --write-mode 2 --fc16 --yes  # step 2, FC 0x10
     python3 balco_modes_probe.py --host 192.168.1.50 --write-period 1,2 --yes  # step 3
 
 --write-mode takes the value the app shows: 1 custom, 2 self-consumption,
-3 backup (tou_codec.WorkingMode). --write-period takes the two timeType
-values to try for the start and end record - they were not decompiled.
+3 backup (tou_codec.WorkingMode); --fc16 sends it as a one-register Write
+Multiple Registers instead of Write Single Register, in case the gateway
+filters the two function codes differently. --write-period takes the two
+timeType values to try for the start and end record - they were not
+decompiled.
+
+Run on a real Balco 260 on 2026-09-20 (IoT 50012.01.x): step 1, every
+address "illegal data address" under FC 0x03 and under FC 0x04 alike (the
+function code is accepted, the space is not exposed there either); step 2,
+FC 0x06 2005 <- 2 refused with "illegal data address" - the gateway does
+not forward a write addressed at the internal space, only translates the
+documented ones.
 """
 
 from __future__ import annotations
@@ -182,18 +193,24 @@ class Prober:
                     print(f"{'':32s} not decodable as TOU records: {err}")
         self.results.append(rec)
 
-    async def write_single(self, name: str, address: int, value: int) -> bool:
-        """FC 0x06. Returns True if the device confirmed the write."""
+    async def write_single(
+        self, name: str, address: int, value: int, *, fc16: bool = False
+    ) -> bool:
+        """FC 0x06 (or a one-register FC 0x10). True if the device confirmed it."""
         assert address not in NEVER_WRITE
+        fc = "fc16" if fc16 else "fc06"
         rec: dict[str, object] = {
-            "op": "write-fc06",
+            "op": f"write-{fc}",
             "name": name,
             "address": address,
             "value": value,
         }
-        label = f"FC06 {name:20s} {address:<6} <- {value}"
+        label = f"{fc.upper()} {name:20s} {address:<6} <- {value}"
         try:
-            await self.unit.write_register(address, value)
+            if fc16:
+                await self.unit.write_registers(address, [value])
+            else:
+                await self.unit.write_register(address, value)
         except IllegalDataAddressError:
             rec["status"] = "illegal-address"
             print(
@@ -325,7 +342,9 @@ class Prober:
                 print(
                     f"\nstep 2: writing working mode {value} ({tou.WorkingMode(value).name}) back to 2005\n"
                 )
-                await self.write_single("WORKING_MODE", tou.WORKING_MODE, value)
+                await self.write_single(
+                    "WORKING_MODE", tou.WORKING_MODE, value, fc16=self.args.fc16
+                )
 
             if self.args.write_period is not None:
                 print("\nstep 3: one inert TOU period at 26001\n")
@@ -391,6 +410,11 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         "shows (1 custom, 2 self-consumption, 3 backup), so the write changes nothing",
     )
     p.add_argument(
+        "--fc16",
+        action="store_true",
+        help="send --write-mode as a one-register Write Multiple Registers (0x10)",
+    )
+    p.add_argument(
         "--write-period",
         type=_time_types,
         metavar="START,END",
@@ -409,7 +433,7 @@ def main(argv: list[str]) -> int:
     args = parse_args(argv)
     writes = []
     if args.write_mode is not None:
-        writes.append(f"FC06 2005 <- {args.write_mode}")
+        writes.append(f"FC{16 if args.fc16 else '06'} 2005 <- {args.write_mode}")
     if args.write_period is not None:
         writes.append("FC16 26001 <- 14 registers (one inert period)")
     if not args.yes:
