@@ -7,6 +7,7 @@ import pytest
 from modbus_connection.exceptions import (
     AcknowledgeError,
     IllegalDataAddressError,
+    ModbusConnectionError,
     ModbusError,
     ModbusProtocolError,
     ModbusTimeoutError,
@@ -100,6 +101,26 @@ async def test_async_update_with_retry_retries_once_after_a_corrupted_frame():
         "Expected response to start with function code and byte count"
     )
     device.async_update = AsyncMock(side_effect=[corrupted, None])  # type: ignore[method-assign]
+
+    await device.async_update_with_retry()
+
+    assert device.async_update.await_count == 2
+
+
+@pytest.mark.asyncio
+async def test_async_update_with_retry_retries_after_a_dropped_connection():
+    # A real Balco 260 drops the connection mid-request now and then, always
+    # on the first block of a poll ("Connection lost before response was
+    # received"); the backend reconnects on the next request, so this is as
+    # transient as a corrupted frame and is retried the same way.
+    device = _balco260()
+    dropped = BluettiModbusConnectionError(
+        "read_holding_registers(50001, 19): Connection lost before response was received."
+    )
+    dropped.__cause__ = ModbusConnectionError(
+        "Connection lost before response was received."
+    )
+    device.async_update = AsyncMock(side_effect=[dropped, None])  # type: ignore[method-assign]
 
     await device.async_update_with_retry()
 
