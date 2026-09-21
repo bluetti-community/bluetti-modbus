@@ -176,6 +176,18 @@ the selector is not reachable over Modbus TCP, so per-pack data cannot be
 read from that family. Never address another unit id on those devices (see
 [Device behaviours](#device-behaviours-this-library-works-around)).
 
+### Encrypted mode (Modbus/TLS)
+
+A device's web page offers an encrypted Modbus TCP mode: it is Modbus over
+TLS with your own certificates - the page takes a CA certificate, a server
+certificate and its key, and the client authenticates with a certificate
+signed by that CA, on the same port as plain mode. `BluettiModbusClient`
+speaks it with `tls=True` (`verify` = the CA file, `check_hostname=False`,
+`client_cert`/`client_key`); the device classes take a
+`modbus_connection.ModbusTlsParams` connection the same way. Leave the mode
+off unless you have uploaded certificates: with it on, plain connections
+are refused.
+
 ## CLI
 
 The optional CLI reads a device straight from the terminal - for testing,

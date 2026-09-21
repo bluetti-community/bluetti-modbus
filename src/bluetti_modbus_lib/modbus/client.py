@@ -36,23 +36,32 @@ class BluettiModbusClient:
     """A device behind a connection this client owns - for the CLI and standalone use.
 
     Plain Modbus TCP by default. ``tls=True`` opens a Modbus/TLS (Modbus
-    Security) link instead, for a device that offers one - conventionally
-    on port 802 - with the TLS options ``modbus_connection.ModbusTlsParams``
+    Security) link instead, with the options ``modbus_connection.ModbusTlsParams``
     takes:
 
     - ``verify``: ``True`` checks the server certificate against the system
-      store, ``False`` skips verification (a self-signed device certificate),
-      a path names a CA file or directory to check against.
+      store, a path names the CA file or directory to check against,
+      ``False`` skips verification altogether.
     - ``check_hostname``: whether the certificate must name the host; only
       meaningful with verification on.
-    - ``client_cert`` / ``client_key`` / ``client_key_password``: a client
+    - ``client_cert`` / ``client_key`` / ``client_key_password``: the client
       certificate, for a device that requires one.
 
-    Both backends handle TLS. Example, for a device with a self-signed
-    certificate::
+    BLUETTI's encrypted mode (developer.bluetti.com, "Modbus TCP") is
+    exactly this: the device's web page takes a CA certificate, a server
+    certificate and its key, and the client authenticates with a
+    certificate signed by that CA, on the same port as plain mode (502 by
+    default). Both backends handle the link. Example::
 
         client = BluettiModbusClient(
-            "192.168.1.100", 802, "ep500p", tls=True, verify=False
+            "192.168.1.100",
+            502,
+            "ep500p",
+            tls=True,
+            verify="ca.pem",
+            check_hostname=False,
+            client_cert="client.pem",
+            client_key="client.key",
         )
         values = await client.read()
         await client.aclose()
