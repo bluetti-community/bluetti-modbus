@@ -59,7 +59,7 @@ AC500_SINGLE_REGISTER_OVERRIDES = {
     "pv_i_p_total",
     "g_i_p_total",
 }
-# AC200L (confirmed on an AC200L2, bluetti-community/bluetti-modbus#76)
+# AC200L (confirmed on a real unit, bluetti-community/bluetti-modbus#76)
 # shares AC500's register layout for these three, read as single registers
 # against the same unit's BLE readings - and, like AC500, has no official
 # register list to confirm the "+1" register from. EP500P (read on two real

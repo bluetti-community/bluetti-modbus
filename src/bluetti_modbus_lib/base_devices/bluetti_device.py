@@ -29,14 +29,14 @@ _WRITE_SINGLE_REGISTER_FUNCTION_CODE = 6
 # an internal one and builds the confirmation from that, so a strict Modbus
 # client sees a confirmation that doesn't match its request. That internal
 # space differs between product families - a Balco 260 confirms its AC
-# output switch at 2011, an AC200L2 its DC output switch at 3008, nowhere
+# output switch at 2011, an AC200L its DC output switch at 3008, nowhere
 # near the 2012 the Balco family's map would predict - so the table is
 # keyed by device class name, then by the Modbus holding-register address
 # written to, and holds only captured echoes: every Balco 260 entry from
 # 2026-09-16 (all five of its writable registers), the AC200L one from
 # 2026-09-18 (bluetti-modbus#78), the EP500P one from 2026-09-20 (its
 # owner's first toggles in Home Assistant, hassio-bluetti-modbus#122) -
-# the same 3008 as the AC200L2, the portable stations sharing one internal
+# the same 3008 as the AC200L, the portable stations sharing one internal
 # map. A device or register with no entry gets its echo accepted and
 # reported - see BluettiDevice.write.
 _INTERNAL_WRITE_ADDRESS: dict[str, dict[int, int]] = {
@@ -48,7 +48,7 @@ _INTERNAL_WRITE_ADDRESS: dict[str, dict[int, int]] = {
         57017: 2023,  # b_soc_high - SYS_SOC_HIGH_CAPACITY
     },
     "AC200L": {
-        57005: 3008,  # dc_o_switch - captured on a real AC200L2
+        57005: 3008,  # dc_o_switch - captured on a real AC200L
     },
     "EP500P": {
         57005: 3008,  # dc_o_switch - captured on a real EP500Pro

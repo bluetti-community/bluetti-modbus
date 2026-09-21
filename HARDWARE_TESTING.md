@@ -215,7 +215,8 @@ from the mDNS *service name* ("Bluetti HEMS") that discovery actually matches on
 1. Open `http://<device-ip>/` in a desktop browser and open the developer tools **before**
    logging in (F12, or right-click → Inspect). Go to the **Network** tab and set its filter to
    **WS** (WebSocket).
-2. Log in (`admin`, your BLUETTI app account password - blank if you never set one). A single
+2. Log in (`admin`; the password is the device's Bluetooth password set in the BLUETTI app - blank
+   if you never set one - not your app account password). A single
    WebSocket connection appears in the list, to `ws://<device-ip>/8`. Click it, then open its
    **Messages** tab (Firefox: **Response**).
 3. Walk through the page - the network status page, Settings → Modbus TCP, the firmware/about
@@ -247,7 +248,7 @@ for a new model, report both:
   `avahi-browse -rt _bluetti._tcp` and `avahi-browse -rt _http._tcp` (Linux),
   `dns-sd -B _bluetti._tcp` / `dns-sd -B _http._tcp` (macOS), or a few lines of
   python-zeroconf on the Home Assistant host (an AI assistant can write them). No result on
-  both service types means the device does not announce itself at all (the AC200L2, for one)
+  both service types means the device does not announce itself at all (the AC200L, for one)
   and is added by hand.
 
 Where to send it: [hassio-bluetti-modbus issues](https://github.com/bluetti-community/hassio-bluetti-modbus/issues)

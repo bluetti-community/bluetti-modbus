@@ -453,7 +453,7 @@ async def test_write_accepts_but_reports_a_confirmation_at_an_address_not_on_fil
 
 @pytest.mark.asyncio
 async def test_write_looks_the_echo_up_per_device(caplog):
-    # Captured on a real AC200L2 (bluetti-modbus#78): its DC output switch
+    # Captured on a real AC200L (bluetti-modbus#78): its DC output switch
     # (57005) confirms at 3008 - nowhere near what the Balco family's
     # internal map would say. The table is keyed by device, so this is the
     # entry on file for an AC200L and logs at debug, not warning.
@@ -473,7 +473,7 @@ async def test_write_looks_the_echo_up_per_device(caplog):
 async def test_write_knows_the_ep500p_dc_switch_echo(caplog):
     # Captured on a real EP500Pro on its owner's first toggles in Home
     # Assistant (hassio-bluetti-modbus#122, 2026-09-20): 57005 confirms at
-    # 3008, the same internal address as the AC200L2's - on file, so debug.
+    # 3008, the same internal address as the AC200L's - on file, so debug.
     device = EP500P(MockModbusConnection().for_unit(1))
     device.modbus_unit.write_register = AsyncMock(  # type: ignore[method-assign]
         side_effect=_mismatched_confirmation(6, 3008, 0)
