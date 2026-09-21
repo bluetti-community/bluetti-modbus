@@ -33,7 +33,7 @@ bounds with [`probatio`][probatio] before anything reaches the device.
 | AC500 | `ac500` | Confirmed on real hardware ([evidence][ev-ac500]) | AC/DC output switches |
 | AC200L | `ac200l` | Beta - confirmed on a real unit against its BLE readings ([evidence][ev-ac200l]) | AC/DC output switches |
 | EP500Pro | `ep500p` | Beta - two real units ([evidence][ev-ep500p]) | AC/DC output switches |
-| FridgePower | `fp` | Beta - two real units, read-only ([evidence][ev-fp]) | - |
+| FridgePower | `fp` | Confirmed on two real units, read-only ([evidence][ev-fp]) | - |
 
 Notes:
 
