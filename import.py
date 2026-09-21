@@ -1,6 +1,6 @@
 import requests
 
-tag = "0.0.44"
+tag = "0.0.45"
 url = f"https://github.com/bluetti-community/bluetti-registers/releases/download/{tag}/modbus-tcp.json"
 
 output = "src/bluetti_modbus_lib/devices/"
@@ -276,7 +276,9 @@ for d in schema:
         # (bluetti-registers#35, its second owner); b_soc_low/b_soc_high
         # refuse a write there and g_i_switch's effect is unseen, so the
         # schema carries no writeable flag for those (EP500P overrides).
-        if name in ("Balco260", "AC500", "AC200L", "EP500P") and f.get("writeable"):
+        if name in ("Balco260", "AC500", "AC200L", "EP500P", "FP") and f.get(
+            "writeable"
+        ):
             if "num_min" in f and "num_max" in f:
                 uses_range = True
                 fields += (

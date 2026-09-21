@@ -623,10 +623,12 @@ class FP(BluettiDevice):
     dc_o_switch = field(
         t=FieldType.UINT16,
         address=57005,
+        writable=True,
     )
     g_i_switch = field(
         t=FieldType.UINT16,
         address=57009,
+        writable=True,
     )
     g_o_switch = field(
         t=FieldType.UINT16,

@@ -136,7 +136,10 @@ register, writes back the value it already holds - which changes nothing on the 
 reports how the device confirmed it; the Balco family answers with the setting's address in its
 own internal register space, and that echo is what the library records per device. With
 `--value` it then writes the new value, reads it back and restores the original. The AC output
-switch is refused unless you say so explicitly: on a FridgePower it powers the fridge.
+switch is refused unless you say so explicitly: on a FridgePower it powers the fridge. Before
+any of it: disable the Home Assistant integration entry itself (the switch at the top of its
+page - disabling the devices below it is not enough) and restart Home Assistant, so the unit
+drops that connection; it serves one client at a time.
 
 ```
 python3 write_probe.py --host <device-ip> --device fp --register 57017               # same-value write only
