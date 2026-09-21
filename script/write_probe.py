@@ -48,12 +48,12 @@ from modbus_connection.exceptions import (
 from modbus_connection.tmodbus import ModbusConnection
 
 REGISTERS: dict[int, tuple[str, range]] = {
-    57001: ("ac_o_switch", range(0, 2)),
-    57005: ("dc_o_switch", range(0, 2)),
-    57009: ("g_i_switch", range(0, 2)),
-    57010: ("g_o_switch", range(0, 2)),
-    57016: ("b_soc_low", range(0, 101)),
-    57017: ("b_soc_high", range(0, 101)),
+    57001: ("ac_o_switch", range(2)),
+    57005: ("dc_o_switch", range(2)),
+    57009: ("g_i_switch", range(2)),
+    57010: ("g_o_switch", range(2)),
+    57016: ("b_soc_low", range(101)),
+    57017: ("b_soc_high", range(101)),
 }
 DEVICES = (
     "balco260",
@@ -192,17 +192,20 @@ class WriteProbe:
             return 0 if restored == current else 1
         finally:
             await self.conn.close()
-            payload = {
-                "generated": datetime.now(UTC).isoformat(),
-                "host": args.host,
-                "device": args.device,
-                "register": args.register,
-                "name": name,
-                "steps": self.steps,
-            }
-            with open(args.output, "w") as f:
-                json.dump(payload, f, indent=2)
-            print(f"full results written to {args.output}")
+
+    def save(self) -> None:
+        args = self.args
+        payload = {
+            "generated": datetime.now(UTC).isoformat(),
+            "host": args.host,
+            "device": args.device,
+            "register": args.register,
+            "name": REGISTERS[args.register][0],
+            "steps": self.steps,
+        }
+        with open(args.output, "w") as f:
+            json.dump(payload, f, indent=2)
+        print(f"full results written to {args.output}")
 
 
 def parse_args(argv: list[str]) -> argparse.Namespace:
@@ -265,7 +268,11 @@ def main(argv: list[str]) -> int:
         )
         if input("Continue? [y/N] ").strip().lower() != "y":
             return 1
-    return asyncio.run(WriteProbe(args).run())
+    probe = WriteProbe(args)
+    try:
+        return asyncio.run(probe.run())
+    finally:
+        probe.save()
 
 
 if __name__ == "__main__":
