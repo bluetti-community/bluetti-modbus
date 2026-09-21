@@ -47,7 +47,7 @@ EXPANSION_PACK_FIRST_SLAVE_ID = 41
 # confirmed this for the entire "Pack Summary Information" block (51001-
 # 51008, which also includes d_num_battery_packs): reading it at slave 250
 # on a Balco260 with 3 real BC260 packs correctly returned 4 (1 main + 3
-# packs, matching the Bluetti app's own count) for d_num_battery_packs,
+# packs, matching the BLUETTI app's own count) for d_num_battery_packs,
 # where reading the same register at the device's own slave address always
 # read 0 regardless of how many packs were actually attached.
 AGGREGATE_SLAVE_ID = 250

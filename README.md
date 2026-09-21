@@ -1,4 +1,4 @@
-# Python: async client for Bluetti power stations over Modbus
+# Python: async client for BLUETTI power stations over Modbus
 
 [![PyPI Version][pypi-shield]][pypi]
 [![Python Versions][python-versions-shield]][pypi]
@@ -6,12 +6,12 @@
 [![Build Status][build-shield]][build]
 [![Open in Dev Containers][devcontainer-shield]][devcontainer]
 
-Asynchronous Python client for Bluetti power stations over their local Modbus
+Asynchronous Python client for BLUETTI power stations over their local Modbus
 TCP interface.
 
 ## About
 
-This package decodes what a Bluetti device reports over Modbus TCP, using
+This package decodes what a BLUETTI device reports over Modbus TCP, using
 the register maps documented in [bluetti-registers][bluetti-registers]. It is
 built on [`modbus-connection`][modbus-connection], a backend-neutral async
 Modbus toolkit: the caller owns the connection and hands the library a
@@ -349,17 +349,17 @@ If you want to support this project, you can sponsor
 ## Disclaimer
 
 This project is an independent, community-driven effort. It is **not
-affiliated with, endorsed by, or supported by** Bluetti (PowerOak). All
+affiliated with, endorsed by, or supported by** BLUETTI (PowerOak). All
 product names, trademarks, and registered trademarks are property of their
 respective owners.
 
-The register map is based on Bluetti's own published
+The register map is based on BLUETTI's own published
 [bluetti-modbus-tcp-slave][official-docs] documentation and the
 [bluetti-registers][bluetti-registers] project. This work is done for
 interoperability purposes.
 
 Use this software at your own risk. This library is provided without any
-warranty or support by Bluetti, and the authors are not responsible for any
+warranty or support by BLUETTI, and the authors are not responsible for any
 problems it may cause.
 
 ## License

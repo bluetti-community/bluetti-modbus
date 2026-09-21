@@ -138,7 +138,7 @@ def dotted_version(address: int) -> NumberField[Any]:
 
     Confirmed against real hardware across 4 independent samples on a
     Balco 260 (BMS, ARM, DSP, and IoT module firmware versions, all
-    matching what the Bluetti app shows) - see
+    matching what the BLUETTI app shows) - see
     https://github.com/bluetti-community/bluetti-registers/pull/11 for the
     "version" content type this applies to.
     """
@@ -162,10 +162,10 @@ def dotted_version_2part(address: int) -> NumberField[Any]:
     dotted_version()'s 3-part major.minor.patch.
 
     Confirmed against real AC500 hardware across 2 independent samples (ARM
-    and DSP firmware versions), matching what the Bluetti app shows - see
+    and DSP firmware versions), matching what the BLUETTI app shows - see
     https://github.com/bluetti-community/bluetti-registers/issues/13. Unlike
     dotted_version(), this is only confirmed on this one device so far, not
-    Bluetti-support-verified - see the "version2" content type this applies
+    BLUETTI-support-verified - see the "version2" content type this applies
     to.
     """
 

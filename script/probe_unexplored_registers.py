@@ -133,7 +133,7 @@ Run it from a machine on the same LAN as the device:
     python3 probe_unexplored_registers.py --host 192.168.1.50 --sweep-units --max-timeouts 0
     python3 probe_unexplored_registers.py --host 192.168.1.50 --device ac500   # unit 1 only
 
-Before running, disable the Bluetti Modbus integration entry in Home
+Before running, disable the BLUETTI Modbus integration entry in Home
 Assistant (or stop anything else polling the device): the Balco 260 accepts
 very few simultaneous Modbus TCP connections, and a second poller is the
 known way to get its Modbus stack stuck.
@@ -1046,7 +1046,7 @@ def main(argv: list[str]) -> int:
     if not args.yes:
         print(
             "The device accepts very few simultaneous Modbus TCP connections.\n"
-            "Disable the Bluetti Modbus integration entry in Home Assistant (and stop\n"
+            "Disable the BLUETTI Modbus integration entry in Home Assistant (and stop\n"
             "anything else polling this device) before continuing."
         )
         if (

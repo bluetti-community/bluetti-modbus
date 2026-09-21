@@ -2,7 +2,7 @@
 
 This project has no static per-model register map baked in from a datasheet. Every field this
 library and its downstream integrations expose was confirmed by someone with the real device
-comparing raw Modbus values against BLUETTI's own official register list and/or the Bluetti app.
+comparing raw Modbus values against BLUETTI's own official register list and/or the BLUETTI app.
 That means **you don't need to write code, or even know Python, to make a real contribution** -
 you need a device, a network connection to it, and a bit of patience. An AI assistant (ChatGPT,
 Claude, or similar) can write and explain every script below for you - this guide includes
@@ -14,7 +14,7 @@ a wrong/missing/impossible value, this guide walks you through gathering the evi
 
 ## What you'll need
 
-- The device's IP address on your local network (check the Bluetti app's device settings, or your
+- The device's IP address on your local network (check the BLUETTI app's device settings, or your
   router's connected-devices list).
 - A computer on the *same* local network as the device (Modbus TCP, port 502, isn't routable over
   the internet - this has to be a phone hotspot, home Wi-Fi, whatever network the device itself is
@@ -66,7 +66,7 @@ of a released version, e.g.:
 pip install --force-reinstall "bluetti-modbus[cli] @ git+https://github.com/bluetti-community/bluetti-modbus@ac500-beta"
 ```
 
-If this runs cleanly and every value looks sane compared to the Bluetti app, there may be nothing
+If this runs cleanly and every value looks sane compared to the BLUETTI app, there may be nothing
 to report. If a field is missing, obviously wrong (huge, negative-when-it-shouldn't-be, or
 frozen), or the whole thing errors out (including "Illegal Data Address" - normal for a
 device/model that doesn't have that register at all), keep going below.
@@ -82,7 +82,7 @@ remarks, unit) and compare it against what this library currently does for that 
 [naming convention doc][bluetti-registers-naming] shows how field names map to what the schema
 declares.
 
-**b) Compare against the Bluetti app at the same instant.** Open the app, note the value it shows
+**b) Compare against the BLUETTI app at the same instant.** Open the app, note the value it shows
 (power, SOC, whatever), and read the same field within a few seconds using `bluetti-modread` or a
 raw scan (below). If they don't match even roughly, something in the decode is wrong - wrong
 scale, wrong sign, or wrong width.
@@ -271,7 +271,7 @@ are four prompts you can copy, fill in, and paste as-is.
 
 **Prompt: write me a scan script**
 ```
-I have a Bluetti [MODEL] (a home battery/inverter system) that speaks Modbus TCP on port 502.
+I have a BLUETTI [MODEL] (a home battery/inverter system) that speaks Modbus TCP on port 502.
 I want to scan a range of "holding registers" to see what values come back, using Python and the
 `tmodbus` library (pip install tmodbus).
 
@@ -287,15 +287,15 @@ Keep it simple, no retries needed.
 
 **Prompt: help me interpret a raw value**
 ```
-I'm working on an open-source Modbus integration for a Bluetti battery/inverter
+I'm working on an open-source Modbus integration for a BLUETTI battery/inverter
 (bluetti-community on GitHub). I read a Modbus holding register and the raw value doesn't make
 sense as-is - I want help figuring out the correct decoding.
 
 - Register address: <ADDRESS>
 - Register count (consecutive 16-bit registers this field spans): <COUNT>
 - Raw register value(s), in order: <RAW_VALUES, e.g. [64336, 65535]>
-- What the official Bluetti register spec says the type is: <e.g. "uint">
-- What I expect the decoded value to represent right now, and why (e.g. from the Bluetti app or a
+- What the official BLUETTI register spec says the type is: <e.g. "uint">
+- What I expect the decoded value to represent right now, and why (e.g. from the BLUETTI app or a
   known device state): <e.g. "inverter power in Watts; the app shows it's charging at ~1200W, so
   I'd expect roughly -1200">
 
@@ -305,7 +305,7 @@ Walk me through decoding this as signed vs. unsigned, 16-bit vs. 32-bit, little-
 
 **Prompt: help me compare against the official spec**
 ```
-I'm cross-checking a Modbus register field for a Bluetti [MODEL] against BLUETTI's own official
+I'm cross-checking a Modbus register field for a BLUETTI [MODEL] against BLUETTI's own official
 register list. Here's the row from their spec (address, register count, name, data type, range,
 remarks, unit):
 
@@ -320,13 +320,13 @@ Does this match the spec? If not, what's the discrepancy and how should it be fi
 
 **Prompt: help me write a good GitHub issue**
 ```
-I found what looks like a bug in a Bluetti Modbus register decoding (or a missing/wrong sensor)
+I found what looks like a bug in a BLUETTI Modbus register decoding (or a missing/wrong sensor)
 in an open-source project (bluetti-community on GitHub). Help me write a clear, well-organized
 GitHub issue including:
 - My device model and firmware versions
 - The specific register address(es) and field name involved
 - The raw values I read, and the exact commands/script I used to get them
-- What I expected to see (e.g. from the Bluetti app) vs. what the integration currently shows
+- What I expected to see (e.g. from the BLUETTI app) vs. what the integration currently shows
 - Any relevant excerpt from the official register spec
 
 Here's my raw notes/data - please turn it into a clean issue report:
@@ -353,7 +353,7 @@ What made both of those reports actionable, and what to aim for in yours:
   - a value that's wrong in one specific way often reveals itself by *how* it changes.
 - **Firmware versions** (`bluetti-modread` prints `d_ver_arm`/`d_ver_dsp`/etc.) - behavior can
   differ across firmware, so this narrows down whether a fix applies to everyone.
-- **What you expected and why** - the Bluetti app's own display is the usual ground truth.
+- **What you expected and why** - the BLUETTI app's own display is the usual ground truth.
 
 ## Where to report it
 

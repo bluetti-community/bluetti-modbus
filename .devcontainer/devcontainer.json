@@ -40,6 +40,6 @@
     }
   },
   "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
-  "name": "Unofficial async client for Bluetti power stations over Modbus",
+  "name": "Unofficial async client for BLUETTI power stations over Modbus",
   "updateContentCommand": "python -m venv .venv && .venv/bin/pip install -e '.[cli]' pre-commit ruff mypy 'pytest>=8' 'pytest-asyncio>=0.24' 'pytest-cov>=5' && .venv/bin/pre-commit install"
 }

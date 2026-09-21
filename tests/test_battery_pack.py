@@ -136,7 +136,7 @@ def test_aggregate_pack_summary_restricts_to_aggregate_fields():
 async def test_aggregate_pack_summary_reads_from_slave_250():
     # Real-hardware regression: a Balco260 with 3 confirmed BC260 packs
     # read d_num_battery_packs as 0 at its own slave address (1), and as 4
-    # (1 main + 3 packs, matching the Bluetti app) at slave 250.
+    # (1 main + 3 packs, matching the BLUETTI app) at slave 250.
     conn = MockModbusConnection()
     conn.for_unit(1).holding[51001] = 0
     conn.for_unit(250).holding[51001] = 4

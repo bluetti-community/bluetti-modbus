@@ -154,7 +154,7 @@ def test_reference_offset_current_decodes_magnitude_around_the_reference():
 
 def test_dotted_version_decodes_major_minor_patch():
     # Raw values captured from a real Balco 260 (registers 51211 - BMS - and
-    # 53011 - IoT module), both matching what the Bluetti app shows for the
+    # 53011 - IoT module), both matching what the BLUETTI app shows for the
     # same firmware ("v50008.01.10" and "v50012.01.19" respectively).
     reg = dotted_version(51211)
 
@@ -168,7 +168,7 @@ def test_dotted_version_decodes_major_minor_patch():
 
 def test_dotted_version_2part_decodes_major_minor():
     # Raw values captured from a real AC500 (registers 50210/50211 - ARM -
-    # and 50212/50213 - DSP), matching what the Bluetti app shows for the
+    # and 50212/50213 - DSP), matching what the BLUETTI app shows for the
     # same firmware ("V4048.04" and "V4047.30" respectively) - see
     # https://github.com/bluetti-community/bluetti-registers/issues/13.
     # Confirmed on this one device so far, unlike dotted_version() above.

@@ -443,7 +443,7 @@ def main(argv: list[str]) -> int:
         writes.append("FC16 26001 <- 14 registers (one inert period)")
     if not args.yes:
         print(
-            "Disable the Bluetti Modbus integration entry in Home Assistant (and stop"
+            "Disable the BLUETTI Modbus integration entry in Home Assistant (and stop"
         )
         print("anything else polling this device) before continuing.")
         if writes:

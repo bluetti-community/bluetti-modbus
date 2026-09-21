@@ -8,7 +8,7 @@ class BluettiModbusError(Exception):
 
 
 class BluettiModbusConnectionError(BluettiModbusError, ModbusError):
-    """Bluetti Modbus communication error.
+    """BLUETTI Modbus communication error.
 
     Raised when reading from a device over Modbus fails, wrapping the
     backend-neutral error from ``modbus-connection`` (or a timeout of the

@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "bluetti-modbus"
 version = "0.0.0"
-description = "Unofficial library for basic communication to Bluetti Power Stations via Modbus"
+description = "Unofficial library for basic communication to BLUETTI Power Stations via Modbus"
 readme = "README.md"
 requires-python = ">=3.13"
 license = { text = "MIT" }

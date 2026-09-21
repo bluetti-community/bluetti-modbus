@@ -1,4 +1,4 @@
-"""Unofficial async client for Bluetti power stations over Modbus."""
+"""Unofficial async client for BLUETTI power stations over Modbus."""
 
 from .devices import (
     AC200L,
