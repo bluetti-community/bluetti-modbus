@@ -97,39 +97,45 @@ fields that should mathematically match, use that instead of guessing.
 
 ## 4. Scanning raw registers directly
 
-For a Balco 260 - or any device of the Balco family - there is a ready-made, read-only probe in
-this repository: [`script/probe_unexplored_registers.py`](script/probe_unexplored_registers.py).
-It reads one register per request, backs off and checks the device is still alive after every
-timeout, and records in its own docstring what each block answered so far. Two runs are worth
-knowing about:
+There is a ready-made, read-only probe in this repository:
+[`script/probe_unexplored_registers.py`](script/probe_unexplored_registers.py). It reads one
+register per request, backs off and checks the device is still alive after every timeout, and
+writes a JSON file you can attach to an issue. Tell it which device it is with `--device`; that
+picks the liveness register and the safety rules (see its docstring).
+
+**A device that is new here** (a Transfer Hub, a FridgePower, a Balco 500 - anything without a
+confirmed profile): start with the documented set, one register per documented block, before
+pointing any full profile at it:
 
 ```
 pip install "modbus-connection[tmodbus]" "tmodbus[async-serial]"
-python3 probe_unexplored_registers.py --host <device-ip>                                 # registers a Balco 260 is not documented to have
-python3 probe_unexplored_registers.py --host <device-ip> --sweep-units --max-timeouts 0  # which Modbus slave ids answer, and with which pack
-python3 probe_unexplored_registers.py --host <device-ip> --pack-block 1,41,42            # the whole pack block at those ids, side by side
+python3 probe_unexplored_registers.py --host <device-ip> --device transfer-hub --blocks documented
 ```
 
-The second one is what settles the multi-pack question (README, "Multiple battery packs"): on a
-Balco 260 with BC260 packs it prints, per slave id, the pack type, serial number, voltage, current,
-SOC, SOH and cycle count that id serves. The third reads every field of the pack block (the same
-ones the built-in pack reports at slave 1) at the ids the sweep found, decoded the way the library
-decodes them - the check that an id serves a *whole* pack, not just a few registers. Stop anything
-else polling the device first (the Home Assistant integration entry in particular - disable it,
-re-enable it afterwards).
+(`--device unknown` if the model is not in the list.) Some of these devices answer an unserved
+address with silence rather than a rejection; the probe tolerates timeouts for them and keeps
+going. The result says which blocks the firmware serves - the input a profile is built from.
 
-**Not on an AC500 or an EP500P.** On a real AC500 (bluetti-registers#13, 2026-09-19) a
-single-register read at any unit id other than 1 - 2, 41 to 46, 250 - got no reply and **froze the
-unit's Modbus TCP stack until a power cycle**; disabling and re-enabling Modbus TCP on the web
-page did not bring it back, and the same reads done by hand, without the probe, froze it again. An
-EP500P given the same requests the same day answered them with silence and took new requests on
-a fresh TCP connection - less severe, still nothing gained: nothing answered at those unit ids. A
-Balco 260 shrugs an unknown unit id off; this family does not. Pass `--device ac500` (or
-`ep500p`): the probe then uses a liveness register that family serves (50001 is not one) and
-refuses `--sweep-units`, `--pack-block`, `--unit` and every block that addresses another unit id.
-Unit-1 reads of unserved *addresses* are fine there - both AC500 testers' scans got clean
-"illegal data address" answers - so the plain run still works. Write your own scan for one of
-these? Same rule: `unit_id=1`, nothing else.
+**A Balco 260**, the device the other blocks were written for:
+
+```
+python3 probe_unexplored_registers.py --host <device-ip> --device balco260                                 # registers it is not documented to have
+python3 probe_unexplored_registers.py --host <device-ip> --device balco260 --sweep-units --max-timeouts 0  # which Modbus slave ids answer, and with which pack
+python3 probe_unexplored_registers.py --host <device-ip> --device balco260 --pack-block 1,41,42            # the whole pack block at those ids, side by side
+```
+
+The sweep is what settled the multi-pack question (README, "Multiple battery packs"): per slave
+id, the pack type, serial number, voltage, current, SOC, SOH and cycle count that id serves. The
+pack block reads every field of the block at the ids the sweep found, decoded the way the
+library decodes them. Stop anything else polling the device first (the Home Assistant
+integration entry in particular - disable it, re-enable it afterwards).
+
+**AC500 and EP500P: unit id 1 only.** On a real AC500 (bluetti-registers#13) a single-register
+read at any other unit id got no reply and **froze the unit's Modbus TCP stack until a power
+cycle**; an EP500P went silent per connection. `--device ac500` / `ep500p` makes the probe use a
+liveness register that family serves and refuse `--sweep-units`, `--pack-block`, `--unit` and
+every block that addresses another unit id. Unit-1 reads of unserved *addresses* are fine
+there. Write your own scan for one of these? Same rule: `unit_id=1`, nothing else.
 
 When you need something the probe doesn't cover - a suspected wrong address, a field that isn't
 mapped at all yet, or hunting for something new (a switch, a missing sensor) - a small scanning

@@ -1,166 +1,76 @@
 #!/usr/bin/env python3
-"""Probe a Balco 260 for Modbus registers it is not documented to have.
+"""Probe a BLUETTI device over Modbus TCP, one register at a time.
 
-Reads, one field at a time, registers outside BLUETTI's official Balco 260
-list and reports which ones answer with data, which read as zero, and which
-the device rejects. Strictly read-only (FC 0x03 only).
+Reads registers a device is not documented to serve - or, with --blocks
+documented, one register from each documented block - and reports which
+answer with data, which read as zero, which the device rejects and which
+it leaves unanswered. Strictly read-only (FC 0x03 only). Say which device
+it is with --device: that picks the liveness register and the safety
+rules below.
 
-Written for the Balco 260. On an AC500 or an EP500P (--device ac500 /
-ep500p) it only ever talks to unit id 1, and refuses everything else:
-on a real AC500 (bluetti-registers#13, 2026-09-19) a single-register read
-at any other unit id - 2, 41 to 46, 250 - got no reply and **froze the
-unit's Modbus TCP stack until a power cycle**; disabling and re-enabling
-Modbus TCP on the device's web page did not recover it, and the same
-reads done by hand, without this script, froze it again. An EP500P
-given the same requests the same day went silent per TCP connection
-instead (a fresh connection worked again) and answered nothing at those
-unit ids either. A Balco 260 ignores an unknown unit id and carries on;
-that family does not. The liveness register is also per device: 50001 is
-not served on an AC500 or an EP500P.
+Blocks (--blocks, comma-separated; the first five run by default):
 
-Its blocks:
+- summary-ext, per-phase, der-status, ems-control, battery-control: every
+  register bluetti-registers declares for the EP2000 but not for the Balco
+  family. All rejected by a Balco 260 (2026-09-14); kept to re-run after a
+  firmware update.
+- internal-v2: the device's own internal register space, the one the
+  BLUETTI app speaks over BLE (ProtocolAddrV2, app 3.0.9, via voltkeeper).
+  Six entries are settings also readable through documented registers
+  (2022 <-> 57016 ...), printed side by side. Not served by a Balco 260
+  (2026-09-16, all 54 rejected); kept for the same reason.
+- documented (opt-in): one register from each block of BLUETTI's own
+  register list plus its five writable registers. The first thing to run
+  on a device that is new here (a Transfer Hub, a FridgePower, a Balco
+  500): it maps which documented blocks the firmware serves, one safe
+  request each, before any full profile is pointed at it. Some such
+  devices answer an unserved address with silence rather than a rejection
+  - --max-timeouts defaults to 0 for them, so the run continues through
+  timeouts (each one still triggers a reconnect and a liveness check).
+- pack-41, inv-31, pack-91, pack-92 (opt-in): a documented register plus
+  one internal pack address at the slave ids the app uses for packs and
+  balcony systems. Balco 260 only. Results: bluetti-modbus#55.
+- --sweep-units [ids]: one register from each documented block and the
+  pack identity/health registers at every listed slave id, to see which
+  ids serve which blocks and which return different packs. Balco 260 only;
+  the default list covers a five-pack system (about four minutes).
+- --pack-block ids: the whole "Each Pack Base Information" block
+  (51200-51249) at each listed id, decoded as the library decodes it, side
+  by side. Balco 260 only. Include id 1 as the reference column.
 
-- The EP2000 blocks (summary-ext, per-phase, der-status, ems-control,
-  battery-control): every register bluetti-registers declares for EP2000 but
-  not for Balco 260. Probed on a real Balco 260 on 2026-09-14: all 57 came
-  back "illegal data address". Kept here to re-run after a firmware update.
-- The internal-v2 block: the device's own internal register space - the one
-  the BLUETTI app speaks over BLE ("ProtocolAddrV2", tabulated from app
-  v3.0.9 by https://github.com/mikemccllstr/voltkeeper). The Modbus TCP
-  slave demonstrably translates documented writes into that space (a Write
-  Single Register to 57016 is confirmed at 2022 - see bluetti-modbus's
-  BluettiDevice.write); this block asks whether it also *serves* that space
-  to a TCP client. Six of its entries are settings whose values are known
-  through documented registers (2022 <-> 57016 and so on), so the script
-  reads both and prints them side by side: matching values would mean the
-  internal space is reachable, and every other entry becomes worth reading;
-  "illegal data address" on all of them closes the question. Probed on a
-  real Balco 260 on 2026-09-16: all 54 came back "illegal data address" -
-  the slave translates documented writes into that space but does not
-  serve it. Kept for the same reason as the EP2000 blocks. Only readable
-  registers are listed - the app's write-only ones (control events, power
-  off, factory reset, OTA start) are left out even though FC 0x03 could not
-  trigger them.
-- The balco-set block (opt-in, --blocks balco-set): not unexplored at all -
-  one register from each block of BLUETTI's own BalcoXX register list, plus
-  its five writable registers. For a device that is in the Balco family but
-  is not a Balco 260 (a Balco Transfer Hub, a Balco 500), it maps which of
-  the documented blocks the firmware actually serves, one safe request per
-  block, before anyone points a full Balco 260 profile at it. A Transfer Hub
-  (2026-09-17) answered a single-register read of an unserved address with
-  silence rather than the Balco 260's "illegal data address", so on such a
-  device run this with --max-timeouts 0: every timeout is still followed by
-  a reconnect and a liveness check, which stops the run on its own if the
-  device really has stopped answering.
-- The pack-41 block (opt-in, --blocks pack-41): the app addresses battery
-  packs of 2nd-generation IoT home systems at Modbus slave 41 and up. Over
-  TCP, packs are documented at slave 2..N and the aggregate summary at 250,
-  so this is a long shot; an unknown slave id most likely times out, which
-  the recovery below handles.
-- The inv-31, pack-91 and pack-92 blocks (opt-in): the app's own slave ids
-  for a balcony system (app 3.1.4, ConnConstantsV2: DC/DC at 1, inverter at
-  31, packs at 91 and up) - not the home-system ids the pack-41 block tries.
-  Each reads a documented register (50002, 51219, 51221) plus one internal
-  pack address at that slave id, so the answer separates "the slave routes
-  documented registers per unit" from "it serves the internal pack space
-  there": on a Balco 260 whose packs 2 and up read as zero at the documented
-  slave ids (bluetti-modbus#55), a pack answering at 91 would be the lead.
-  Run on a one-pack Balco 260 on 2026-09-17: slave 91 and slave 92 both
-  answered 51219/51221 with the pack's own voltage and SOC (26.9 V, 69 %),
-  slave 31 answered 50002 and 1100 with "illegal data address", and 6000
-  was illegal at 91 and 92 - the slave id is honoured, documented pack
-  registers are served at 91+, the internal space is not. Whether 92 is
-  "pack 2, falling back to pack 1" or "any id from 91 up is the pack block"
-  is what the sweep below is for.
-- The sweep (--sweep-units, optionally with an explicit list of ids): one
-  register from each documented block (50001, 50219, 51001, 53011), the
-  pack's type and serial number (51200, 51206) and its voltage, current,
-  SOC, SOH and cycle count (51219-51223) at every slave id in the list, so a run shows which blocks each id serves and, on
-  a system with two packs or more, which ids return *different* packs - a
-  BC260 at its own id should read "BC260" and its own serial number, where
-  an alias of the aggregate view repeats the built-in pack's "Balco260".
-  The default list is sized for the largest supported system, a Balco 260
-  with five BC260 packs: the documented-by-assumption ids 2-6, BLUETTI's
-  41-46 (one past the last possible pack, to see an empty slot), the app's
-  balcony ids 91-96, plus 1, 31, 90 and 250 - 21 ids, about four minutes
-  on a device that rejects unknown addresses quickly. --sweep-units alone
-  probes only the sweep; add --blocks to probe other blocks in the same
-  run. Run on the same
-  one-pack Balco 260 on 2026-09-17: slave 1 serves all six (51001 as 0,
-  the known "count only at 250" rule); 2 and 3 serve 50219 (the per-inverter
-  PV charging power) and the pack block as zeros and reject 50001/53011 -
-  they look like inverter slots; 31 and 41 serve the pack block as zeros and
-  reject the rest - 41 being an empty expansion slot, per BLUETTI's answer
-  that expansion packs answer at 41 and up; 90-94 and 250 all answer
-  51001 = 1 and the pack's own 51219/51221 (250 alone also serves 50001, as
-  0) and reject the rest, i.e. 90-94 look like aliases of the aggregate
-  view. Only a system with two packs or more can show pack 2 at 42 (or
-  anywhere else) - that run is what bluetti-modbus#55 is waiting for.
-  First multi-pack run, 2026-09-17, a Balco 260 with two BC260 attached:
-  slave 41 answered the pack block as zeros *except the serial number* -
-  a real one, different from the built-in pack's and with a different
-  prefix - while 42-46 were all zeros and the pack count at 250 read 1;
-  90-96 and 250 repeated the built-in pack field for field (serial
-  included), which settles those as aliases of the aggregate view. So 41
-  is where an expansion pack lives, but the device was counting no pack
-  beyond the built-in one at that moment - whether the packs were asleep,
-  off or not recognised is the open question, to be rerun with the packs
-  known to be active in the app. Settled 2026-09-18 on a Balco 260 with
-  three BC260 packs: 42 and 43 answered the whole block with each pack's
-  own type ("BC260"), serial, voltage, SOC, SOH, cycle count, firmware and
-  energies, 250 counted 4 - the packs are at 41 and up, as BLUETTI said;
-  41 on that unit, and on a second unit with no pack attached, served a
-  serial number and zeros for everything else (a pack the inverter knows
-  but that is not reporting) - see the library's pack_is_reporting().
-- The pack block (--pack-block 1,41,42): the follow-up to a sweep, on the
-  ids that answered with a pack - every field of the "Each Pack Base
-  Information" block (51200-51249) as the library declares it for a Balco
-  260, read at each id and printed side by side, decoded the way the
-  library decodes it (type, serial number, firmware versions, voltage,
-  current, SOC, SOH, cycle count, cell/NTC counts, energies, protection
-  and alarm words). Include slave 1: that is the built-in pack, the
-  reference every other column should differ from field by field if the id
-  really serves another pack. 36 registers per id, about half a minute
-  each.
+Safety rules:
 
-Requires only the library the integration already uses:
+- One register per request, never a multi-register read of an unknown
+  address: a Balco-family device rejects a single-register read of an
+  unserved address but gives no reply at all to a multi-register read that
+  touches one (--batched reproduces that on purpose). Multi-word fields
+  are read word by word and reassembled.
+- Requests are paced (--delay) over one connection kept open for the run;
+  a fresh connection per read is what has made these devices unresponsive
+  before. Disable the BLUETTI Modbus integration entry in Home Assistant
+  and stop anything else polling the device first: they accept very few
+  simultaneous Modbus TCP connections.
+- A timeout or a corrupted reply drops the link, waits --recover-delay,
+  reconnects and re-reads the liveness register; after --max-timeouts of
+  those in a row the run stops.
+- AC500 and EP500P (--device ac500 / ep500p): unit id 1 only, every option
+  that would address another unit id is refused. A real AC500 froze its
+  Modbus TCP stack until a power cycle on a single read at another unit id
+  (bluetti-registers#13); an EP500P went silent per connection. Their
+  liveness register is 50002 (50001 is not served there).
+
+Nothing here writes to the device.
+
+Requires the library the integration already uses:
 
     pip install "modbus-connection[tmodbus]"
 
-Run it from a machine on the same LAN as the device:
+Examples, from a machine on the same LAN as the device:
 
-    python3 probe_unexplored_registers.py --host 192.168.1.50
-    python3 probe_unexplored_registers.py --host 192.168.1.50 --sweep-units --max-timeouts 0
+    python3 probe_unexplored_registers.py --host 192.168.1.50 --device transfer-hub --blocks documented
+    python3 probe_unexplored_registers.py --host 192.168.1.50 --device balco260
+    python3 probe_unexplored_registers.py --host 192.168.1.50 --device balco260 --sweep-units --max-timeouts 0
     python3 probe_unexplored_registers.py --host 192.168.1.50 --device ac500   # unit 1 only
-
-Before running, disable the BLUETTI Modbus integration entry in Home
-Assistant (or stop anything else polling the device): the Balco 260 accepts
-very few simultaneous Modbus TCP connections, and a second poller is the
-known way to get its Modbus stack stuck.
-
-What "safe" means here, and why each guard exists:
-
-- One *register* per request, never a multi-register read of an unknown
-  address. Confirmed on a real Balco 260 (2026-09-14, 11 unknown fields):
-  every 1-register read of an unserved address came back as a clean
-  "illegal data address" exception, and every 2-register read of one got
-  no reply at all (a timeout, with the device otherwise alive) - the same
-  behaviour behind the AC500's isolated-block read plan. So a multi-word
-  field is read word by word here and reassembled (--batched restores the
-  single request, to reproduce that timeout deliberately).
-- Requests are paced (--delay) through modbus-connection's own
-  message_spacing, and the connection is kept open for the whole run - a
-  fresh connection per read is the pattern that has made this device
-  unresponsive under load before.
-- A timeout or a corrupted reply is treated as "the link may be stuck": the
-  link is dropped, re-opened after --recover-delay, and a known-good
-  register (50001, Number of Inverters) is re-read to confirm the device is
-  still answering. After --max-timeouts of those in a row the run stops
-  rather than keep hammering the device.
-- "Illegal data address" is the benign, expected answer for a register the
-  firmware doesn't serve, and just gets recorded.
-
-Nothing here writes to the device.
 """
 
 from __future__ import annotations
@@ -184,15 +94,25 @@ from modbus_connection.exceptions import (
 from modbus_connection.tmodbus import ModbusConnection
 
 # The liveness check, read before probing and after every link recovery: a
-# register in the device's own documented range, with the range of values
-# it can plausibly hold (None: any answer will do). Balco 260: 50001
-# "Number of Inverters" (uint, 1~10). AC500 / EP500P: 50002 "Total AC
-# Output Power" - 50001 is not served there (bluetti-registers#13).
+# register in the device's documented range, with the range of values it
+# can plausibly hold (None: any answer will do). Balco family: 50001 "Number
+# of Inverters". AC500 / EP500P: 50002 "Total AC Output Power" - 50001 is
+# not served there (bluetti-registers#13). unknown: 50001, any value.
 SANITY: dict[str, tuple[int, range | None]] = {
     "balco260": (50001, range(1, 11)),
+    "balco500": (50001, range(1, 11)),
+    "fp": (50001, range(1, 11)),
+    "transfer-hub": (50001, None),
+    "unknown": (50001, None),
     "ac500": (50002, None),
     "ep500p": (50002, None),
 }
+
+# Devices seen to answer an unserved address with silence rather than a
+# rejection (a Transfer Hub, bluetti-registers#29), or not yet seen at all:
+# --max-timeouts defaults to 0 for them so a --blocks documented run gets
+# through the whole list.
+SILENT_ON_UNSERVED = frozenset({"balco500", "fp", "transfer-hub", "unknown"})
 
 # Devices on which a request to any unit id other than 1 froze the Modbus
 # TCP stack until a power cycle (AC500, bluetti-registers#13, 2026-09-19;
@@ -349,22 +269,22 @@ CANDIDATES: list[tuple[str, int, int, str, str, str]] = [
     # Opt-in - see OPT_IN_BLOCKS and the module docstring. One register from
     # each documented BalcoXX block ("what declares it" is the official
     # register list's own abbreviation), then the writable set.
-    ("d_num_inverters", 50001, 1, "Number of Inverters", "", "balco-set"),
-    ("ac_o_p_total", 50002, 1, "Total AC Output Power", "W", "balco-set"),
-    ("d_serial", 50206, 1, "Inverter Serial Number (1st word)", "", "balco-set"),
-    ("pv_i_p_local", 50219, 1, "PV Charging Power (Single)", "W", "balco-set"),
-    ("d_num_battery_packs", 51001, 1, "Number of Packs", "", "balco-set"),
-    ("b_soc_total", 51004, 1, "Total SOC", "%", "balco-set"),
-    ("b_v", 51219, 1, "Pack Voltage", "V", "balco-set"),
-    ("b_soc", 51221, 1, "Pack SOC", "%", "balco-set"),
-    ("d_iot_serial", 53007, 1, "IOT Serial Number (1st word)", "", "balco-set"),
-    ("d_iot_ver", 53011, 1, "IOT Version", "", "balco-set"),
-    ("meter_status", 55111, 1, "AC Meter Status", "", "balco-set"),
-    ("ac_o_switch", 57001, 1, "AC load output switch", "", "balco-set"),
-    ("g_i_switch", 57009, 1, "AC grid charging switch", "", "balco-set"),
-    ("g_o_switch", 57010, 1, "AC grid feed-in switch", "", "balco-set"),
-    ("b_soc_low", 57016, 1, "Battery empty SOC threshold", "%", "balco-set"),
-    ("b_soc_high", 57017, 1, "Battery full SOC threshold", "%", "balco-set"),
+    ("d_num_inverters", 50001, 1, "Number of Inverters", "", "documented"),
+    ("ac_o_p_total", 50002, 1, "Total AC Output Power", "W", "documented"),
+    ("d_serial", 50206, 1, "Inverter Serial Number (1st word)", "", "documented"),
+    ("pv_i_p_local", 50219, 1, "PV Charging Power (Single)", "W", "documented"),
+    ("d_num_battery_packs", 51001, 1, "Number of Packs", "", "documented"),
+    ("b_soc_total", 51004, 1, "Total SOC", "%", "documented"),
+    ("b_v", 51219, 1, "Pack Voltage", "V", "documented"),
+    ("b_soc", 51221, 1, "Pack SOC", "%", "documented"),
+    ("d_iot_serial", 53007, 1, "IOT Serial Number (1st word)", "", "documented"),
+    ("d_iot_ver", 53011, 1, "IOT Version", "", "documented"),
+    ("meter_status", 55111, 1, "AC Meter Status", "", "documented"),
+    ("ac_o_switch", 57001, 1, "AC load output switch", "", "documented"),
+    ("g_i_switch", 57009, 1, "AC grid charging switch", "", "documented"),
+    ("g_o_switch", 57010, 1, "AC grid feed-in switch", "", "documented"),
+    ("b_soc_low", 57016, 1, "Battery empty SOC threshold", "%", "documented"),
+    ("b_soc_high", 57017, 1, "Battery full SOC threshold", "%", "documented"),
     ("pack41_main_info", 6000, 1, "PACK_MAIN_INFO", "", "pack-41"),
     ("pack41_item_info", 6100, 1, "PACK_ITEM_INFO", "", "pack-41"),
     ("pack41_settings_info", 7000, 1, "PACK_SETTINGS_INFO", "", "pack-41"),
@@ -392,7 +312,7 @@ CROSS_CHECK: dict[int, tuple[int, str]] = {
 # Blocks read at a slave id other than --unit.
 BLOCK_UNIT: dict[str, int] = {"pack-41": 41, "inv-31": 31, "pack-91": 91, "pack-92": 92}
 # Blocks only probed when named explicitly in --blocks - see the docstring.
-OPT_IN_BLOCKS = frozenset({"balco-set", *BLOCK_UNIT})
+OPT_IN_BLOCKS = frozenset({"documented", *BLOCK_UNIT})
 
 # Read at every slave id of a --sweep-units run: one register from each
 # documented block, so an id that answers shows which blocks it serves -
@@ -889,10 +809,10 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     p.add_argument(
         "--device",
         choices=sorted(SANITY),
-        default="balco260",
-        help="which device this is (default balco260): picks the liveness register, and "
-        "on an AC500 / EP500P refuses any request to a unit id other than 1 - see the "
-        "module docstring for why",
+        required=True,
+        help="which device this is: picks the liveness register and the safety rules "
+        "(unit id 1 only on ac500/ep500p; timeouts tolerated on transfer-hub/fp/"
+        "balco500/unknown). unknown = a Balco-family device not listed here",
     )
     p.add_argument("--unit", type=int, default=1, help="Modbus unit id (default 1)")
     p.add_argument(
@@ -908,10 +828,12 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     p.add_argument(
         "--max-timeouts",
         type=int,
-        default=3,
+        default=None,
         help="stop after this many timeouts/corrupted replies in a row; 0 means never "
         "stop for that reason alone (each timeout is still followed by a reconnect "
-        "and a liveness check, which stops the run if the device no longer answers)",
+        "and a liveness check, which stops the run if the device no longer answers). "
+        "Default 3, or 0 on a device that answers unserved addresses with silence "
+        "(transfer-hub, fp, balco500, unknown)",
     )
     p.add_argument(
         "--blocks",
@@ -949,13 +871,13 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     p.add_argument(
         "--output",
         default=None,
-        help="JSON results file (default: probe-balco260-<timestamp>.json)",
+        help="JSON results file (default: probe-<device>-<timestamp>.json)",
     )
     p.add_argument(
         "--batched",
         action="store_true",
-        help="read a multi-word field in one request, the way the library does - on a "
-        "Balco 260 this gets no reply at all for an unserved address (see the module docstring)",
+        help="read a multi-word field in one request, the way the library does - a "
+        "Balco-family device gives no reply at all when that touches an unserved address",
     )
     p.add_argument(
         "--list",
@@ -968,8 +890,11 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         help="skip the 'is Home Assistant stopped?' confirmation",
     )
     args = p.parse_args(argv)
+    if args.max_timeouts is None:
+        args.max_timeouts = 0 if args.device in SILENT_ON_UNSERVED else 3
     if args.output is None:
-        args.output = f"probe-balco260-{datetime.now().astimezone().strftime('%Y%m%d-%H%M%S')}.json"
+        stamp = datetime.now().astimezone().strftime("%Y%m%d-%H%M%S")
+        args.output = f"probe-{args.device}-{stamp}.json"
     return args
 
 
