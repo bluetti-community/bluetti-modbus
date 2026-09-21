@@ -6,6 +6,25 @@ from ..fields import FieldType, dotted_version, field, nibble, reference_offset_
 
 
 class FP(BluettiDevice):
+    register_ranges = (
+        (50001, 50019),
+        (50020, 50031),
+        (50200, 50218),
+        (50219, 50238),
+        (50239, 50258),
+        (50259, 50278),
+        (50279, 50283),
+        (51001, 51008),
+        (51200, 51219),
+        (51220, 51224),
+        (51234, 51249),
+        (53001, 53012),
+        (57001, 57001),
+        (57005, 57005),
+        (57009, 57010),
+        (57016, 57017),
+    )
+
     max_span = 20
 
     d_num_inverters = field(

@@ -77,6 +77,19 @@ SINGLE_REGISTER_TOTALS_DEVICES = {"AC500", "AC200L", "EP500P"}
 # (bluetti-registers#35).
 ISOLATED_RANGE_DEVICES = {"AC500", "AC200L", "EP500P"}
 
+# Devices whose settings block (57001 and up) is read as runs of adjacent
+# declared registers, never bridged across an undeclared one, while the
+# data area below keeps its normal gap-based batching. On the Balco family
+# a block that touches a register the device does not serve gets no reply
+# at all (bluetti-registers, "unserved registers"), and FP declares
+# dc_o_switch at 57005 - within max_gap of both 57001 and 57009 - so the
+# default planner fused 57001-57010 into one read that timed out on a real
+# FridgePower and kept it out of Home Assistant (bluetti-community/
+# hassio-bluetti-modbus#127). Balco260/Balco500 only escape this because
+# their settings registers happen to sit more than max_gap apart.
+SETTINGS_BLOCK_START = 57001
+ISOLATED_SETTINGS_DEVICES = {"FP"}
+
 
 # bluetti-registers documents each of these as spanning 2 registers
 # (MULTI_REGISTER_FIELD_LENGTHS in that repo's fields.py), same as b_i_e/
@@ -345,7 +358,7 @@ class {name}(BluettiDevice):
     # device has no evidence for. Introspected from the freshly generated
     # class rather than re-derived by hand here, so it can't drift from
     # whatever field()/uint16()/etc. actually build.
-    if name in ISOLATED_RANGE_DEVICES:
+    if name in ISOLATED_RANGE_DEVICES or name in ISOLATED_SETTINGS_DEVICES:
         import importlib
 
         # Imported (not read from a standalone file location) so its own
@@ -358,12 +371,39 @@ class {name}(BluettiDevice):
         )
         module = importlib.reload(module)
         instance = getattr(module, name)(None)
-        ranges = sorted(
-            {
-                (field.address, field.address + field.count - 1)
+        if name in ISOLATED_RANGE_DEVICES:
+            ranges = sorted(
+                {
+                    (field.address, field.address + field.count - 1)
+                    for field in (instance.get_field(n) for n in instance.field_names())
+                }
+            )
+        else:
+            # ISOLATED_SETTINGS_DEVICES: the data area's ranges are the
+            # blocks the planner builds on its own (so those reads do not
+            # change), the settings block is split into runs of adjacent
+            # declared registers - 57009-57010 stay one read, 57005 is
+            # read alone rather than fused with its unserved neighbours.
+            ranges = [
+                (start, start + count - 1)
+                for start, count in instance._build_plan().blocks["holding"]
+                if start < SETTINGS_BLOCK_START
+            ]
+            settings = sorted(
+                address
                 for field in (instance.get_field(n) for n in instance.field_names())
-            }
-        )
+                for address in range(field.address, field.address + field.count)
+                if field.address >= SETTINGS_BLOCK_START
+            )
+            for address in settings:
+                if (
+                    ranges
+                    and ranges[-1][1] == address - 1
+                    and ranges[-1][0] >= SETTINGS_BLOCK_START
+                ):
+                    ranges[-1] = (ranges[-1][0], address)
+                else:
+                    ranges.append((address, address))
         ranges_literal = "".join(f"\n        ({lo}, {hi})," for lo, hi in ranges)
         with open(output + file_name, encoding="utf-8") as f:
             regenerated = f.read()
