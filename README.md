@@ -33,7 +33,7 @@ bounds with [`probatio`][probatio] before anything reaches the device.
 | AC500 | `ac500` | Confirmed on real hardware ([evidence][ev-ac500]) | AC/DC output switches |
 | AC200L | `ac200l` | Beta - confirmed on a real unit against its BLE readings ([evidence][ev-ac200l]) | AC/DC output switches |
 | EP500Pro | `ep500p` | Beta - two real units ([evidence][ev-ep500p]) | AC/DC output switches |
-| FridgePower | `fp` | Confirmed on two real units, read-only ([evidence][ev-fp]) | - |
+| FridgePower | `fp` | Confirmed on three real units ([evidence][ev-fp]) | DC output, grid charging switches |
 
 Notes:
 
@@ -46,7 +46,9 @@ Notes:
   fields on the AC200L and EP500Pro are carried over unverified. None of
   them exposes per-pack data over Modbus TCP.
 - **FridgePower** is a Balco-family device on the Modbus side: the full
-  BalcoXX register set, pack voltage at 0.01 V, signed grid power.
+  BalcoXX register set, pack voltage at 0.01 V, signed grid power. Its SOC
+  thresholds refuse writes (unlike the Balco 260's); the AC output and grid
+  feed-in switches are untried.
 - `AC200L`, `EP500P` and `FP` are named after the type string the device
   itself gives at register 50200.
 

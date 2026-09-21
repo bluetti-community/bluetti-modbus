@@ -38,7 +38,7 @@ _WRITE_SINGLE_REGISTER_FUNCTION_CODE = 6
 # 2026-09-18 (bluetti-modbus#78), the EP500P one from 2026-09-20 (its
 # owner's first toggles in Home Assistant, hassio-bluetti-modbus#122) -
 # the same 3008 as the AC200L, the portable stations sharing one internal
-# map. A device or register with no entry gets its echo accepted and
+# map; a FridgePower echoes the Balco 260's numbers (2012 for the DC switch). A device or register with no entry gets its echo accepted and
 # reported - see BluettiDevice.write.
 _INTERNAL_WRITE_ADDRESS: dict[str, dict[int, int]] = {
     "Balco260": {
@@ -53,6 +53,10 @@ _INTERNAL_WRITE_ADDRESS: dict[str, dict[int, int]] = {
     },
     "EP500P": {
         57005: 3008,  # dc_o_switch - captured on a real EP500Pro
+    },
+    "FP": {
+        57005: 2012,  # dc_o_switch - DC_SWITCH, captured on a real FridgePower
+        57009: 2207,  # g_i_switch - CTRL_GRID, same as the Balco 260
     },
 }
 

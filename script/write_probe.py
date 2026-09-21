@@ -20,8 +20,11 @@ Only the documented setting registers are accepted, at unit id 1:
     57016  battery SOC low threshold (%)
     57017  battery SOC high threshold (%)
 
-Stop anything else polling the device first (the Home Assistant entry in
-particular). Each step waits for the previous reply; nothing is retried.
+Stop anything else polling the device first: in Home Assistant, disable
+the integration entry itself (the switch at the top of its page - disabling
+the devices below it is not enough, the entry keeps polling), then restart
+Home Assistant so the unit drops that connection. Each step waits for the
+previous reply; nothing is retried.
 
     pip install "modbus-connection[tmodbus]" "tmodbus[async-serial]"
     python3 write_probe.py --host 192.168.1.50 --device fp --register 57017
@@ -263,8 +266,9 @@ def main(argv: list[str]) -> int:
     if not args.yes:
         print(
             "This writes to the device: first the value the register already holds,\n"
-            f"then {args.value if args.value is not None else 'nothing else'}."
-            " Disable the Home Assistant entry and anything else polling it first."
+            f"then {args.value if args.value is not None else 'nothing else'}.\n"
+            "Disable the Home Assistant integration entry itself (not just its devices),\n"
+            "restart Home Assistant, and stop anything else polling the unit first."
         )
         if input("Continue? [y/N] ").strip().lower() != "y":
             return 1
