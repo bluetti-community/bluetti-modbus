@@ -79,8 +79,10 @@ Supported out of the box:
   are served here, several of them populated. BLUETTI's full BalcoXX set
   under its own name, with the pack voltage at 0.01 V, signed per-phase
   grid power, `b_c` a magnitude with `b_status` giving the direction, and
-  a DC output switch register. Nothing writable until a write has been
-  tested
+  a DC output switch register, read on its own so the read plan never
+  bridges into the unserved registers around it. Nothing writable until a
+  write has been tested. No mDNS announcement (nmap and Home Assistant's
+  Zeroconf browser saw nothing), so it's set up by address
 
 Field names, units, and register addresses come from
 [bluetti-registers][bluetti-registers] - `devices/balco260.py` is generated
@@ -316,10 +318,19 @@ read touching such an address with **no reply at all** - a timeout, with the
 device otherwise alive (confirmed on real hardware, 2026-09-14: 57 of 57
 unserved addresses answered the 1-register way, 7 of 7 went silent the
 2-register way). That's why `Balco260` declares a narrow
-`max_span`, why `AC500` reads every field as its own isolated block, and why
-probing for an optional block (modbus-connection's `read_optional()`, or a
-scan of your own) only tells you anything if it never spans an address the
-device might not serve - see `HARDWARE_TESTING.md`, section 4.
+`max_span`, why `AC500` reads every field as its own isolated block, why
+`FP` reads its settings registers (57001 and up) in runs of adjacent
+declared registers instead of letting the planner bridge 57001-57010
+across six it doesn't serve (which is exactly how a real FridgePower went
+silent on the first Home Assistant attempt, hassio-bluetti-modbus#127 -
+the `dc_o_switch` register at 57005 sits within `max_gap` of both
+neighbours, a layout the Balco 260 happens not to have), and why probing
+for an optional block (modbus-connection's `read_optional()`, or a scan of
+your own) only tells you anything if it never spans an address the device
+might not serve - see `HARDWARE_TESTING.md`, section 4. The corollary for a
+new profile: run `bluetti-modread -t <its own name>` on the device before
+anything else is built on it - a dump taken with a *neighbouring* profile
+proves the registers, not the read plan.
 
 An AC500 is less forgiving still: a single-register read at any Modbus
 unit id other than 1 got no reply and **froze its Modbus TCP stack until a
