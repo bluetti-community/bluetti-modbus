@@ -1,6 +1,8 @@
+import ssl
 from unittest.mock import patch
 
 import pytest
+from modbus_connection import ModbusTcpParams, ModbusTlsParams
 from modbus_connection.mock import MockModbusConnection
 
 from bluetti_modbus_lib.exceptions import BluettiModbusConnectionError
@@ -141,3 +143,91 @@ def test_backend_pymodbus_uses_the_pymodbus_connection():
 
     pym.assert_called_once()
     tm.assert_not_called()
+
+
+def _params_passed_to(mock_backend):
+    return mock_backend.call_args.args[0]
+
+
+def test_plain_tcp_by_default():
+    with patch(
+        "modbus_connection.tmodbus.ModbusConnection",
+        return_value=MockModbusConnection(),
+    ) as tm:
+        client = BluettiModbusClient("10.0.0.1", 502, "balco260")
+
+    params = _params_passed_to(tm)
+    assert isinstance(params, ModbusTcpParams)
+    assert (params.host, params.port) == ("10.0.0.1", 502)
+    assert client.params is params
+
+
+def test_tls_builds_tls_params_with_the_given_options():
+    with patch(
+        "modbus_connection.tmodbus.ModbusConnection",
+        return_value=MockModbusConnection(),
+    ) as tm:
+        BluettiModbusClient(
+            "10.0.0.1",
+            802,
+            "ep500p",
+            tls=True,
+            verify="/etc/ssl/device-ca.pem",
+            check_hostname=False,
+            client_cert="/etc/ssl/client.pem",
+            client_key="/etc/ssl/client.key",
+            client_key_password="secret",
+        )
+
+    params = _params_passed_to(tm)
+    assert isinstance(params, ModbusTlsParams)
+    assert (params.host, params.port) == ("10.0.0.1", 802)
+    assert params.verify == "/etc/ssl/device-ca.pem"
+    assert params.check_hostname is False
+    assert (params.client_cert, params.client_key, params.client_key_password) == (
+        "/etc/ssl/client.pem",
+        "/etc/ssl/client.key",
+        "secret",
+    )
+
+
+def test_tls_with_the_pymodbus_backend():
+    with (
+        patch(
+            "modbus_connection.pymodbus.ModbusConnection",
+            return_value=MockModbusConnection(),
+        ) as pym,
+        patch("modbus_connection.tmodbus.ModbusConnection") as tm,
+    ):
+        BluettiModbusClient("10.0.0.1", 802, "balco260", backend="pymodbus", tls=True)
+
+    assert isinstance(_params_passed_to(pym), ModbusTlsParams)
+    tm.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_tls_params_build_an_ssl_context_the_backend_can_use():
+    with patch(
+        "modbus_connection.tmodbus.ModbusConnection",
+        return_value=MockModbusConnection(),
+    ):
+        verified = BluettiModbusClient("10.0.0.1", 802, "balco260", tls=True)
+        self_signed = BluettiModbusClient(
+            "10.0.0.1", 802, "balco260", tls=True, verify=False
+        )
+
+    assert isinstance(verified.params, ModbusTlsParams)
+    assert isinstance(self_signed.params, ModbusTlsParams)
+    strict = await verified.params.create_ssl_context()
+    lax = await self_signed.params.create_ssl_context()
+
+    assert strict.verify_mode == ssl.CERT_REQUIRED
+    assert strict.check_hostname is True
+    # verify=False is the self-signed-certificate case: no verification at all.
+    assert lax.verify_mode == ssl.CERT_NONE
+    assert lax.check_hostname is False
+
+
+def test_tls_options_without_tls_are_refused():
+    with pytest.raises(ValueError, match="tls=True"):
+        BluettiModbusClient("10.0.0.1", 502, "balco260", verify=False)

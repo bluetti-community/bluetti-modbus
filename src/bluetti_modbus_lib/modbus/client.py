@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from typing import Any, Literal
 
 from modbus_connection import ModbusConnection as _BaseModbusConnection
-from modbus_connection import ModbusTcpParams
+from modbus_connection import ModbusTcpParams, ModbusTlsParams
 
 from ..devices import (
     AC200L,
@@ -33,8 +33,44 @@ class ClientReturnValue:
 
 
 class BluettiModbusClient:
+    """A device behind a connection this client owns - for the CLI and standalone use.
+
+    Plain Modbus TCP by default. ``tls=True`` opens a Modbus/TLS (Modbus
+    Security) link instead, for a device that offers one - conventionally
+    on port 802 - with the TLS options ``modbus_connection.ModbusTlsParams``
+    takes:
+
+    - ``verify``: ``True`` checks the server certificate against the system
+      store, ``False`` skips verification (a self-signed device certificate),
+      a path names a CA file or directory to check against.
+    - ``check_hostname``: whether the certificate must name the host; only
+      meaningful with verification on.
+    - ``client_cert`` / ``client_key`` / ``client_key_password``: a client
+      certificate, for a device that requires one.
+
+    Both backends handle TLS. Example, for a device with a self-signed
+    certificate::
+
+        client = BluettiModbusClient(
+            "192.168.1.100", 802, "ep500p", tls=True, verify=False
+        )
+        values = await client.read()
+        await client.aclose()
+    """
+
     def __init__(
-        self, host: str, port: int, device_type: str, *, backend: Backend = "tmodbus"
+        self,
+        host: str,
+        port: int,
+        device_type: str,
+        *,
+        backend: Backend = "tmodbus",
+        tls: bool = False,
+        verify: bool | str = True,
+        check_hostname: bool = True,
+        client_cert: str | None = None,
+        client_key: str | None = None,
+        client_key_password: str | None = None,
     ) -> None:
         # tmodbus is the default since 0.4.0 - confirmed via persistent-
         # connection testing against real Balco260/S Meter hardware: it
@@ -56,7 +92,30 @@ class BluettiModbusClient:
         # rather than importing under one shared name first, is what lets
         # mypy see each concrete class as assignment-compatible with that
         # declared base instead of flagging the import itself.
-        params = ModbusTcpParams(host=host, port=port)
+        self.params: ModbusTcpParams | ModbusTlsParams
+        if tls:
+            self.params = ModbusTlsParams(
+                host=host,
+                port=port,
+                verify=verify,
+                check_hostname=check_hostname,
+                client_cert=client_cert,
+                client_key=client_key,
+                client_key_password=client_key_password,
+            )
+        else:
+            # A TLS option on a plain-TCP client would be silently ignored;
+            # better to say so than to let verify=False look like it applied.
+            if (
+                verify is not True
+                or not check_hostname
+                or client_cert is not None
+                or client_key is not None
+                or client_key_password is not None
+            ):
+                raise ValueError("TLS options need tls=True")
+            self.params = ModbusTcpParams(host=host, port=port)
+        params = self.params
         self.conn: _BaseModbusConnection
         if backend == "tmodbus":
             from modbus_connection.tmodbus import ModbusConnection as _TConn
