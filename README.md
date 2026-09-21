@@ -11,98 +11,57 @@ TCP interface.
 
 ## About
 
-This package reads Bluetti power stations over Modbus, using the register
-maps Bluetti documents for its Modbus TCP slave implementation. It's built on
-[`modbus-connection`][modbus-connection], a backend-neutral async Modbus
-toolkit - the caller owns the connection and hands this library a
-`ModbusUnit`, so a site with several devices shares one connection across
-several device objects.
+This package decodes what a Bluetti device reports over Modbus TCP, using
+the register maps documented in [bluetti-registers][bluetti-registers]. It is
+built on [`modbus-connection`][modbus-connection], a backend-neutral async
+Modbus toolkit: the caller owns the connection and hands the library a
+`ModbusUnit`, so several device objects can share one connection.
 
-The library is primarily **read-only** - it decodes what a device reports. A
-small, explicit set of fields `bluetti-registers`' schema marks writeable
-(currently Balco 260's 3 control switches and 2 battery SOC thresholds) also
-support `await device.write(field_name, value)`, validated against the
-schema's own bounds (via [`probatio`][probatio]) before anything reaches the
-device.
+The library is **read-only by default**. The few fields a device is known to
+accept writes for (output switches, SOC thresholds - see the table) support
+`await device.write(field_name, value)`, validated against the schema's own
+bounds with [`probatio`][probatio] before anything reaches the device.
 
-Supported out of the box:
+## Supported devices
 
-- **Balco 260**: battery voltage/current/SoC/SoH/cycle count, per-string PV,
-  grid import/export, AC output, inverter status/fault/warning, and more
-- **Balco 500**: Balco 260's register set minus 3 of its 4 PV string inputs
-  - the official datasheet documents a single MPPT tracker, not four -
-  otherwise sourced from the same generic "BalcoXX" tab in BLUETTI's own
-  official register spec, not a Balco260-specific one. Not yet verified
-  against real Balco 500 hardware (no unit exists in this community yet),
-  so every writable field (switches, SoC thresholds) stays read-only here,
-  same policy as EP2000 below
-- **EP2000**: the same Balco 260 register set plus a rated-capacity and
-  EMS/grid-export control block - sourced from BLUETTI's own official
-  register spec, not yet verified against real EP2000 hardware
-- **AC500**: a smaller register set (battery/PV/grid/AC totals, the
-  "Customized UPS" SOC thresholds read-only, no per-pack data - see the
-  "Multiple battery packs" section below), confirmed against real
-  hardware by the community
-  (bluetti-official/bluetti-modbus-tcp-slave#5,
-  bluetti-community/bluetti-registers#13) but not yet confirmed by BLUETTI
-  support directly, unlike every other device here
-- **S Meter**: Bluetti's AC meter/CT accessory, confirmed against real
-  hardware
-- **AC200L / AC200L2** (beta): a portable power station, absent from
-  BLUETTI's official Modbus register list. Its profile
-  (bluetti-registers#31) was derived from AC500's register set and
-  confirmed against a real **AC200L2** by cross-checking this library's
-  raw reads against the same unit's simultaneous BLE readings
-  (bluetti-modbus#76, by @awrede): device type, powers, firmware
-  versions, switch states, SOC and SOC thresholds match; grid frequency
-  and total battery voltage need different scales than AC500 at the same
-  addresses. Energies and PV fields are carried over unverified; the DC
-  output switch is confirmed writable, the AC one writable at the owner's
-  request. The device names itself "AC200L" - nothing yet says an
-  original AC200L exposes Modbus TCP at all
-- **EP500P** (beta) - the BLUETTI EP500Pro, named here after the type
-  string the device gives at 50200, as AC200L is: a home backup station
-  on which Modbus TCP appeared with IoT firmware 9041.17, absent from
-  BLUETTI's official Modbus register list. Its profile
-  (bluetti-registers#35) is AC500's register set plus the read-only SOC
-  thresholds, read on two real units by @TobiGitHubi and @BOPOHOP: device
-  type, SOC, AC/PV powers, grid frequency and firmware versions match the
-  app, and the AC/DC output switches switch the outputs (writable).
-  Energies and PV fields are carried over unverified; grid charging is a
-  read-only state until its effect has been seen
-- **FP** (beta, read-only) - the BLUETTI FridgePower, named here after the
-  type string the device gives at 50200: on the Modbus side a Balco-family
-  device, whose real US unit answered the whole Balco 260 profile
-  (bluetti-registers#38, by @MadPB) with values matching the app - energy
-  totals, SOC, thresholds, time to empty to the minute - and the whole
-  Balco 500 profile too, so the twelve registers the Balco 260 never fills
-  are served here, several of them populated. BLUETTI's full BalcoXX set
-  under its own name, with the pack voltage at 0.01 V, signed per-phase
-  grid power, `b_c` a magnitude with `b_status` giving the direction, and
-  a DC output switch register, read on its own so the read plan never
-  bridges into the unserved registers around it. Nothing writable until a
-  write has been tested. No mDNS announcement (nmap and Home Assistant's
-  Zeroconf browser saw nothing), so it's set up by address
+| Device | `get_device()` id | Status | Writable |
+|---|---|---|---|
+| Balco 260 | `balco260` | Confirmed by BLUETTI and on real hardware | AC output, grid in/out switches, SOC thresholds |
+| Balco 500 | `balco500` | From BLUETTI's register spec, no unit seen yet | - |
+| EP2000 | `ep2000` | From BLUETTI's register spec, no unit seen yet | - |
+| S Meter | `smeter` | Confirmed by BLUETTI and on real hardware | - |
+| AC500 | `ac500` | Confirmed on real hardware ([evidence][ev-ac500]) | AC/DC output switches |
+| AC200L / AC200L2 | `ac200l` | Beta - confirmed on an AC200L2 against its BLE readings ([evidence][ev-ac200l]) | AC/DC output switches |
+| EP500Pro | `ep500p` | Beta - two real units ([evidence][ev-ep500p]) | AC/DC output switches |
+| FridgePower | `fp` | Beta - two real units, read-only ([evidence][ev-fp]) | - |
 
-Field names, units, and register addresses come from
-[bluetti-registers][bluetti-registers] - `devices/balco260.py` is generated
-from it by `import.py`, and a [scheduled workflow][sync-devices] keeps it in
-sync weekly, so `main` never silently drifts from what it currently
-documents. See [CONTRIBUTING.md](CONTRIBUTING.md) for EP2000's verification
-status and this project's writable-field policy.
+Notes:
 
-Have a device model this doesn't support yet, or a value that looks wrong? See
-[HARDWARE_TESTING.md](HARDWARE_TESTING.md) - no coding experience required, including
-prompts you can hand to an AI assistant.
+- **Balco 260** reports up to five BC260 expansion packs - see
+  [Multiple battery packs](#multiple-battery-packs-balco-260).
+- **Balco 500 / EP2000** come from BLUETTI's official register spec and have
+  not been read on real hardware, so nothing is writable there yet.
+- **AC500 / EP500Pro / AC200L** share one register layout (the AC500's) with
+  per-device scales. SOC thresholds are read-only on them; energies and PV
+  fields on the AC200L and EP500Pro are carried over unverified. None of
+  them exposes per-pack data over Modbus TCP.
+- **FridgePower** is a Balco-family device on the Modbus side: the full
+  BalcoXX register set, pack voltage at 0.01 V, signed grid power.
+- `AC200L`, `EP500P` and `FP` are named after the type string the device
+  itself gives at register 50200.
+
+Field names, units and addresses come from
+[bluetti-registers][bluetti-registers]: every `devices/*.py` is generated
+from it by `import.py`, and a [scheduled workflow][sync-devices] keeps them
+in sync. Have a device this doesn't support, or a value that looks wrong?
+See [HARDWARE_TESTING.md](HARDWARE_TESTING.md) - no coding experience
+required.
 
 ## Enabling Modbus TCP on your device
 
-Modbus TCP is off by default on Bluetti power stations that support it -
-enable it in the device's own web interface first, then point this library
-at its IP address. See the official
-[bluetti-modbus-tcp-slave][official-docs] documentation for the exact steps
-for your model; they vary enough between devices that this README won't
-guess at them.
+Modbus TCP is off by default - enable it in the device's own web interface
+first, then point this library at its IP address. The steps vary by model;
+see the official [bluetti-modbus-tcp-slave][official-docs] documentation.
 
 ## Installation
 
@@ -110,24 +69,21 @@ guess at them.
 pip install bluetti-modbus
 ```
 
-Installing `bluetti-modbus` alone only pulls in `modbus-connection`'s
-backend-neutral interface - enough to use the device classes directly against
-a `ModbusUnit` you already have. The `bluetti-modread` CLI, and the examples
-below, need a concrete backend, installed via the `cli` extra (currently
-[tmodbus][tmodbus], the default since 0.4.0 - see
-[CONTRIBUTING.md](CONTRIBUTING.md) for why):
+That pulls in only `modbus-connection`'s backend-neutral interface - enough
+to use the device classes against a `ModbusUnit` you already have. The
+`bluetti-modread` CLI and the examples below need a concrete backend, via
+the `cli` extra ([tmodbus][tmodbus], the default):
 
 ```bash
 pip install "bluetti-modbus[cli]"
 ```
 
-`bluetti-modread` also accepts `--backend pymodbus` (`pip install
-"bluetti-modbus[cli-pymodbus]"` first) - the previous default, still
-available for anyone who needs it.
+`--backend pymodbus` is also available (`pip install
+"bluetti-modbus[cli-pymodbus]"`).
 
 ## Usage
 
-The consumer owns the connection and hands the library a unit:
+The caller owns the connection and hands the library a unit:
 
 ```python
 import asyncio
@@ -161,41 +117,30 @@ async def main() -> None:
 asyncio.run(main())
 ```
 
-There is no self-describing header to detect the model from, unlike some
-Modbus devices - `get_device()` takes the model as a plain string
-(`"balco260"`, `"ep2000"`, or `"smeter"`); the caller has to already know
-which one it's talking to. `async_update_with_retry()` is the entry point
-most callers want: it retries once on a transient acknowledge/busy response
-(codes 5/6), which Bluetti devices return in practice on registers that
-otherwise read fine. Call `async_update()` directly instead if you want that
-first failure to raise immediately. Either way, a communication failure
-raises `BluettiModbusConnectionError` (also a `modbus_connection.ModbusError`,
-for code that already catches that directly) - except for a transient busy
-response, which `async_update_with_retry` decides whether to retry rather
-than wrapping. Decoded values land on `device.values`, a plain
-`dict[str, Any]` keyed by field name; `field_names()` and `get_field()`
-expose the field metadata (address, type, scale, unit, whether it's
-writable) behind each key, deliberately limited to what's true at the
-protocol level - no Home Assistant concepts like entity category or device
-class live here, since those describe UI presentation, not the register.
+- There is no self-describing header to detect the model from:
+  `get_device()` takes the id from the table above, and the caller has to
+  know which device it is talking to.
+- `async_update_with_retry()` retries a transient acknowledge/busy response
+  (Modbus codes 5/6), which these devices return now and then on registers
+  that otherwise read fine. `async_update()` raises on the first failure
+  instead. A communication failure raises `BluettiModbusConnectionError`
+  (also a `modbus_connection.ModbusError`).
+- Decoded values land on `device.values`, a `dict[str, Any]` keyed by field
+  name. `field_names()` and `get_field()` expose each field's address, type,
+  scale, unit and whether it is writable - protocol facts only, no UI
+  concepts.
+- Everything a caller needs (`get_device`, the device classes, the
+  exceptions, `BluettiModbusClient`, the enums, the pack helpers) is
+  importable from `bluetti_modbus_lib` directly.
 
-Everything above (`get_device`, the device classes, `BluettiModbusError`,
-`BluettiModbusConnectionError`, `BluettiModbusClient`, the inverter enums) is
-importable directly from `bluetti_modbus_lib`, not from the deeper module
-paths that define them.
+### Multiple battery packs (Balco 260)
 
-### Multiple battery packs (BC260)
-
-Balco 260 only, for now - see the note at the end of this section for AC500.
-A Balco 260 can have up to `MAX_BATTERY_PACKS` (5, confirmed by BLUETTI)
-BC260 packs attached. Reading how many are actually there, and every
-"total"/aggregate field (`d_num_battery_packs`, `b_v_total`, `b_c_total`,
-`b_soc_total`, `b_soh_total`, `b_status`, `b_time_to_full_total`,
-`b_time_to_empty_total` - registers 51001-51008), needs a *second* Modbus
-unit at the aggregate slave address 250 (0xFA), confirmed by BLUETTI and
-by real-hardware testing (reading `d_num_battery_packs` at the device's own
-slave address always returns 0, regardless of how many packs are actually
-attached - only slave 250 reports the real count):
+A Balco 260 takes up to `MAX_BATTERY_PACKS` (5) BC260 packs. Pack 1's own
+data (`b_soc`, `b_v`, serial, ...) is part of the main device's fields. The
+pack count and every aggregate field (`d_num_battery_packs`, `b_v_total`,
+`b_soc_total`, ... - `AGGREGATE_SUMMARY_FIELDS`) are only served at the
+aggregate unit id `AGGREGATE_SLAVE_ID` (250); at the device's own unit id
+the count always reads 0:
 
 ```python
 from bluetti_modbus_lib import aggregate_pack_summary
@@ -205,16 +150,11 @@ await summary.async_update_with_retry()
 print(summary.values["d_num_battery_packs"], "packs")
 ```
 
-`AGGREGATE_SUMMARY_FIELDS` lists the field names this covers.
-
-Pack 1's own per-pack data (`b_soc`, `b_v`, serial number, etc.) is already
-part of the main `Balco260` device's own fields - reading its own Modbus
-slave address covers pack 1. Each BC260 expansion pack answers the same
-"Each Pack Base Information" block at its *own* slave address, and those
-addresses start at **41** (`EXPANSION_PACK_FIRST_SLAVE_ID`, per BLUETTI):
-pack 2 is at 41, pack 3 at 42, and so on - `pack_slave_id()` does that
-arithmetic, and `battery_pack()` builds a `Balco260` restricted to just that
-block at the given address:
+Each expansion pack answers the "Each Pack Base Information" block
+(`PACK_INFO_FIELDS`) at its own unit id, starting at
+`EXPANSION_PACK_FIRST_SLAVE_ID` (41): pack 2 at 41, pack 3 at 42, and so on.
+`pack_slave_id()` does the arithmetic, `battery_pack()` builds a `Balco260`
+restricted to that block:
 
 ```python
 from bluetti_modbus_lib import battery_pack, pack_slave_id
@@ -224,51 +164,29 @@ await pack2.async_update_with_retry()
 print(pack2.values["b_soc"], "%")
 ```
 
-`PACK_INFO_FIELDS` lists the field names this covers. Confirmed on a
-Balco260 with three BC260 packs (2026-09-18, bluetti-community/bluetti-modbus#55):
-slaves 42 and 43 answered the whole block with each pack's own type string,
-serial number, voltage, SOC, SOH, cycle count, firmware version and energies.
-An earlier reading of BLUETTI's description had the packs at slave 2, 3,
-..., which read as zeros - wrong addresses, not missing data.
+A slot can answer its serial number and zeros for everything else (a
+firmware issue BLUETTI has acknowledged). `pack_is_reporting(values)` tells
+a reporting pack from such a slot; while it is False, treat the pack as
+absent rather than as "0 %, 0 V".
 
-One thing to check before showing a pack's values: a slot can answer its
-serial number and **zeros for everything else** (seen on slot 41 of that
-same unit, and on a Balco260 with no pack attached at all). BLUETTI has
-confirmed this as a firmware issue and plans a fix, and has said a future
-firmware will also list the unit ids in use and the serial number behind
-each - until then `pack_is_reporting(values)` tells a reporting pack from
-such a slot (type string present, or a non-zero voltage); while it is
-False, treat the pack as absent rather than as "0 %, 0 V" - its current in
-particular would otherwise decode to 3000 A, 0 being 30000 below its
-reference.
-
-AC500 also has a `d_num_battery_packs` field, but real-hardware testing
-found it means something different there: it stays at a fixed value (the
-device's maximum supported packs) regardless of how many are actually
-attached, unlike Balco260's confirmed real-time count. `aggregate_pack_summary()`/
-`battery_pack()` are Balco260-only - and must stay so: on a real AC500 a
-read at any unit id other than 1 (2, 41-46, 250 were tried) got no reply
-and froze the device's Modbus TCP stack until a power cycle
-(bluetti-registers#13, 2026-09-19). Never address another unit id on an
-AC500 or an EP500P. What that family serves at 51200-51249 on unit 1 is
-a *window* onto whichever pack the BLUETTI app has selected - zeros until
-the app looks at a pack, then that pack's BMS version, voltage, SOC and
-SOH - and the selector behind it is not reachable over Modbus TCP (a
-write to it is refused, 2026-09-20), so per-pack data cannot be read from
-these devices until BLUETTI exposes it.
+These helpers are Balco 260 only. On the AC500, EP500Pro and AC200L,
+`d_num_battery_packs` is a fixed maximum, not a count, and registers
+51200-51249 are a window onto whichever pack the BLUETTI app has selected -
+the selector is not reachable over Modbus TCP, so per-pack data cannot be
+read from that family. Never address another unit id on those devices (see
+[Device behaviours](#device-behaviours-this-library-works-around)).
 
 ## CLI
 
-The optional CLI reads a device straight from the terminal - useful for
-testing, not something another application should build on (see
-[Architecture](#architecture) below).
+The optional CLI reads a device straight from the terminal - for testing,
+not something another application should build on (see
+[Architecture](#architecture)):
 
 ```bash
 bluetti-modread -c 10.2.1.60 -p 502 -t balco260
 ```
 
-Example output, captured from a real Balco 260 (truncated - `bluetti-modread`
-prints one line per field):
+Example output from a real Balco 260 (truncated - one line per field):
 
 ```text
 d_num_inverters: 1
@@ -283,85 +201,57 @@ b_cycle_count: 8
 b_i_e: 23420 Wh
 ```
 
-The output ends with the number of Modbus block reads the whole update actually took (e.g.
-`15 Modbus block reads`) - a quick way to notice if a device's fields aren't pooling into
-reads as efficiently as expected.
+The output ends with the number of Modbus block reads the update took
+(`15 Modbus block reads`) - a quick way to notice a profile whose fields
+do not pool into reads as expected.
 
-Note the two energy fields above: most cumulative energy fields
-(`ac_o_e_total`, etc.) are reported in kWh, but the battery charge/discharge
-ones (`b_i_e`, `b_o_e`) are in Wh - both correct as reported by the device,
-just worth knowing if you're comparing values across fields. Field names
-follow the naming convention documented in
-[bluetti-registers][bluetti-registers-naming].
+Most cumulative energies (`ac_o_e_total`, ...) are in kWh; the battery
+charge/discharge energies (`b_i_e`, `b_o_e`) are in Wh, as the device
+reports them. Field names follow the
+[bluetti-registers naming convention][bluetti-registers-naming].
 
 ## Architecture
 
-Two different things in this library talk Modbus, for two different
-audiences:
+Two things in this library talk Modbus, for two audiences:
 
-- `AC200L`, `AC500`, `Balco260`, `Balco500`, `EP2000`, `EP500P`, `FP`, and `SMeter`
-  (`bluetti_modbus_lib.devices`) are the integration surface: each takes a
-  `ModbusUnit` supplied by the caller,
-  built from whichever backend and connection the caller already manages.
-  This is what an application - a Home Assistant integration, for example -
-  should build on.
-- `BluettiModbusClient` (`bluetti_modbus_lib.modbus.client`) is different: it
-  owns and manages its own connection. It exists for the `bluetti-modread`
-  CLI above and standalone/manual use, not as something another application
-  should depend on - doing so would open a second, competing connection to
-  the device instead of sharing one.
+- The device classes (`bluetti_modbus_lib.devices`) are the integration
+  surface: each takes a `ModbusUnit` built from whichever backend and
+  connection the caller manages. This is what an application should build
+  on.
+- `BluettiModbusClient` (`bluetti_modbus_lib.modbus.client`) owns its own
+  connection. It exists for the `bluetti-modread` CLI and standalone use -
+  building an application on it would open a second, competing connection
+  to the device.
 
-One device behaviour shapes every read plan here, so it's worth knowing
-before changing one: a Balco 260 answers a 1-register read of an address it
-doesn't serve with an "illegal data address" exception, but a multi-register
-read touching such an address with **no reply at all** - a timeout, with the
-device otherwise alive (confirmed on real hardware, 2026-09-14: 57 of 57
-unserved addresses answered the 1-register way, 7 of 7 went silent the
-2-register way). That's why `Balco260` declares a narrow
-`max_span`, why `AC500` reads every field as its own isolated block, why
-`FP` reads its settings registers (57001 and up) in runs of adjacent
-declared registers instead of letting the planner bridge 57001-57010
-across six it doesn't serve (which is exactly how a real FridgePower went
-silent on the first Home Assistant attempt, hassio-bluetti-modbus#127 -
-the `dc_o_switch` register at 57005 sits within `max_gap` of both
-neighbours, a layout the Balco 260 happens not to have), and why probing
-for an optional block (modbus-connection's `read_optional()`, or a scan of
-your own) only tells you anything if it never spans an address the device
-might not serve - see `HARDWARE_TESTING.md`, section 4. The corollary for a
-new profile: run `bluetti-modread -t <its own name>` on the device before
-anything else is built on it - a dump taken with a *neighbouring* profile
-proves the registers, not the read plan.
+## Device behaviours this library works around
 
-An AC500 is less forgiving still: a single-register read at any Modbus
-unit id other than 1 got no reply and **froze its Modbus TCP stack until a
-power cycle** - toggling Modbus TCP on the device's web page did not
-recover it (bluetti-registers#13, 2026-09-19). A Balco 260 ignores an
-unknown unit id and carries on. So nothing in this library, and nothing
-built on it, may address another unit id on an AC500 or an EP500P (an
-EP500P given the same requests went silent per connection rather than
-freezing, and answered nothing at those ids either); unit-1 reads of
-unserved *addresses* are answered with a clean "illegal data address"
-there, as on a Balco 260.
+All confirmed on real hardware; the details live in the linked issues.
 
-A second one shapes writes: a Balco 260 confirms a Write Single Register
-(function 0x06) with the right function code and value but **not the Modbus
-address it was asked to write** - the same setting's address in the device's
-own internal register space, the one the BLUETTI app speaks (57016 → 2022,
-57009 → 2207, and so on; confirmed on real hardware for all five of its
-writable registers, 2026-09-16). An AC200L2 does the same with its own,
-different internal map (57005 → 3008, 2026-09-18), and an EP500Pro
-confirms the same switch at the same 3008 (2026-09-20) - the portable
-stations share one internal map, the Balco family another. A strict Modbus client
-reports that as a protocol error even though the write applied, so
-`BluettiDevice.write()` recognises such a confirmation and treats it as
-success, logging the echoed address - at debug when it is the one on file
-for that device and register (see `_INTERNAL_WRITE_ADDRESS` in
-`base_devices/bluetti_device.py`, keyed by device), at warning when it
-isn't, which is the signal to add an entry. Reported to BLUETTI. The internal space itself is not served over Modbus TCP: a
-1-register read of any of 54 of its addresses is an illegal data address
-(confirmed on real hardware, 2026-09-16) - the translation exists for the
-documented registers only, so there is nothing to gain by addressing it
-directly.
+- **A read touching an unserved register gets no reply.** A Balco-family
+  device answers a single-register read of an address it does not serve
+  with "illegal data address", but a multi-register read that touches one
+  with silence until the timeout. Hence `Balco260`'s `max_span = 20`, the
+  AC family's one-block-per-field read plans, and `FP`'s settings block
+  read in runs of adjacent registers. For a new profile, run
+  `bluetti-modread -t <its own id>` on the device before building on it:
+  a dump taken with a neighbouring profile proves the registers, not the
+  read plan.
+- **AC500 and EP500Pro: unit id 1 only.** A request to any other unit id
+  gets no reply, and on an AC500 it froze the Modbus TCP stack until a
+  power cycle ([details][ev-ac500]). Nothing in this library, and nothing
+  built on it, may address another unit id on that family.
+- **Writes are confirmed with the device's internal address.** A Write
+  Single Register (0x06) comes back with the right function code and value
+  but the setting's address in the device's own register space (the one
+  the BLUETTI app uses - 57016 → 2022 on a Balco 260, 57005 → 3008 on the
+  portable stations). The write has applied every time; `write()` accepts
+  such a confirmation, logs the echoed address at debug when it is the one
+  on file (`_INTERNAL_WRITE_ADDRESS` in `base_devices/bluetti_device.py`)
+  and at warning when it isn't - that warning is the signal to add an
+  entry. Reported to BLUETTI.
+- **The internal register space is not reachable over Modbus TCP.** Reads
+  and writes of the app's own addresses are refused; only the documented
+  registers are translated.
 
 ## Related projects
 
@@ -371,8 +261,9 @@ top of it:
 - [`hassio-bluetti-modbus`][hassio-bluetti-modbus] - a HACS-installable
   custom integration, vendoring this library directly (see its own README
   for why).
-- [`bluetti-home-assistant`][bluetti-home-assistant] - a cloud + Modbus
-  hybrid integration, depending on this library via PyPI.
+- [`bluetti-home-assistant`][bluetti-home-assistant] - the cloud
+  integration; its built-in Modbus path, now deprecated in favour of the
+  one above, depends on this library via PyPI.
 - [home-assistant/core#180602][ha-core-pr] - an in-review attempt at a
   built-in `home-assistant/core` integration for the Modbus-only path.
 
@@ -498,6 +389,10 @@ SOFTWARE.
 [bluetti-community]: https://github.com/bluetti-community
 [bluetti-home-assistant]: https://github.com/bluetti-community/bluetti-home-assistant
 [bluetti-registers-naming]: https://github.com/bluetti-community/bluetti-registers#naming-convention-for-field-names
+[ev-ac200l]: https://github.com/bluetti-community/bluetti-modbus/issues/76
+[ev-ac500]: https://github.com/bluetti-community/bluetti-registers/issues/13
+[ev-ep500p]: https://github.com/bluetti-community/bluetti-registers/issues/35
+[ev-fp]: https://github.com/bluetti-community/bluetti-registers/issues/38
 [bluetti-registers]: https://github.com/bluetti-community/bluetti-registers
 [build-shield]: https://github.com/bluetti-community/bluetti-modbus/actions/workflows/tests.yml/badge.svg
 [build]: https://github.com/bluetti-community/bluetti-modbus/actions/workflows/tests.yml
