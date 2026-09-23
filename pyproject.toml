@@ -7,7 +7,7 @@ name = "bluetti-modbus"
 version = "0.0.0"
 description = "Unofficial library for basic communication to BLUETTI Power Stations via Modbus"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.12"
 license = { text = "MIT" }
 authors = [{ name = "Patrick762" }, { name = "bluetti-community" }]
 keywords = ["modbus", "bluetti", "home-assistant"]
@@ -15,6 +15,8 @@ classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
 ]
 # Protocol + the device-modelling framework (modbus_connection.model). The
 # caller injects a ModbusUnit built from whichever backend they choose - see
