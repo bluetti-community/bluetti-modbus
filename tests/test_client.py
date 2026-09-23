@@ -2,7 +2,7 @@ import ssl
 from unittest.mock import patch
 
 import pytest
-from modbus_connection import ModbusTcpParams, ModbusTlsParams
+from modbus_connection import ModbusSerialParams, ModbusTcpParams, ModbusTlsParams
 from modbus_connection.mock import MockModbusConnection
 
 from bluetti_modbus_lib.exceptions import BluettiModbusConnectionError
@@ -231,3 +231,162 @@ async def test_tls_params_build_an_ssl_context_the_backend_can_use():
 def test_tls_options_without_tls_are_refused():
     with pytest.raises(ValueError, match="tls=True"):
         BluettiModbusClient("10.0.0.1", 502, "balco260", verify=False)
+
+
+def test_serial_builds_serial_params_with_the_line_settings():
+    # An RS485 adapter on a real port: the line settings are the device's,
+    # so they are passed as given.
+    with patch(
+        "modbus_connection.tmodbus.ModbusConnection",
+        return_value=MockModbusConnection(),
+    ) as tm:
+        client = BluettiModbusClient(
+            device_type="ep2000",
+            serial_device="/dev/ttyUSB0",
+            baudrate=19200,
+            parity="E",
+            stopbits=2,
+            bytesize=7,
+        )
+
+    params = _params_passed_to(tm)
+    assert isinstance(params, ModbusSerialParams)
+    assert params.device == "/dev/ttyUSB0"
+    assert (params.baudrate, params.parity, params.stopbits, params.bytesize) == (
+        19200,
+        "E",
+        2,
+        7,
+    )
+    # RTU: the framing every BLUETTI serial port is expected to speak.
+    assert params.framer == "rtu"
+    assert client.params is params
+
+
+def test_serial_defaults_match_the_common_rs485_line():
+    with patch(
+        "modbus_connection.tmodbus.ModbusConnection",
+        return_value=MockModbusConnection(),
+    ) as tm:
+        BluettiModbusClient(device_type="ep2000", serial_device="/dev/ttyUSB0")
+
+    params = _params_passed_to(tm)
+    assert (params.baudrate, params.parity, params.stopbits, params.bytesize) == (
+        9600,
+        "N",
+        1,
+        8,
+    )
+
+
+def test_a_serial_to_tcp_gateway_is_just_another_device_string():
+    # socket://host:port is pyserial's own URL form: the gateway owns the
+    # line settings, this end only has to name it.
+    with patch(
+        "modbus_connection.tmodbus.ModbusConnection",
+        return_value=MockModbusConnection(),
+    ) as tm:
+        BluettiModbusClient(
+            device_type="ep2000", serial_device="socket://192.168.1.50:8899"
+        )
+
+    assert _params_passed_to(tm).device == "socket://192.168.1.50:8899"
+
+
+def test_serial_with_the_pymodbus_backend():
+    with (
+        patch(
+            "modbus_connection.pymodbus.ModbusConnection",
+            return_value=MockModbusConnection(),
+        ) as pym,
+        patch("modbus_connection.tmodbus.ModbusConnection") as tm,
+    ):
+        BluettiModbusClient(
+            device_type="balco260", serial_device="/dev/ttyUSB0", backend="pymodbus"
+        )
+
+    assert isinstance(_params_passed_to(pym), ModbusSerialParams)
+    tm.assert_not_called()
+
+
+def test_a_transport_has_to_be_named():
+    with pytest.raises(ValueError, match="host"):
+        BluettiModbusClient(device_type="balco260")
+
+
+def test_the_two_transports_are_mutually_exclusive():
+    with pytest.raises(ValueError, match="mutually exclusive"):
+        BluettiModbusClient(
+            "10.0.0.1", device_type="balco260", serial_device="/dev/ttyUSB0"
+        )
+
+
+def test_a_port_is_refused_next_to_a_serial_device():
+    with pytest.raises(ValueError, match="port belongs to a TCP connection"):
+        BluettiModbusClient(
+            port=502, device_type="balco260", serial_device="/dev/ttyUSB0"
+        )
+
+
+def test_tls_is_refused_on_a_serial_line():
+    with pytest.raises(ValueError, match="no serial equivalent"):
+        BluettiModbusClient(
+            device_type="balco260", serial_device="/dev/ttyUSB0", tls=True
+        )
+
+
+def test_the_device_type_is_required():
+    with pytest.raises(ValueError, match="device_type"):
+        BluettiModbusClient("10.0.0.1", 502)
+
+
+def test_a_host_without_a_port_gets_the_modbus_tcp_port():
+    with patch(
+        "modbus_connection.tmodbus.ModbusConnection",
+        return_value=MockModbusConnection(),
+    ) as tm:
+        BluettiModbusClient("10.0.0.1", device_type="balco260")
+
+    assert _params_passed_to(tm).port == 502
+
+
+def test_the_unit_id_selects_which_device_on_the_bus_is_read():
+    # Everything BLUETTI answers at 1 over TCP; a shared RS485 bus is what
+    # this is for.
+    mock_conn = MockModbusConnection()
+    with patch("modbus_connection.tmodbus.ModbusConnection", return_value=mock_conn):
+        client = BluettiModbusClient(
+            device_type="balco260", serial_device="/dev/ttyUSB0", unit_id=7
+        )
+
+    assert client.device.modbus_unit is mock_conn.for_unit(7)
+
+
+def test_unit_id_1_stays_the_default():
+    mock_conn = MockModbusConnection()
+    with patch("modbus_connection.tmodbus.ModbusConnection", return_value=mock_conn):
+        client = BluettiModbusClient("10.0.0.1", 502, "balco260")
+
+    assert client.device.modbus_unit is mock_conn.for_unit(1)
+
+
+def test_message_spacing_is_handed_to_the_backend():
+    with patch(
+        "modbus_connection.tmodbus.ModbusConnection",
+        return_value=MockModbusConnection(),
+    ) as tm:
+        BluettiModbusClient(
+            device_type="balco260", serial_device="/dev/ttyUSB0", message_spacing=0.05
+        )
+
+    assert tm.call_args.kwargs["message_spacing"] == 0.05
+
+
+def test_no_message_spacing_leaves_the_backend_to_its_own_pacing():
+    with patch(
+        "modbus_connection.tmodbus.ModbusConnection",
+        return_value=MockModbusConnection(),
+    ) as tm:
+        BluettiModbusClient("10.0.0.1", 502, "balco260")
+
+    assert tm.call_args.kwargs["message_spacing"] is None

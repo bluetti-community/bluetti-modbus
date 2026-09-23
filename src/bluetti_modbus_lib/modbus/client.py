@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from typing import Any, Literal
 
 from modbus_connection import ModbusConnection as _BaseModbusConnection
-from modbus_connection import ModbusTcpParams, ModbusTlsParams
+from modbus_connection import ModbusSerialParams, ModbusTcpParams, ModbusTlsParams
 
 from ..devices import (
     AC200L,
@@ -35,9 +35,29 @@ class ClientReturnValue:
 class BluettiModbusClient:
     """A device behind a connection this client owns - for the CLI and standalone use.
 
-    Plain Modbus TCP by default. ``tls=True`` opens a Modbus/TLS (Modbus
-    Security) link instead, with the options ``modbus_connection.ModbusTlsParams``
-    takes:
+    Three transports, one of which must be named:
+
+    - **Modbus TCP** (the default): ``host`` and ``port``.
+    - **Modbus/TLS**: the same, with ``tls=True`` and the certificate
+      options below.
+    - **Modbus RTU over a serial line**: ``serial_device`` instead of a
+      host, with ``baudrate``, ``parity``, ``stopbits`` and ``bytesize``.
+      The device is a port path (``/dev/ttyUSB0``, ``COM3``) or any URL
+      pyserial understands - ``socket://192.168.1.50:8899`` for a
+      serial-to-TCP gateway, an ESP32 or a hardware bridge, where the line
+      settings live in the gateway rather than here.
+
+    ``unit_id`` selects the Modbus address to talk to (1 by default). On a
+    shared RS485 bus that is how the device is picked; over TCP the BLUETTI
+    devices answer at 1 and nothing else should be addressed on the
+    AC500/EP500Pro family (see this library's README).
+
+    ``message_spacing`` (seconds) is the minimum gap the backend leaves
+    between requests. A serial line needs the RTU inter-frame gap, which
+    the backend derives from the line speed - state it here only to pace a
+    device further apart than that.
+
+    Modbus/TLS options, ``modbus_connection.ModbusTlsParams``':
 
     - ``verify``: ``True`` checks the server certificate against the system
       store, a path names the CA file or directory to check against,
@@ -65,15 +85,29 @@ class BluettiModbusClient:
         )
         values = await client.read()
         await client.aclose()
+
+    And over a serial line, a USB adapter or a gateway::
+
+        client = BluettiModbusClient(device_type="ep2000", serial_device="/dev/ttyUSB0")
+        client = BluettiModbusClient(
+            device_type="ep2000", serial_device="socket://192.168.1.50:8899"
+        )
     """
 
     def __init__(
         self,
-        host: str,
-        port: int,
-        device_type: str,
+        host: str | None = None,
+        port: int | None = None,
+        device_type: str | None = None,
         *,
         backend: Backend = "tmodbus",
+        unit_id: int = 1,
+        message_spacing: float | None = None,
+        serial_device: str | None = None,
+        baudrate: int = 9600,
+        parity: Literal["N", "E", "O"] = "N",
+        stopbits: Literal[1, 2] = 1,
+        bytesize: Literal[7, 8] = 8,
         tls: bool = False,
         verify: bool | str = True,
         check_hostname: bool = True,
@@ -101,11 +135,39 @@ class BluettiModbusClient:
         # rather than importing under one shared name first, is what lets
         # mypy see each concrete class as assignment-compatible with that
         # declared base instead of flagging the import itself.
-        self.params: ModbusTcpParams | ModbusTlsParams
-        if tls:
+        if device_type is None:
+            raise ValueError("device_type is required")
+        # host/port and serial_device name two different transports; each
+        # call has to say which one, so neither a typo nor a half-filled
+        # configuration can quietly open the wrong kind of link.
+        if host is not None and serial_device is not None:
+            raise ValueError("host and serial_device are mutually exclusive")
+
+        self.params: ModbusTcpParams | ModbusTlsParams | ModbusSerialParams
+        if serial_device is not None:
+            if port is not None:
+                raise ValueError("port belongs to a TCP connection, not serial_device")
+            if tls:
+                raise ValueError("tls is a TCP transport; it has no serial equivalent")
+            # Line settings are ignored on a socket:// device - the gateway
+            # owns them there - and used as given on a real port.
+            self.params = ModbusSerialParams(
+                device=serial_device,
+                baudrate=baudrate,
+                bytesize=bytesize,
+                parity=parity,
+                stopbits=stopbits,
+                framer="rtu",
+            )
+        elif host is None:
+            raise ValueError("either host (with port) or serial_device is required")
+        elif tls:
             self.params = ModbusTlsParams(
                 host=host,
-                port=port,
+                # BLUETTI's encrypted mode listens on the same port as the
+                # plain one, so the default here is 502 rather than the 802
+                # ModbusTlsParams itself defaults to.
+                port=502 if port is None else port,
                 verify=verify,
                 check_hostname=check_hostname,
                 client_cert=client_cert,
@@ -123,18 +185,21 @@ class BluettiModbusClient:
                 or client_key_password is not None
             ):
                 raise ValueError("TLS options need tls=True")
-            self.params = ModbusTcpParams(host=host, port=port)
+            # ModbusTcpParams' own default, stated here so a caller that
+            # gives only a host gets the Modbus TCP port rather than a
+            # TypeError.
+            self.params = ModbusTcpParams(host=host, port=502 if port is None else port)
         params = self.params
         self.conn: _BaseModbusConnection
         if backend == "tmodbus":
             from modbus_connection.tmodbus import ModbusConnection as _TConn
 
-            self.conn = _TConn(params, timeout=10)
+            self.conn = _TConn(params, timeout=10, message_spacing=message_spacing)
         else:
             from modbus_connection.pymodbus import ModbusConnection as _PConn
 
-            self.conn = _PConn(params, timeout=10)
-        device = get_device(device_type, self.conn.for_unit(1))
+            self.conn = _PConn(params, timeout=10, message_spacing=message_spacing)
+        device = get_device(device_type, self.conn.for_unit(unit_id))
         if device is None:
             raise ValueError(f"Unsupported device type: {device_type!r}")
         self.device: (
