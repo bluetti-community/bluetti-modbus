@@ -71,6 +71,13 @@ see the official [bluetti-modbus-tcp-slave][official-docs] documentation.
 pip install bluetti-modbus
 ```
 
+Python 3.12 or newer. On a machine still on an older one, `uv` runs the
+commands without installing anything system-wide:
+
+```bash
+uvx --python 3.13 --from "bluetti-modbus[cli]" bluetti-modread -c 10.2.1.60 -t balco260
+```
+
 That pulls in only `modbus-connection`'s backend-neutral interface - enough
 to use the device classes against a `ModbusUnit` you already have. The
 `bluetti-modread` CLI and the examples below need a concrete backend, via
