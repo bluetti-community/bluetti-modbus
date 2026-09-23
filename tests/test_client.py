@@ -383,10 +383,27 @@ def test_message_spacing_is_handed_to_the_backend():
 
 
 def test_no_message_spacing_leaves_the_backend_to_its_own_pacing():
+    # Not passed at all rather than passed as None: at the declared
+    # modbus-connection floor (4.11.1) the argument is a plain float and
+    # None raises TypeError before a connection is opened.
     with patch(
         "modbus_connection.tmodbus.ModbusConnection",
         return_value=MockModbusConnection(),
     ) as tm:
         BluettiModbusClient("10.0.0.1", 502, "balco260")
 
-    assert tm.call_args.kwargs["message_spacing"] is None
+    assert "message_spacing" not in tm.call_args.kwargs
+
+
+def test_the_client_builds_against_the_declared_dependency_floor():
+    # modbus-connection 4.11.1's own signature - message_spacing a plain
+    # float, no None accepted - so a client built without pacing works at
+    # the floor this package declares, not only at the latest version.
+    def _floor_connection(
+        params: object, *, timeout: float = 10, message_spacing: float = 0.0
+    ) -> MockModbusConnection:
+        assert isinstance(message_spacing, float)
+        return MockModbusConnection()
+
+    with patch("modbus_connection.tmodbus.ModbusConnection", _floor_connection):
+        BluettiModbusClient("10.0.0.1", 502, "balco260")
