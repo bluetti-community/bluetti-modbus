@@ -190,15 +190,21 @@ class BluettiModbusClient:
             # TypeError.
             self.params = ModbusTcpParams(host=host, port=502 if port is None else port)
         params = self.params
+        # Passed only when asked for: at this package's declared floor
+        # (modbus-connection 4.11.1) message_spacing is a plain float
+        # defaulting to 0.0, and handing it None raises TypeError before a
+        # connection is ever opened. Leaving the argument out gets each
+        # version's own default, which is what "no pacing asked for" means.
+        pacing = {} if message_spacing is None else {"message_spacing": message_spacing}
         self.conn: _BaseModbusConnection
         if backend == "tmodbus":
             from modbus_connection.tmodbus import ModbusConnection as _TConn
 
-            self.conn = _TConn(params, timeout=10, message_spacing=message_spacing)
+            self.conn = _TConn(params, timeout=10, **pacing)
         else:
             from modbus_connection.pymodbus import ModbusConnection as _PConn
 
-            self.conn = _PConn(params, timeout=10, message_spacing=message_spacing)
+            self.conn = _PConn(params, timeout=10, **pacing)
         device = get_device(device_type, self.conn.for_unit(unit_id))
         if device is None:
             raise ValueError(f"Unsupported device type: {device_type!r}")
