@@ -1,10 +1,12 @@
 import argparse
 import asyncio
+import sys
 from enum import Enum
 from typing import Any
 
 from modbus_connection import ModbusConnection as _BaseModbusConnection
 from modbus_connection import ModbusSerialParams, ModbusTcpParams
+from modbus_connection.exceptions import ModbusError
 from modbus_connection.model import RegisterField
 from probatio import Range
 
@@ -162,6 +164,17 @@ async def read_field(
         await conn.close()
 
 
+# How long to leave the device before reading a setting back, and how many
+# times to look again. A Balco 260 applies a write immediately but serves
+# the old value for a moment afterwards - a read straight after the write
+# returns the previous setting, and the next command shows the new one
+# (confirmed on real hardware: writing b_soc_low 15 -> 16 read back 15, and
+# the following run read 16). script/write_probe.py has always waited for
+# the same reason.
+READ_BACK_DELAY = 2.0
+READ_BACK_ATTEMPTS = 3
+
+
 async def write_field(
     params: ModbusTcpParams | ModbusSerialParams,
     device_type: str,
@@ -170,6 +183,8 @@ async def write_field(
     value: Any,
     backend: Backend,
     unit: int,
+    *,
+    settle: float = READ_BACK_DELAY,
 ) -> Any:
     """Write the value and return what the device reports afterwards.
 
@@ -187,8 +202,18 @@ async def write_field(
         device = get_device(device_type, unit_handle)
         assert device is not None  # the type was checked before connecting
         await device.write(field_name, value)
-        words = await unit_handle.read_holding_registers(field.address, field.count)
-        return field.decode(words)
+
+        # Read back until the device reports the new value, or until the
+        # attempts run out - then report whatever it does say, rather than
+        # a stale reading dressed up as the result.
+        current = None
+        for _ in range(READ_BACK_ATTEMPTS):
+            await asyncio.sleep(settle)
+            words = await unit_handle.read_holding_registers(field.address, field.count)
+            current = field.decode(words)
+            if current == value:
+                break
+        return current
     finally:
         await conn.close()
 
@@ -218,6 +243,16 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "-y", "--yes", action="store_true", help="skip the confirmation prompt"
+    )
+    parser.add_argument(
+        "--settle",
+        type=float,
+        default=READ_BACK_DELAY,
+        help=(
+            "seconds to leave the device before reading the setting back "
+            f"(default: {READ_BACK_DELAY:g}); it applies a write at once but "
+            "serves the old value for a moment"
+        ),
     )
     parser.add_argument(
         "-b",
@@ -262,7 +297,11 @@ def start() -> None:
         return
 
     params = connection_params(args)
-    current = asyncio.run(read_field(params, field, args.backend, args.unit))
+    try:
+        current = asyncio.run(read_field(params, field, args.backend, args.unit))
+    except ModbusError as err:
+        print(err)
+        sys.exit(1)
     print(f"{args.field} ({field.address}): {current} -> {value}")
 
     # Asked with no connection open: the device serves one client at a
@@ -272,9 +311,26 @@ def start() -> None:
         print("nothing written")
         return
 
-    now = asyncio.run(
-        write_field(
-            params, args.type, args.field, field, value, args.backend, args.unit
+    try:
+        now = asyncio.run(
+            write_field(
+                params,
+                args.type,
+                args.field,
+                field,
+                value,
+                args.backend,
+                args.unit,
+                settle=args.settle,
+            )
         )
-    )
-    print(f"{args.field} now reads {now}")
+    except ModbusError as err:
+        print(err)
+        sys.exit(1)
+    if now == value:
+        print(f"{args.field} now reads {now}")
+    else:
+        print(
+            f"{args.field} still reads {now} - the write was accepted, so give the "
+            "device a moment and read it again (--settle waits longer)"
+        )

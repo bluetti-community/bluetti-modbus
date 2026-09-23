@@ -278,12 +278,15 @@ bluetti-modwrite -s /dev/ttyUSB0 -t ep2000 -f b_soc_high -v 95   # same over RS4
 | `-f FIELD` | the field to write; an unknown or read-only name lists the writable ones |
 | `-v VALUE` | a number, or an enum field's member name |
 | `-y`, `--yes` | skip the confirmation prompt |
+| `--settle` | seconds to wait before reading the setting back (default 2) |
 | `--allow-ac-output` | required to write the AC output switch - it powers whatever the outlets feed |
 | `-b` | backend, as for the reader |
 
 It reads that one field - one block read, not a whole device refresh -
 prints `old -> new`, asks with the connection closed, then reconnects to
-write and read the value back. The flags follow the `bluetti-modwrite`
+write and read the value back. A device applies a setting at once but can
+serve the old value for a moment afterwards, so the read-back waits and
+looks again before reporting. The flags follow the `bluetti-modwrite`
 in Patrick762's own bluetti-modbus-lib, so a user of that one does not
 have to relearn the command.
 
