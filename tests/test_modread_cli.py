@@ -134,3 +134,29 @@ def test_start_prints_the_help_when_no_transport_is_given(monkeypatch, capsys):
     start()
 
     assert "usage:" in capsys.readouterr().out
+
+
+def test_an_unreachable_device_prints_one_line_and_exits(monkeypatch, capsys):
+    # Not a traceback: an unreachable address or a serial port that will
+    # not open is an ordinary outcome for a command like this.
+    from modbus_connection.exceptions import ModbusConnectionError
+
+    async def _fails(params, type, backend, unit=1) -> None:
+        raise ModbusConnectionError(
+            "could not open serial port socket://127.0.0.1:5599"
+        )
+
+    monkeypatch.setattr(
+        "sys.argv",
+        ["bluetti-modread", "-s", "socket://127.0.0.1:5599", "-t", "balco260"],
+    )
+    monkeypatch.setattr("bluetti_modbus_lib.scripts.bluetti_modread.async_read", _fails)
+    monkeypatch.setattr(
+        "bluetti_modbus_lib.scripts.bluetti_modread.asyncio.run", asyncio.run
+    )
+
+    with pytest.raises(SystemExit) as exit_info:
+        start()
+
+    assert exit_info.value.code == 1
+    assert "could not open serial port" in capsys.readouterr().out

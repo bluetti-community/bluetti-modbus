@@ -1,9 +1,11 @@
 import argparse
 import asyncio
+import sys
 
 from modbus_connection import ModbusConnection as _BaseModbusConnection
 from modbus_connection import ModbusSerialParams, ModbusTcpParams
 from modbus_connection.cli_helper import CountingUnit, print_component
+from modbus_connection.exceptions import ModbusError
 
 from ..devices.getter import get_device
 from ..modbus import Backend
@@ -101,4 +103,13 @@ def start() -> None:
         build_parser().print_help()
         return
 
-    asyncio.run(async_read(connection_params(args), args.type, args.backend, args.unit))
+    try:
+        asyncio.run(
+            async_read(connection_params(args), args.type, args.backend, args.unit)
+        )
+    except ModbusError as err:
+        # An unreachable device or a serial port that will not open is an
+        # ordinary outcome for a command like this, not a crash to print a
+        # traceback for.
+        print(err)
+        sys.exit(1)

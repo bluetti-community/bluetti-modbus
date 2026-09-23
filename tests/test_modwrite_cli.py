@@ -185,11 +185,73 @@ async def test_writing_puts_the_value_on_the_wire_and_reads_it_back():
             95,
             "tmodbus",
             1,
+            settle=0,
         )
 
     assert now == 95
     assert conn.for_unit(1).holding[57017] == 95
     assert conn.connected is False
+
+
+@pytest.mark.asyncio
+async def test_a_device_that_serves_the_old_value_for_a_moment_is_read_again():
+    # Confirmed on a real Balco 260: writing b_soc_low 15 -> 16 read back
+    # 15, and the next command read 16. The setting is applied at once and
+    # served late, so one read straight after the write is not the answer.
+    conn = MockModbusConnection()
+    unit = conn.for_unit(1)
+    unit.holding[57017] = 90
+    original = unit.read_holding_registers
+    stale = [True]
+
+    async def _late(address: int, count: int) -> list[int]:
+        if stale[0]:
+            stale[0] = False
+            return [90]
+        return await original(address, count)
+
+    unit.read_holding_registers = _late  # type: ignore[method-assign]
+
+    with patch("modbus_connection.tmodbus.ModbusConnection", return_value=conn):
+        now = await write_field(
+            ModbusTcpParams(host="10.0.0.1", port=502),
+            "balco260",
+            "b_soc_high",
+            _field(),
+            95,
+            "tmodbus",
+            1,
+            settle=0,
+        )
+
+    assert now == 95
+
+
+@pytest.mark.asyncio
+async def test_a_value_that_never_appears_is_reported_as_it_reads():
+    # Not dressed up as a success: the caller says what the device reports.
+    conn = MockModbusConnection()
+    unit = conn.for_unit(1)
+    unit.holding[57017] = 90
+
+    async def _never_changes(address: int, count: int) -> list[int]:
+        return [90]
+
+    unit.read_holding_registers = _never_changes  # type: ignore[method-assign]
+
+    with patch("modbus_connection.tmodbus.ModbusConnection", return_value=conn):
+        now = await write_field(
+            ModbusTcpParams(host="10.0.0.1", port=502),
+            "balco260",
+            "b_soc_high",
+            _field(),
+            95,
+            "tmodbus",
+            1,
+            settle=0,
+        )
+
+    assert now == 90
 
 
 @pytest.mark.asyncio
@@ -207,6 +269,7 @@ async def test_writing_addresses_the_unit_id_it_was_given():
             95,
             "tmodbus",
             7,
+            settle=0,
         )
 
     assert conn.for_unit(7).holding[57017] == 95
