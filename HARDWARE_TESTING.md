@@ -146,6 +146,34 @@ python3 write_probe.py --host <device-ip> --device fp --register 57017          
 python3 write_probe.py --host <device-ip> --device fp --register 57017 --value 95    # then 95, read back, restore
 ```
 
+### RS485: never transmit on a bus the device already drives
+
+A device's RS485 port is not necessarily a Modbus slave waiting to be
+polled. On an EP2000's EMS, the terminal block carries two buses, and
+BLUETTI describes them as serving "third-party meters and charging
+stations" - which reads as the EMS being the **master** on both: it polls
+the CT meters on one and drives the charger on the other. A second master
+transmitting there corrupts the readings the device runs on - grid power,
+export limit - and there is no way to tell from the outside which role a
+bus has until you have listened to it.
+
+So, in order:
+
+1. **Listen first.** Wire RX only - a UART with no TX pin configured
+   physically cannot transmit - and watch the traffic to learn the line
+   settings and who does the asking. Nothing in this repository does that:
+   it is a logic-analyser or an ESP sketch, not a Modbus client.
+2. **Only then, on a bus with no traffic**, try reads - one request at a
+   time, well spaced, read-only. `bluetti-modread -s <device> -t <type>`
+   is that try; `--unit` picks the address.
+3. **Sweep unit ids slowly, or not at all.** One address per run, spaced
+   by seconds, reading a single register. A device that answers nothing is
+   the normal outcome. Never sweep on an AC500 or EP500P - see below - and
+   never write anything while mapping.
+4. Wire with the device powered down: these terminal blocks also carry
+   +12 V, a generator contact and external inputs, and a slip shorts the
+   supply or closes the generator relay.
+
 **AC500 and EP500P: unit id 1 only.** On a real AC500 (bluetti-registers#13) a single-register
 read at any other unit id got no reply and **froze the unit's Modbus TCP stack until a power
 cycle**; an EP500P went silent per connection. `--device ac500` / `ep500p` makes the probe use a

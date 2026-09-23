@@ -178,6 +178,34 @@ the selector is not reachable over Modbus TCP, so per-pack data cannot be
 read from that family. Never address another unit id on those devices (see
 [Device behaviours](#device-behaviours-this-library-works-around)).
 
+### Modbus RTU over a serial line (RS485)
+
+Some devices carry an RS485 port instead of, or alongside, Modbus TCP - an
+EP2000's EMS is the case this was written for. `BluettiModbusClient` takes
+a serial device in place of a host, and the CLI a `--serial`:
+
+```python
+client = BluettiModbusClient(device_type="ep2000", serial_device="/dev/ttyUSB0")
+client = BluettiModbusClient(
+    device_type="ep2000",
+    serial_device="socket://192.168.1.50:8899",  # a serial-to-TCP gateway
+    unit_id=1,
+)
+```
+
+The device string is a port path (`/dev/ttyUSB0`, `COM3`) or any URL
+pyserial understands; `socket://host:port` reaches a transparent
+serial-to-TCP gateway - an ESP32 bridge, a hardware converter - in which
+case the line settings live in the gateway and the ones here are ignored.
+`baudrate` (9600), `parity` (`N`), `stopbits` (1) and `bytesize` (8) are
+the defaults for a real port, and `unit_id` picks the device on a shared
+bus. Framing is RTU.
+
+Nothing about this is verified against a BLUETTI device yet: no unit is
+known to answer as a Modbus slave on its RS485 port, and an EMS may well
+be the *master* there (see `HARDWARE_TESTING.md` before wiring anything to
+a live bus).
+
 ### Encrypted mode (Modbus/TLS)
 
 A device's web page offers an encrypted Modbus TCP mode: it is Modbus over
@@ -198,6 +226,13 @@ not something another application should build on (see
 
 ```bash
 bluetti-modread -c 10.2.1.60 -p 502 -t balco260
+```
+
+Over a serial line, `--serial` replaces `--host`:
+
+```bash
+bluetti-modread -s /dev/ttyUSB0 -t ep2000 --baud 9600 --parity N --stopbits 1
+bluetti-modread -s socket://192.168.1.50:8899 -t ep2000 -u 1
 ```
 
 Example output from a real Balco 260 (truncated - one line per field):
