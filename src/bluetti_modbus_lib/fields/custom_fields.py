@@ -287,4 +287,16 @@ def field(
             # FieldType.ENUM - the None default only exists because the
             # other FieldTypes don't use this parameter at all.
             assert enum_type is not None, "FieldType.ENUM requires enum_type"
-            return enum(address, enum_type, count=count, word_order="little")
+            # writable passed through like every other branch: an enum is
+            # how a mode/selector register is declared, and bluetti-registers
+            # marks those writeable (helpers.py gives any `*_mode` field
+            # content "enum" and writeable True). Dropping it here would
+            # generate a read-only field for a register the schema says can
+            # be written, with nothing to show for it.
+            return enum(
+                address,
+                enum_type,
+                count=count,
+                word_order="little",
+                writable=writable,
+            )
