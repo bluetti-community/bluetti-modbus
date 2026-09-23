@@ -261,19 +261,22 @@ thresholds a device declares writable, nothing else:
 
 ```bash
 bluetti-modwrite -c 10.2.1.60 -p 502 -t balco260 -f b_soc_high -v 95
+bluetti-modwrite -s /dev/ttyUSB0 -t ep2000 -f b_soc_high -v 95   # same over RS485
 ```
 
 | | |
 |---|---|
-| `-c`, `-p`, `-t` | address, port and device type, as for the reader |
+| `-c`, `-p` / `-s` … | the same transport options as the reader: TCP, or a serial line |
+| `-t TYPE` | device type |
 | `-f FIELD` | the field to write; an unknown or read-only name lists the writable ones |
 | `-v VALUE` | a number, or an enum field's member name |
 | `-y`, `--yes` | skip the confirmation prompt |
 | `--allow-ac-output` | required to write the AC output switch - it powers whatever the outlets feed |
 | `-b` | backend, as for the reader |
 
-It reads the field first, prints `old -> new`, asks before sending, and
-reads the value back afterwards. The flags follow the `bluetti-modwrite`
+It reads that one field - one block read, not a whole device refresh -
+prints `old -> new`, asks with the connection closed, then reconnects to
+write and read the value back. The flags follow the `bluetti-modwrite`
 in Patrick762's own bluetti-modbus-lib, so a user of that one does not
 have to relearn the command.
 

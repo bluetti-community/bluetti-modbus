@@ -292,7 +292,8 @@ def field(
             # marks those writeable (helpers.py gives any `*_mode` field
             # content "enum" and writeable True). Dropping it here would
             # generate a read-only field for a register the schema says can
-            # be written, with nothing to show for it.
+            # be written, with nothing to show for it. Patrick762 fixed the
+            # same thing in his own bluetti-modbus-lib (78827bb).
             return enum(
                 address,
                 enum_type,

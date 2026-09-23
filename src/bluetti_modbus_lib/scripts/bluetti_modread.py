@@ -7,6 +7,11 @@ from modbus_connection.cli_helper import CountingUnit, print_component
 
 from ..devices.getter import get_device
 from ..modbus import Backend
+from ._connection_args import (
+    add_connection_arguments,
+    check_connection_arguments,
+    connection_params,
+)
 
 # Not BluettiModbusClient: that wrapper decodes straight into a flat
 # name/value/unit list (see ClientReturnValue), which is exactly what a
@@ -63,55 +68,8 @@ async def async_read(
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Read bluetti devices via modbus")
-    # Modbus TCP and a serial line are two transports: one of them, never
-    # both. --port stays outside the group because it belongs to --host,
-    # and is refused next to --serial below.
-    transport = parser.add_mutually_exclusive_group()
-    transport.add_argument("-c", "--host", type=str, help="IP-address of the device")
-    transport.add_argument(
-        "-s",
-        "--serial",
-        type=str,
-        metavar="DEVICE",
-        help=(
-            "serial port to read Modbus RTU from, instead of --host: a port "
-            "path (/dev/ttyUSB0, COM3) or any URL pyserial understands, "
-            "notably socket://ip:port for a transparent serial-to-TCP "
-            "gateway (an ESP32 bridge, a hardware converter), where the line "
-            "settings below live in the gateway and are ignored here."
-        ),
-    )
-    parser.add_argument(
-        "-p", "--port", type=int, help="Port of the device (with --host)"
-    )
+    add_connection_arguments(parser)
     parser.add_argument("-t", "--type", type=str, help="Device type")
-    parser.add_argument(
-        "--baud", type=int, default=9600, help="serial line speed (default: 9600)"
-    )
-    parser.add_argument(
-        "--parity",
-        choices=["N", "E", "O"],
-        default="N",
-        help="serial parity: none, even or odd (default: N)",
-    )
-    parser.add_argument(
-        "--stopbits",
-        type=int,
-        choices=[1, 2],
-        default=1,
-        help="serial stop bits (default: 1)",
-    )
-    parser.add_argument(
-        "-u",
-        "--unit",
-        type=int,
-        default=1,
-        help=(
-            "Modbus unit id to read (default: 1). On a shared RS485 bus this "
-            "is how a device is picked; never address another unit id on an "
-            "AC500 or EP500Pro - see HARDWARE_TESTING.md."
-        ),
-    )
     parser.add_argument(
         "-b",
         "--backend",
@@ -130,8 +88,7 @@ def build_parser() -> argparse.ArgumentParser:
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = build_parser()
     args = parser.parse_args(argv)
-    if args.serial is not None and args.port is not None:
-        parser.error("--port belongs to --host; --serial carries no port")
+    check_connection_arguments(parser, args)
     return args
 
 
@@ -144,18 +101,4 @@ def start() -> None:
         build_parser().print_help()
         return
 
-    params: ModbusTcpParams | ModbusSerialParams
-    if args.serial is not None:
-        params = ModbusSerialParams(
-            device=args.serial,
-            baudrate=args.baud,
-            parity=args.parity,
-            stopbits=args.stopbits,
-            framer="rtu",
-        )
-    else:
-        params = ModbusTcpParams(
-            host=args.host, port=502 if args.port is None else args.port
-        )
-
-    asyncio.run(async_read(params, args.type, args.backend, args.unit))
+    asyncio.run(async_read(connection_params(args), args.type, args.backend, args.unit))
