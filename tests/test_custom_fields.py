@@ -139,6 +139,20 @@ def test_field_enum_decodes_the_raw_register_value():
     assert reg.decode([1]) is _FakeStatus.FAULT
 
 
+def test_field_enum_can_be_writable():
+    # A mode/selector register: bluetti-registers gives any `*_mode` field
+    # content "enum" and writeable True, so the flag has to survive the
+    # ENUM branch the way it does for every numeric type - otherwise the
+    # generated field is silently read-only.
+    reg = field(FieldType.ENUM, 30, enum_type=_FakeStatus, writable=True)
+
+    assert reg.writable is True
+
+
+def test_field_enum_is_read_only_by_default():
+    assert field(FieldType.ENUM, 30, enum_type=_FakeStatus).writable is False
+
+
 def test_reference_offset_current_decodes_magnitude_around_the_reference():
     # Raw values captured from a real device (issue #8): while charging at
     # ~1000W solar in, b_c read 30335 and b_c_total (already correct) read
