@@ -4,13 +4,18 @@ from enum import Enum
 from typing import Any
 
 from modbus_connection import ModbusConnection as _BaseModbusConnection
-from modbus_connection import ModbusTcpParams
+from modbus_connection import ModbusSerialParams, ModbusTcpParams
 from modbus_connection.model import RegisterField
 from probatio import Range
 
 from ..base_devices import BluettiDevice
 from ..devices.getter import get_device
 from ..modbus import Backend
+from ._connection_args import (
+    add_connection_arguments,
+    check_connection_arguments,
+    connection_params,
+)
 
 # A write counterpart to bluetti-modread, after the bluetti-modwrite
 # Patrick762 shipped in his own bluetti-modbus-lib (25bb444, 2026-09-13):
@@ -115,20 +120,9 @@ def _parse_value(field: RegisterField[Any], raw_value: str) -> Any:
         raise WriteRefused(f"{raw_value!r} is not a whole number") from err
 
 
-async def async_write(
-    params: ModbusTcpParams,
-    type: str,
-    field_name: str,
-    raw_value: str,
-    backend: Backend,
-    *,
-    allow_ac_output: bool = False,
-    assume_yes: bool = False,
-) -> None:
-    if get_device(type) is None:
-        print("type not supported")
-        return
-
+def _connect(
+    params: ModbusTcpParams | ModbusSerialParams, backend: Backend
+) -> _BaseModbusConnection:
     # Built inside each branch, not imported under one shared name first -
     # see bluetti_modread's own identical comment.
     conn: _BaseModbusConnection
@@ -140,49 +134,70 @@ async def async_write(
         from modbus_connection.pymodbus import ModbusConnection as _PConn
 
         conn = _PConn(params, timeout=10)
+    return conn
 
-    # Unit id 1, always: a request to any other unit id froze an AC500's
-    # Modbus TCP stack until a power cycle and silenced an EP500P (see
-    # script/probe_unexplored_registers.py). Nothing here needs another.
-    device = get_device(type, conn.for_unit(1))
-    assert device is not None  # already checked above
 
-    try:
-        field, value = prepare_write(
-            device, field_name, raw_value, allow_ac_output=allow_ac_output
-        )
-    except WriteRefused as err:
-        print(err)
-        await conn.close()
-        return
+async def read_field(
+    params: ModbusTcpParams | ModbusSerialParams,
+    field: RegisterField[Any],
+    backend: Backend,
+    unit: int,
+) -> Any:
+    """This one field's current value, on a connection of its own.
 
+    One block read, not a whole device update: a full refresh costs
+    fifteen block reads on a Balco 260 and sixteen on a FridgePower, on a
+    Modbus stack that serves one client at a time - far too much traffic
+    to show a single number. The connection is opened and closed around
+    it, so nothing is held while the user decides.
+    """
+    conn = _connect(params, backend)
     try:
         await conn.connect()
-        await device.async_update_with_retry()
-        current = device.values.get(field_name)
-        print(f"{field_name} ({field.address}): {current} -> {value}")
-        if not assume_yes and not _confirmed():
-            print("nothing written")
-            return
-
-        await device.write(field_name, value)
-
-        await device.async_update_with_retry()
-        print(f"{field_name} now reads {device.values.get(field_name)}")
+        words = await conn.for_unit(unit).read_holding_registers(
+            field.address, field.count
+        )
+        return field.decode(words)
     finally:
         await conn.close()
 
 
-def _confirmed() -> bool:
-    return input("Write it? [y/N] ").strip().lower() == "y"
+async def write_field(
+    params: ModbusTcpParams | ModbusSerialParams,
+    device_type: str,
+    field_name: str,
+    field: RegisterField[Any],
+    value: Any,
+    backend: Backend,
+    unit: int,
+) -> Any:
+    """Write the value and return what the device reports afterwards.
+
+    The device is built on this connection - a component's unit is fixed
+    at construction - and the write goes through BluettiDevice.write(),
+    never the Component's own: that override is what absorbs a
+    confirmation the device echoes at its internal register address,
+    which a strict client reports as a protocol error even though the
+    write applied.
+    """
+    conn = _connect(params, backend)
+    try:
+        await conn.connect()
+        unit_handle = conn.for_unit(unit)
+        device = get_device(device_type, unit_handle)
+        assert device is not None  # the type was checked before connecting
+        await device.write(field_name, value)
+        words = await unit_handle.read_holding_registers(field.address, field.count)
+        return field.decode(words)
+    finally:
+        await conn.close()
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Write one setting on a bluetti device via modbus"
     )
-    parser.add_argument("-c", "--host", type=str, help="IP-address of the device")
-    parser.add_argument("-p", "--port", type=int, help="Port of the device")
+    add_connection_arguments(parser)
     parser.add_argument("-t", "--type", type=str, help="Device type")
     parser.add_argument(
         "-f", "--field", type=str, help="Field to write, e.g. b_soc_high"
@@ -222,25 +237,44 @@ def build_parser() -> argparse.ArgumentParser:
 def start() -> None:
     parser = build_parser()
     args = parser.parse_args()
+    check_connection_arguments(parser, args)
 
     if (
-        args.host is None
-        or args.port is None
-        or args.type is None
+        args.type is None
         or args.field is None
         or args.value is None
+        or (args.host is None and args.serial is None)
     ):
         parser.print_help()
         return
 
-    asyncio.run(
-        async_write(
-            ModbusTcpParams(host=args.host, port=args.port),
-            args.type,
-            args.field,
-            args.value,
-            args.backend,
-            allow_ac_output=args.allow_ac_output,
-            assume_yes=args.yes,
+    device = get_device(args.type)
+    if device is None:
+        print("type not supported")
+        return
+
+    try:
+        field, value = prepare_write(
+            device, args.field, args.value, allow_ac_output=args.allow_ac_output
+        )
+    except WriteRefused as err:
+        print(err)
+        return
+
+    params = connection_params(args)
+    current = asyncio.run(read_field(params, field, args.backend, args.unit))
+    print(f"{args.field} ({field.address}): {current} -> {value}")
+
+    # Asked with no connection open: the device serves one client at a
+    # time, and however long the answer takes is time it would otherwise
+    # spend holding an idle socket for nothing.
+    if not args.yes and input("Write it? [y/N] ").strip().lower() != "y":
+        print("nothing written")
+        return
+
+    now = asyncio.run(
+        write_field(
+            params, args.type, args.field, field, value, args.backend, args.unit
         )
     )
+    print(f"{args.field} now reads {now}")
