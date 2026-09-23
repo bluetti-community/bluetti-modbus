@@ -254,6 +254,35 @@ The output ends with the number of Modbus block reads the update took
 (`15 Modbus block reads`) - a quick way to notice a profile whose fields
 do not pool into reads as expected.
 
+### Writing a setting
+
+`bluetti-modwrite` writes one setting register - the switches and SOC
+thresholds a device declares writable, nothing else:
+
+```bash
+bluetti-modwrite -c 10.2.1.60 -p 502 -t balco260 -f b_soc_high -v 95
+```
+
+| | |
+|---|---|
+| `-c`, `-p`, `-t` | address, port and device type, as for the reader |
+| `-f FIELD` | the field to write; an unknown or read-only name lists the writable ones |
+| `-v VALUE` | a number, or an enum field's member name |
+| `-y`, `--yes` | skip the confirmation prompt |
+| `--allow-ac-output` | required to write the AC output switch - it powers whatever the outlets feed |
+| `-b` | backend, as for the reader |
+
+It reads the field first, prints `old -> new`, asks before sending, and
+reads the value back afterwards. The flags follow the `bluetti-modwrite`
+in Patrick762's own bluetti-modbus-lib, so a user of that one does not
+have to relearn the command.
+
+> Stop anything else polling the device first - a write landing while Home
+> Assistant is mid-poll collides on a Modbus stack that takes one client at
+> a time. `script/write_probe.py`'s own note says how: disable the
+> integration entry itself, not just its devices, and restart Home
+> Assistant.
+
 Most cumulative energies (`ac_o_e_total`, ...) are in kWh; the battery
 charge/discharge energies (`b_i_e`, `b_o_e`) are in Wh, as the device
 reports them. Field names follow the

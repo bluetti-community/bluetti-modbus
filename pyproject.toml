@@ -52,6 +52,7 @@ Homepage = "https://github.com/bluetti-community/bluetti-modbus"
 
 [project.scripts]
 bluetti-modread = "bluetti_modbus_lib.scripts.bluetti_modread:start"
+bluetti-modwrite = "bluetti_modbus_lib.scripts.bluetti_modwrite:start"
 
 [dependency-groups]
 dev = ["pytest>=8", "pytest-asyncio>=0.24", "pytest-cov>=5"]
