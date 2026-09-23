@@ -1,11 +1,15 @@
-"""Tests for the bluetti-modread CLI's option parsing."""
+"""Tests for the bluetti-modread CLI: its options and its printed output."""
 
 import asyncio
+import re
 
 import pytest
 from modbus_connection import ModbusSerialParams, ModbusTcpParams
+from modbus_connection.mock import MockModbusConnection
+from modbus_connection.model import Component, integer, repeating_group
 
-from bluetti_modbus_lib.scripts.bluetti_modread import parse_args, start
+from bluetti_modbus_lib.devices import Balco260, SMeter
+from bluetti_modbus_lib.scripts.bluetti_modread import parse_args, print_fields, start
 
 
 def test_host_and_port_parse_as_a_tcp_connection():
@@ -160,3 +164,51 @@ def test_an_unreachable_device_prints_one_line_and_exits(monkeypatch, capsys):
 
     assert exit_info.value.code == 1
     assert "could not open serial port" in capsys.readouterr().out
+
+
+def test_the_values_dict_is_not_printed_as_a_field(capsys):
+    # BluettiDevice.values is a property, and the reflection print_fields
+    # builds on lists every public property a class adds: the whole read
+    # came out a second time as a dict, under the rows it duplicates.
+    device = SMeter(MockModbusConnection().for_unit(1))
+    asyncio.run(device.async_update())
+
+    print_fields(device)
+
+    out = capsys.readouterr().out
+    assert "values" not in out
+    assert "SMeter\n------" in out
+
+
+def test_a_field_still_prints_with_its_value_and_unit(capsys):
+    mock_conn = MockModbusConnection()
+    device = Balco260(mock_conn.for_unit(1))
+    mock_conn.for_unit(1).holding[50002] = 230  # ac_o_p_total
+    asyncio.run(device.async_update())
+
+    print_fields(device)
+
+    out = capsys.readouterr().out
+    assert re.search(r"^  ac_o_p_total +230 W$", out, re.MULTILINE)
+
+
+def test_a_repeating_group_prints_as_its_own_block_without_its_properties(capsys):
+    # No device models one yet; print_component does, and dropping the
+    # sub-blocks along with the properties would lose real fields.
+    class _Cell(Component):
+        cell_v = integer(10, unit="V")
+
+        @property
+        def summary(self) -> dict[str, int]:
+            return {}
+
+    class _Box(Component):
+        box_n = integer(0)
+        cells = repeating_group(2, _Cell, stride=1)
+
+    print_fields(_Box(None))
+
+    out = capsys.readouterr().out
+    assert "cells[1]" in out and "cells[2]" in out
+    assert "cell_v" in out
+    assert "summary" not in out

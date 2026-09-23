@@ -1,11 +1,13 @@
 import argparse
 import asyncio
+import inspect
 import sys
 
 from modbus_connection import ModbusConnection as _BaseModbusConnection
 from modbus_connection import ModbusSerialParams, ModbusTcpParams
-from modbus_connection.cli_helper import CountingUnit, print_component
+from modbus_connection.cli_helper import CountingUnit, field_rows, group_rows
 from modbus_connection.exceptions import ModbusError
+from modbus_connection.model import Component
 
 from ..devices.getter import get_device
 from ..modbus import Backend
@@ -18,12 +20,53 @@ from ._connection_args import (
 # Not BluettiModbusClient: that wrapper decodes straight into a flat
 # name/value/unit list (see ClientReturnValue), which is exactly what a
 # downstream integration wants but hides the two things a query helper is
-# for - the live Component itself (print_component walks its own field
+# for - the live Component itself (print_fields below walks its own field
 # metadata/grouping, not a flattened copy) and the raw connection (needed
 # to wrap it in CountingUnit below). Talking to the same pieces
 # BluettiModbusClient itself is built on, directly, is the documented
 # pattern for a library's own query helper - see modbus-connection's own
 # patterns/query-helper.
+
+
+# What Component itself defines. field_rows() skips these and reports
+# everything else a class adds, so a subclass's own properties land among
+# the fields: BluettiDevice.values is one, and it repeats the whole read
+# as a dict under the rows it duplicates.
+_COMPONENT_ATTRS = frozenset(dir(Component))
+
+
+def _property_names(component: Component) -> set[str]:
+    """The names field_rows() lists that are properties, not Modbus fields."""
+    cls = type(component)
+    return {
+        name
+        for name in dir(component)
+        if not name.startswith("_")
+        and name not in _COMPONENT_ATTRS
+        and isinstance(inspect.getattr_static(cls, name, None), property)
+    }
+
+
+def print_fields(
+    component: Component, *, title: str | None = None, indent: str = ""
+) -> None:
+    """Print a device's fields, and each repeating group's, as a table.
+
+    print_component() with the properties left out; the rows, their units
+    and the groups are still what modbus-connection itself reflects.
+    """
+    skipped = _property_names(component)
+    rows = [row for row in field_rows(component) if row[0] not in skipped]
+    heading = title if title is not None else type(component).__name__
+    print(f"{indent}{heading}")
+    print(f"{indent}{'-' * len(heading)}")
+    width = max((len(name) for name, _ in rows), default=0)
+    for name, value in rows:
+        print(f"{indent}  {name.ljust(width)}  {value}")
+    for name, instances in group_rows(component):
+        for index, instance in enumerate(instances, start=1):
+            print()
+            print_fields(instance, title=f"{name}[{index}]", indent=f"{indent}  ")
 
 
 async def async_read(
@@ -64,7 +107,7 @@ async def async_read(
     finally:
         await conn.close()
 
-    print_component(device)
+    print_fields(device)
     print(f"\n{counting_unit.reads} Modbus block reads")
 
 
