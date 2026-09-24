@@ -367,12 +367,28 @@ MAX_RANGE_ADDRESSES = 300
 
 
 def range_candidates(spec: str) -> list[tuple[str, int, int, str, str, str]]:
-    """'50001-50250,51001-51008' -> one single-register candidate per address."""
+    """'50001-50250,51001-51008,50200:6' -> the candidates a --range run reads.
+
+    A span or a bare address gives one single-register candidate each;
+    ``address:count`` gives one candidate of that width, which is how a
+    32-bit value or a string is read - still one register per request
+    unless --batched, and reported as one field.
+    """
     out: list[tuple[str, int, int, str, str, str]] = []
     for text in spec.split(","):
         if not text.strip():
             continue
-        first, _, last = text.strip().partition("-")
+        item, _, width = text.strip().partition(":")
+        if width.strip():
+            address = int(item)
+            count = int(width)
+            if count < 1:
+                raise ValueError(f"--range {text.strip()}: the count must be positive")
+            out.append(
+                (f"addr_{address}x{count}", address, count, "range", "", "range")
+            )
+            continue
+        first, _, last = item.partition("-")
         start = int(first)
         end = int(last) if last.strip() else start
         if end < start:
@@ -381,9 +397,9 @@ def range_candidates(spec: str) -> list[tuple[str, int, int, str, str, str]]:
             (f"addr_{address}", address, 1, "range", "", "range")
             for address in range(start, end + 1)
         ]
-    if len(out) > MAX_RANGE_ADDRESSES:
+    if sum(c[2] for c in out) > MAX_RANGE_ADDRESSES:
         raise ValueError(
-            f"--range asks for {len(out)} addresses; the cap is "
+            f"--range asks for {sum(c[2] for c in out)} addresses; the cap is "
             f"{MAX_RANGE_ADDRESSES} per run - probe a narrower span"
         )
     CANDIDATES.extend(out)
@@ -898,8 +914,9 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         metavar="SPAN",
         help="read every address in these comma-separated spans, one register each "
         f"(e.g. 50001-50250,51001-51008; at most {MAX_RANGE_ADDRESSES} addresses per "
-        "run) - what maps a block the candidate list only samples; alone, probes "
-        "only that",
+        "run) - what maps a block the candidate list only samples. An entry written "
+        "address:count (50200:6) is read as one field of that width, for a 32-bit "
+        "value or a string. Alone, probes only that",
     )
     p.add_argument(
         "--only",

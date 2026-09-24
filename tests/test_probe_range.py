@@ -78,3 +78,33 @@ def test_a_bad_span_prints_one_line_and_exits(probe, capsys):
 
     assert code == 2
     assert "below the start" in capsys.readouterr().out
+
+
+def test_an_address_with_a_count_is_one_candidate_of_that_width(probe):
+    # A 32-bit value or a string is one field, read one register per
+    # request all the same - see _read_words().
+    candidates = probe.range_candidates("50200:6")
+
+    assert [(name, address, count) for name, address, count, *_ in candidates] == [
+        ("addr_50200x6", 50200, 6)
+    ]
+
+
+def test_widths_and_spans_mix_in_one_spec(probe):
+    candidates = probe.range_candidates("50008:2,51001-51002")
+
+    assert [(address, count) for _, address, count, *_ in candidates] == [
+        (50008, 2),
+        (51001, 1),
+        (51002, 1),
+    ]
+
+
+def test_a_count_below_one_is_refused(probe):
+    with pytest.raises(ValueError, match="count must be positive"):
+        probe.range_candidates("50200:0")
+
+
+def test_the_cap_counts_registers_not_candidates(probe):
+    with pytest.raises(ValueError, match="the cap is"):
+        probe.range_candidates(f"50200:{probe.MAX_RANGE_ADDRESSES + 1}")
