@@ -165,7 +165,7 @@ class AC200L(BluettiDevice):
         t=FieldType.UINT16,
         address=51003,
         unit="A",
-        scale=0.01,
+        scale=0.1,
     )
     b_soc_total = field(
         t=FieldType.UINT16,
