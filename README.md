@@ -34,6 +34,7 @@ bounds with [`probatio`][probatio] before anything reaches the device.
 | AC200L | `ac200l` | Beta - confirmed on a real unit against its BLE readings ([evidence][ev-ac200l]) | AC/DC output switches |
 | EP500Pro | `ep500p` | Beta - two real units ([evidence][ev-ep500p]) | AC/DC output switches |
 | FridgePower | `fp` | Confirmed on three real units ([evidence][ev-fp]) | DC output, grid charging switches |
+| Balco Transfer Hub | `balcotrans` | Confirmed on two real units against the app ([evidence][ev-hub]) | - |
 
 Notes:
 
@@ -41,6 +42,10 @@ Notes:
   [Multiple battery packs](#multiple-battery-packs-balco-260).
 - **Balco 500 / EP2000** come from BLUETTI's official register spec and have
   not been read on real hardware, so nothing is writable there yet.
+- **Balco Transfer Hub** has no battery of its own: its SOC, battery voltage
+  and PV registers carry the connected power station's values. Its firmware
+  serves no writable register, and its energy counters stay at zero, so
+  neither is in the profile.
 - **AC500 / EP500Pro / AC200L** share one register layout (the AC500's) with
   per-device scales. SOC thresholds are read-only on them; energies and PV
   fields on the AC200L and EP500Pro are carried over unverified. None of
@@ -484,6 +489,7 @@ SOFTWARE.
 [ev-ac500]: https://github.com/bluetti-community/bluetti-registers/issues/13
 [ev-ep500p]: https://github.com/bluetti-community/bluetti-registers/issues/35
 [ev-fp]: https://github.com/bluetti-community/bluetti-registers/issues/38
+[ev-hub]: https://github.com/bluetti-community/bluetti-registers/issues/29
 [bluetti-registers]: https://github.com/bluetti-community/bluetti-registers
 [build-shield]: https://github.com/bluetti-community/bluetti-modbus/actions/workflows/tests.yml/badge.svg
 [build]: https://github.com/bluetti-community/bluetti-modbus/actions/workflows/tests.yml

@@ -13,6 +13,7 @@ from ..devices import (
     FP,
     Balco260,
     Balco500,
+    Balcotrans,
     SMeter,
     get_device,
 )
@@ -209,7 +210,15 @@ class BluettiModbusClient:
         if device is None:
             raise ValueError(f"Unsupported device type: {device_type!r}")
         self.device: (
-            AC200L | AC500 | FP | Balco260 | Balco500 | EP2000 | EP500P | SMeter
+            AC200L
+            | AC500
+            | FP
+            | Balco260
+            | Balco500
+            | Balcotrans
+            | EP2000
+            | EP500P
+            | SMeter
         ) = device
 
     async def aclose(self) -> None:

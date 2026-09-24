@@ -1,6 +1,6 @@
 import requests
 
-tag = "0.0.45"
+tag = "0.0.46"
 url = f"https://github.com/bluetti-community/bluetti-registers/releases/download/{tag}/modbus-tcp.json"
 
 output = "src/bluetti_modbus_lib/devices/"
@@ -189,7 +189,12 @@ NIBBLE_FIELDS = {"pv_dc_count": False, "pv_ac_count": True}
 # answered the Balco 260 plan - built with this same override - in full on
 # real hardware (bluetti-registers#38); it keeps the override rather than
 # being the first Balco-family device read with 50-register blocks.
-MAX_SPAN_OVERRIDES = {"Balco260": 20, "FP": 20}
+# Balcotrans (the Balco Transfer Hub) is the same family on the same kind of
+# IoT module, and BLUETTI has said the MCU on these products is at its limit
+# with Modbus TCP enabled. It has only ever been read one register at a time,
+# so it starts on the same narrow blocks rather than being the first of the
+# family to be read with 50-register ones.
+MAX_SPAN_OVERRIDES = {"Balco260": 20, "FP": 20, "Balcotrans": 20}
 
 for d in schema:
     name = d["name"]
