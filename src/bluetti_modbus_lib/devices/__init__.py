@@ -2,6 +2,7 @@ from .ac200l import AC200L as AC200L
 from .ac500 import AC500 as AC500
 from .balco260 import Balco260 as Balco260
 from .balco500 import Balco500 as Balco500
+from .balcotrans import Balcotrans as Balcotrans
 from .battery_pack import AGGREGATE_SLAVE_ID as AGGREGATE_SLAVE_ID
 from .battery_pack import AGGREGATE_SUMMARY_FIELDS as AGGREGATE_SUMMARY_FIELDS
 from .battery_pack import EXPANSION_PACK_FIRST_SLAVE_ID as EXPANSION_PACK_FIRST_SLAVE_ID
