@@ -21,8 +21,8 @@ Blocks (--blocks, comma-separated; the first five run by default):
   (2026-09-16, all 54 rejected); kept for the same reason.
 - documented (opt-in): one register from each block of BLUETTI's own
   register list plus its five writable registers. The first thing to run
-  on a device that is new here (a Transfer Hub, a FridgePower, a Balco
-  500): it maps which documented blocks the firmware serves, one safe
+  on a device that is new here (a Balco 500, or a model not in the list
+  at all): it maps which documented blocks the firmware serves, one safe
   request each, before any full profile is pointed at it. Some such
   devices answer an unserved address with silence rather than a rejection
   - --max-timeouts defaults to 0 for them, so the run continues through
@@ -70,7 +70,7 @@ Requires the library the integration already uses:
 
 Examples, from a machine on the same LAN as the device:
 
-    python3 probe_unexplored_registers.py --host 192.168.1.50 --device transfer-hub --blocks documented
+    python3 probe_unexplored_registers.py --host 192.168.1.50 --device unknown --blocks documented
     python3 probe_unexplored_registers.py --host 192.168.1.50 --device balco260
     python3 probe_unexplored_registers.py --host 192.168.1.50 --device balco260 --sweep-units --max-timeouts 0
     python3 probe_unexplored_registers.py --host 192.168.1.50 --device ac500   # unit 1 only
