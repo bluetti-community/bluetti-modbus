@@ -103,18 +103,29 @@ register per request, backs off and checks the device is still alive after every
 writes a JSON file you can attach to an issue. Tell it which device it is with `--device`; that
 picks the liveness register and the safety rules (see its docstring).
 
-**A device that is new here** (a Transfer Hub, a FridgePower, a Balco 500 - anything without a
-confirmed profile): start with the documented set, one register per documented block, before
-pointing any full profile at it:
+**A device that is new here** (a Balco 500, or anything else without a confirmed profile): start
+with the documented set, one register per documented block, before pointing any full profile at
+it:
 
 ```
 pip install "modbus-connection[tmodbus]" "tmodbus[async-serial]"
-python3 probe_unexplored_registers.py --host <device-ip> --device transfer-hub --blocks documented
+python3 probe_unexplored_registers.py --host <device-ip> --device unknown --blocks documented
 ```
 
-(`--device unknown` if the model is not in the list.) Some of these devices answer an unserved
-address with silence rather than a rejection; the probe tolerates timeouts for them and keeps
-going. The result says which blocks the firmware serves - the input a profile is built from.
+(`--device <model>` when the model is in the list - it picks the liveness register and the safety
+rules.) Some of these devices answer an unserved address with silence rather than a rejection; the
+probe tolerates timeouts for them and keeps going. The result says which blocks the firmware
+serves - the input a profile is built from. Once a block answers, `--range 50001-50250` maps its
+contents, and `--range 50200:6` reads one field several registers wide.
+
+**Two things a Balco-family device can do that look like a working read.** A multi-register read
+that touches an address the firmware does not serve gets no reply at all, where a single-register
+read of the same address is rejected cleanly - which is why this probe reads one register per
+request. And a Balco Transfer Hub answers a block longer than ten registers with real data for the
+first ten and filler for the rest, rather than refusing it: a 15-register read returned its type
+string and serial number correctly and then three fields that were nothing like what those same
+registers give one at a time (bluetti-registers#29). When a value looks wrong on a device with a
+profile, check where it sits inside its block before suspecting the decode.
 
 **A Balco 260**, the device the other blocks were written for:
 
