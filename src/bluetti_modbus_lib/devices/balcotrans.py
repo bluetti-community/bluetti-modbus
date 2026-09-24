@@ -6,7 +6,7 @@ from ..fields import FieldType, dotted_version, field
 
 
 class Balcotrans(BluettiDevice):
-    max_span = 20
+    max_span = 10
 
     d_num_inverters = field(
         t=FieldType.UINT16,
@@ -138,7 +138,7 @@ class Balcotrans(BluettiDevice):
         t=FieldType.UINT16,
         address=51002,
         unit="V",
-        scale=0.1,
+        scale=0.01,
     )
     b_soc_total = field(
         t=FieldType.UINT16,

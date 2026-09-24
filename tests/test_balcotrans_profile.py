@@ -72,11 +72,22 @@ def test_the_registers_that_never_moved_are_left_out():
     }
 
 
-def test_no_read_reaches_beyond_the_blocks_the_hub_answers():
-    # Every address the plan touches answered on real hardware; the
-    # unserved space starts at 53007 and the pack detail block is empty.
+def test_no_block_asks_for_more_than_the_hub_serves():
+    # A real hub answered a 15-register block correctly for its first ten
+    # registers - the type string and the serial, matching its own web
+    # page - and with values the same registers never return one at a time
+    # for everything past them (bluetti-registers#29). Ten is the measured
+    # ceiling, not a prudent guess.
     device = _device()
 
     for start, count in device._build_plan().blocks["holding"]:
-        assert count <= Balcotrans.max_span
+        assert count <= 10
         assert 50001 <= start and start + count - 1 <= 51004
+
+
+def test_the_battery_voltage_is_the_stations_own_scale():
+    # Raw 5350 is 53.50 V, the connected station's pack - not 535 V.
+    field = _device().get_field("b_v_total")
+
+    assert field is not None
+    assert field.decode([5350]) == 53.5
