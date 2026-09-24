@@ -30,6 +30,9 @@ Blocks (--blocks, comma-separated; the first five run by default):
 - pack-41, inv-31, pack-91, pack-92 (opt-in): a documented register plus
   one internal pack address at the slave ids the app uses for packs and
   balcony systems. Balco 260 only. Results: bluetti-modbus#55.
+- --range spans: every address in the given spans, one register each -
+  what maps the inside of a block the list above only samples, once
+  --blocks documented has shown the device serves it.
 - --sweep-units [ids]: one register from each documented block and the
   pack identity/health registers at every listed slave id, to see which
   ids serve which blocks and which return different packs. Balco 260 only;
@@ -351,6 +354,38 @@ def sweep_candidates(spec: str) -> list[tuple[str, int, int, str, str, str]]:
             (f"u{slave}_{name}", address, count, declared, unit, block)
             for name, address, count, declared, unit in SWEEP_FIELDS
         ]
+    CANDIDATES.extend(out)
+    return out
+
+
+# A --range run reads every address in the given span, one register each,
+# to map what a device serves inside a block the candidate list only
+# samples. Capped: on a device that answers an unserved address with
+# silence, every address in a dead span costs a full --timeout plus a
+# reconnect, so a wide span is hours rather than minutes.
+MAX_RANGE_ADDRESSES = 300
+
+
+def range_candidates(spec: str) -> list[tuple[str, int, int, str, str, str]]:
+    """'50001-50250,51001-51008' -> one single-register candidate per address."""
+    out: list[tuple[str, int, int, str, str, str]] = []
+    for text in spec.split(","):
+        if not text.strip():
+            continue
+        first, _, last = text.strip().partition("-")
+        start = int(first)
+        end = int(last) if last.strip() else start
+        if end < start:
+            raise ValueError(f"--range {text.strip()}: the end is below the start")
+        out += [
+            (f"addr_{address}", address, 1, "range", "", "range")
+            for address in range(start, end + 1)
+        ]
+    if len(out) > MAX_RANGE_ADDRESSES:
+        raise ValueError(
+            f"--range asks for {len(out)} addresses; the cap is "
+            f"{MAX_RANGE_ADDRESSES} per run - probe a narrower span"
+        )
     CANDIDATES.extend(out)
     return out
 
@@ -859,6 +894,14 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         "ids that answered; alone, probes only that",
     )
     p.add_argument(
+        "--range",
+        metavar="SPAN",
+        help="read every address in these comma-separated spans, one register each "
+        f"(e.g. 50001-50250,51001-51008; at most {MAX_RANGE_ADDRESSES} addresses per "
+        "run) - what maps a block the candidate list only samples; alone, probes "
+        "only that",
+    )
+    p.add_argument(
         "--only",
         help="comma-separated field names and/or addresses to probe, nothing else "
         "(e.g. d_battery_control,57504,d_hw_ver)",
@@ -912,13 +955,15 @@ def select_candidates(
 ) -> list[tuple[str, int, int, str, str, str]]:
     """Apply --blocks, then --only, then --skip, in that order."""
     candidates = [c for c in CANDIDATES if c[5] not in OPT_IN_BLOCKS]
-    if args.blocks or args.sweep_units or args.pack_block:
+    if args.blocks or args.sweep_units or args.pack_block or args.range:
         wanted = _selector(args.blocks) if args.blocks else set()
         candidates = [c for c in CANDIDATES if c[5] in wanted]
     if args.sweep_units:
         candidates += sweep_candidates(args.sweep_units)
     if args.pack_block:
         candidates += pack_block_candidates(args.pack_block)
+    if args.range:
+        candidates += range_candidates(args.range)
     if args.only:
         only = _selector(args.only)
         candidates = [c for c in candidates if _matches(c, only)]
@@ -935,7 +980,11 @@ def select_candidates(
 
 def main(argv: list[str]) -> int:
     args = parse_args(argv)
-    candidates = select_candidates(args)
+    try:
+        candidates = select_candidates(args)
+    except ValueError as err:
+        print(err)
+        return 2
     if not candidates:
         print("nothing left to probe after --blocks/--only/--skip")
         return 2
