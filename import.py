@@ -1,6 +1,6 @@
 import requests
 
-tag = "0.0.46"
+tag = "0.0.47"
 url = f"https://github.com/bluetti-community/bluetti-registers/releases/download/{tag}/modbus-tcp.json"
 
 output = "src/bluetti_modbus_lib/devices/"
@@ -189,12 +189,15 @@ NIBBLE_FIELDS = {"pv_dc_count": False, "pv_ac_count": True}
 # answered the Balco 260 plan - built with this same override - in full on
 # real hardware (bluetti-registers#38); it keeps the override rather than
 # being the first Balco-family device read with 50-register blocks.
-# Balcotrans (the Balco Transfer Hub) is the same family on the same kind of
-# IoT module, and BLUETTI has said the MCU on these products is at its limit
-# with Modbus TCP enabled. It has only ever been read one register at a time,
-# so it starts on the same narrow blocks rather than being the first of the
-# family to be read with 50-register ones.
-MAX_SPAN_OVERRIDES = {"Balco260": 20, "FP": 20, "Balcotrans": 20}
+# Balcotrans (the Balco Transfer Hub): 10, and that one is measured rather
+# than prudent. On a real hub the 15-register block this profile used to
+# ask for came back correct for its first ten registers - the type string
+# and the serial number, matching the device's own web page - and wrong for
+# everything past them: both firmware versions and the grid frequency, at
+# offsets 10 to 14, read values the same registers never return when they
+# are read one at a time (bluetti-registers#29). The device answers, it
+# just stops serving real data after the tenth register of a block.
+MAX_SPAN_OVERRIDES = {"Balco260": 20, "FP": 20, "Balcotrans": 10}
 
 for d in schema:
     name = d["name"]
