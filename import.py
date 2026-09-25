@@ -75,7 +75,17 @@ SINGLE_REGISTER_TOTALS_DEVICES = {"AC500", "AC200L", "EP500P"}
 # situation - AC500's register set read on a unit BLUETTI's list doesn't
 # cover, and a 50-register batch (the EP2000 profile) timed out on it
 # (bluetti-registers#35).
-ISOLATED_RANGE_DEVICES = {"AC500", "AC200L", "EP500P"}
+# Balcotrans (the Balco Transfer Hub) for a reason of its own, caught in a
+# Home Assistant diagnostics dump of the raw blocks (bluetti-registers#29):
+# it answers a block read with a word inserted partway through, and the
+# rest of the block shifted one register late. Asked for 5 registers at
+# 50210 it returned [63089, 4584, 2, 7550, 4585] where reading the same
+# addresses one at a time gives [63089, 4584, 7550, 4585, 499] - so the
+# DSP version decoded from a 2 and the grid frequency from the DSP's high
+# word, 458.5 Hz. The device does not refuse the read and the count is
+# right, which is why nothing failed loudly. Every reading that ever
+# matched the app was taken field by field.
+ISOLATED_RANGE_DEVICES = {"AC500", "AC200L", "EP500P", "Balcotrans"}
 
 # Devices whose settings block (57001 and up) is read as runs of adjacent
 # declared registers, never bridged across an undeclared one, while the

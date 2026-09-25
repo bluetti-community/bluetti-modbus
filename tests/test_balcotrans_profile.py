@@ -72,17 +72,21 @@ def test_the_registers_that_never_moved_are_left_out():
     }
 
 
-def test_no_block_asks_for_more_than_the_hub_serves():
-    # A real hub answered a 15-register block correctly for its first ten
-    # registers - the type string and the serial, matching its own web
-    # page - and with values the same registers never return one at a time
-    # for everything past them (bluetti-registers#29). Ten is the measured
-    # ceiling, not a prudent guess.
+def test_every_read_covers_exactly_one_field():
+    # A hub answers a block read with a word inserted partway through and
+    # the rest shifted one register late: asked for 5 registers at 50210 it
+    # returned [63089, 4584, 2, 7550, 4585] where the same addresses read
+    # one at a time give [63089, 4584, 7550, 4585, 499]
+    # (bluetti-registers#29). Every reading that matched the app was taken
+    # field by field, so that is how the profile reads it.
     device = _device()
+    fields = {
+        (f.address, f.count)
+        for f in (device.get_field(n) for n in device.field_names())
+        if f is not None
+    }
 
-    for start, count in device._build_plan().blocks["holding"]:
-        assert count <= 10
-        assert 50001 <= start and start + count - 1 <= 51004
+    assert set(device._build_plan().blocks["holding"]) == fields
 
 
 def test_the_battery_voltage_is_the_stations_own_scale():
