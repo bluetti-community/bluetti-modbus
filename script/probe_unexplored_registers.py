@@ -544,21 +544,34 @@ class Prober:
         return ok
 
     async def recover(self) -> bool:
-        """Drop and re-open the link, then confirm the device still answers."""
-        print(
-            f"  dropping the link and waiting {self.args.recover_delay}s before re-opening..."
-        )
-        try:
-            await self.conn.disconnect()
-        except ModbusError:
-            pass
-        await asyncio.sleep(self.args.recover_delay)
-        try:
-            await self.conn.connect()
-        except ModbusError as err:
-            print(f"  could not re-open the link: {type(err).__name__}: {err}")
-            return False
-        return await self.sanity()
+        """Drop and re-open the link, then confirm the device still answers.
+
+        A device that stays quiet right after a reconnect is not
+        necessarily gone: a Balco Transfer Hub went silent for a few
+        seconds after a single read of an address it does not serve, and
+        the liveness check that followed ended a 107-address run on its
+        first probe (bluetti-registers#29). So it gets a second chance
+        after three times the wait, and only then does the run stop.
+        """
+        for attempt, delay in enumerate(
+            (self.args.recover_delay, self.args.recover_delay * 3), start=1
+        ):
+            print(f"  dropping the link and waiting {delay}s before re-opening...")
+            try:
+                await self.conn.disconnect()
+            except ModbusError:
+                pass
+            await asyncio.sleep(delay)
+            try:
+                await self.conn.connect()
+            except ModbusError as err:
+                print(f"  could not re-open the link: {type(err).__name__}: {err}")
+            else:
+                if await self.sanity():
+                    return True
+            if attempt == 1:
+                print("  no answer yet - trying once more after a longer wait")
+        return False
 
     async def _read_words(self, address: int, count: int, block: str = "") -> list[int]:
         """One register per request unless --batched - see the module docstring."""

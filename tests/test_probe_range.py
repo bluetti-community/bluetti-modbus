@@ -8,8 +8,10 @@ import importlib.util
 import sys
 from pathlib import Path
 from types import ModuleType
+from unittest.mock import AsyncMock
 
 import pytest
+from modbus_connection.exceptions import ModbusTimeoutError
 
 
 @pytest.fixture
@@ -108,3 +110,58 @@ def test_a_count_below_one_is_refused(probe):
 def test_the_cap_counts_registers_not_candidates(probe):
     with pytest.raises(ValueError, match="the cap is"):
         probe.range_candidates(f"50200:{probe.MAX_RANGE_ADDRESSES + 1}")
+
+
+class _Conn:
+    """A link that fails its liveness check a given number of times first."""
+
+    def __init__(self, silent_checks: int) -> None:
+        self.silent_checks = silent_checks
+        self.reads = 0
+        self.connects = 0
+
+    async def disconnect(self) -> None:
+        pass
+
+    async def connect(self) -> None:
+        self.connects += 1
+
+    async def read_holding_registers(self, address: int, count: int) -> list[int]:
+        self.reads += 1
+        if self.reads <= self.silent_checks:
+            raise ModbusTimeoutError("no reply")
+        return [1]
+
+
+def _probe_with(probe, conn, monkeypatch):
+    monkeypatch.setattr(probe.asyncio, "sleep", AsyncMock())
+    p = probe.Prober.__new__(probe.Prober)
+    p.args = probe.parse_args(
+        ["--host", "10.0.0.1", "--device", "transfer-hub", "--range", "50001"]
+    )
+    p.conn = conn
+    p.unit = conn
+    p.results = []
+    p.consecutive_bad = 0
+    return p
+
+
+@pytest.mark.asyncio
+async def test_a_device_that_answers_the_second_time_does_not_stop_the_run(
+    probe, monkeypatch
+):
+    # A Transfer Hub went quiet for a few seconds after one read of an
+    # address it does not serve, and the liveness check right after the
+    # reconnect ended a 107-address run on its first probe.
+    conn = _Conn(silent_checks=1)
+
+    assert await _probe_with(probe, conn, monkeypatch).recover() is True
+    assert conn.connects == 2
+
+
+@pytest.mark.asyncio
+async def test_a_device_that_stays_quiet_still_stops_the_run(probe, monkeypatch):
+    conn = _Conn(silent_checks=99)
+
+    assert await _probe_with(probe, conn, monkeypatch).recover() is False
+    assert conn.connects == 2
