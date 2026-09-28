@@ -151,10 +151,13 @@ asyncio.run(main())
 
 A Balco 260 takes up to `MAX_BATTERY_PACKS` (5) BC260 packs. Pack 1's own
 data (`b_soc`, `b_v`, serial, ...) is part of the main device's fields. The
-pack count and every aggregate field (`d_num_battery_packs`, `b_v_total`,
-`b_soc_total`, ... - `AGGREGATE_SUMMARY_FIELDS`) are only served at the
-aggregate unit id `AGGREGATE_SLAVE_ID` (250); at the device's own unit id
-the count always reads 0:
+aggregate fields (`AGGREGATE_SUMMARY_FIELDS`, registers 51001-51008) are
+served at the aggregate unit id `AGGREGATE_SLAVE_ID` (250). At the device's
+own unit id only `b_v_total` (51002) and `b_c_total` (51003) answer, with the
+same values as at 250; the pack count (51001) and `b_soc_total`,
+`b_soh_total`, `b_status`, `b_time_to_full_total` and `b_time_to_empty_total`
+(51004-51008) always read 0 there. Checked on a one-pack Balco 260 while
+charging and while discharging (firmware ARM 50011.01.12, DSP 50014.01.10):
 
 ```python
 from bluetti_modbus_lib import aggregate_pack_summary
