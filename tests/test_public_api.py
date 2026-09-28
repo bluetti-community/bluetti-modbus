@@ -1,7 +1,9 @@
 import inspect
+from enum import Enum
 
 import bluetti_modbus_lib
 from bluetti_modbus_lib import devices as devices_module
+from bluetti_modbus_lib import enums as enums_module
 from bluetti_modbus_lib.base_devices import BluettiDevice
 
 
@@ -19,4 +21,17 @@ def test_every_device_class_is_re_exported_at_the_top_level():
         if issubclass(obj, BluettiDevice) and obj is not BluettiDevice
     }
     missing = {name for name in device_classes if not hasattr(bluetti_modbus_lib, name)}
+    assert missing == set()
+
+
+def test_every_enum_is_re_exported_at_the_top_level():
+    # Regression test: PvType decodes the Balco260's pv_N_i_type fields but
+    # was missing from the package root's import list, so callers had to
+    # reach into bluetti_modbus_lib.enums or match member names as strings.
+    enum_classes = {
+        name
+        for name, obj in inspect.getmembers(enums_module, inspect.isclass)
+        if issubclass(obj, Enum) and obj.__module__.startswith(enums_module.__name__)
+    }
+    missing = {name for name in enum_classes if not hasattr(bluetti_modbus_lib, name)}
     assert missing == set()
