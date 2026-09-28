@@ -21,7 +21,13 @@ from .devices import (
     pack_is_reporting,
     pack_slave_id,
 )
-from .enums import InverterFault, InverterStatus, InverterWarning, PackChargingStatus
+from .enums import (
+    InverterFault,
+    InverterStatus,
+    InverterWarning,
+    PackChargingStatus,
+    PvType,
+)
 from .exceptions import BluettiModbusConnectionError, BluettiModbusError
 from .modbus import BluettiModbusClient
 
@@ -46,6 +52,7 @@ __all__ = [
     "InverterStatus",
     "InverterWarning",
     "PackChargingStatus",
+    "PvType",
     "SMeter",
     "aggregate_pack_summary",
     "battery_pack",
