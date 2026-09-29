@@ -1,6 +1,6 @@
 import requests
 
-tag = "0.0.48"
+tag = "0.0.49"
 url = f"https://github.com/bluetti-community/bluetti-registers/releases/download/{tag}/modbus-tcp.json"
 
 output = "src/bluetti_modbus_lib/devices/"
@@ -64,8 +64,9 @@ AC500_SINGLE_REGISTER_OVERRIDES = {
 # against the same unit's BLE readings - and, like AC500, has no official
 # register list to confirm the "+1" register from. EP500P (read on two real
 # units with the AC500 profile, bluetti-registers#35) carries AC500's
-# overrides for the same reason.
-SINGLE_REGISTER_TOTALS_DEVICES = {"AC500", "AC200L", "EP500P"}
+# overrides for the same reason, and so does PA030 - the Apex 300, which
+# answered that same profile in full on a real unit (bluetti-registers#49).
+SINGLE_REGISTER_TOTALS_DEVICES = {"AC500", "AC200L", "EP500P", "PA030"}
 
 # Devices whose fields are read one isolated block each rather than batched
 # with max_gap=5 (see the register_ranges step below): AC500 - and AC200L,
@@ -85,7 +86,11 @@ SINGLE_REGISTER_TOTALS_DEVICES = {"AC500", "AC200L", "EP500P"}
 # word, 458.5 Hz. The device does not refuse the read and the count is
 # right, which is why nothing failed loudly. Every reading that ever
 # matched the app was taken field by field.
-ISOLATED_RANGE_DEVICES = {"AC500", "AC200L", "EP500P", "Balcotrans"}
+# PA030 (the Apex 300) for the first reason again: the AC500 profile's
+# one-field blocks are exactly what read on a real unit, 31 of them without
+# an error, on a model BLUETTI's register list does not cover either
+# (bluetti-registers#49).
+ISOLATED_RANGE_DEVICES = {"AC500", "AC200L", "EP500P", "Balcotrans", "PA030"}
 
 # Devices whose settings block (57001 and up) is read as runs of adjacent
 # declared registers, never bridged across an undeclared one, while the

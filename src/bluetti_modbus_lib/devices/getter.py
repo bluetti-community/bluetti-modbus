@@ -10,6 +10,7 @@ from .balcotrans import Balcotrans
 from .ep500p import EP500P
 from .ep2000 import EP2000
 from .fp import FP
+from .pa030 import PA030
 from .smeter import SMeter
 
 
@@ -24,6 +25,7 @@ def get_device(
     | Balcotrans
     | EP2000
     | EP500P
+    | PA030
     | SMeter
     | None
 ):
@@ -48,6 +50,8 @@ def get_device(
         return EP500P(unit)
     if d == "fp":
         return FP(unit)
+    if d == "pa030":
+        return PA030(unit)
     if d == "smeter":
         return SMeter(unit)
     else:
