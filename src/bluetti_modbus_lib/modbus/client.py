@@ -11,6 +11,7 @@ from ..devices import (
     EP500P,
     EP2000,
     FP,
+    PA030,
     Balco260,
     Balco500,
     Balcotrans,
@@ -218,6 +219,7 @@ class BluettiModbusClient:
             | Balcotrans
             | EP2000
             | EP500P
+            | PA030
             | SMeter
         ) = device
 

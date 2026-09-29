@@ -16,4 +16,5 @@ from .ep500p import EP500P as EP500P
 from .ep2000 import EP2000 as EP2000
 from .fp import FP as FP
 from .getter import *
+from .pa030 import PA030 as PA030
 from .smeter import SMeter as SMeter

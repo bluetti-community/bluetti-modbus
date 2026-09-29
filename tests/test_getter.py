@@ -4,6 +4,7 @@ from bluetti_modbus_lib.devices import (
     EP500P,
     EP2000,
     FP,
+    PA030,
     Balco260,
     Balco500,
     Balcotrans,
@@ -38,6 +39,10 @@ def test_get_device_ep500p():
 
 def test_get_device_fp():
     assert isinstance(get_device("fp"), FP)
+
+
+def test_get_device_pa030():
+    assert isinstance(get_device("pa030"), PA030)
 
 
 def test_fp_is_the_full_balco_set_plus_dc_switch_read_only():
@@ -100,6 +105,30 @@ def test_ep500p_is_ac500s_register_set_with_read_only_thresholds():
 
     assert writable(ac500) == {"ac_o_switch", "dc_o_switch"}
     assert writable(ep500p) == {"ac_o_switch", "dc_o_switch"}
+
+
+def test_pa030_is_ac500s_register_set_read_only_with_its_own_pack_scale():
+    # PA030 is the Apex 300, named after the type string the device gives at
+    # 50200. A real unit answered the whole AC500 profile - every field, 31
+    # isolated block reads, no errors (bluetti-registers#49) - so the two
+    # share a register set and a read plan. Two things differ: the pack
+    # voltage is 0.01 here (raw 5339 is 53.39 V on a 51.2 V 16S LFP pack,
+    # not 533.9 V), and nothing is writable, no write of any kind having
+    # been tried on this model. Catches the generated file drifting from
+    # that.
+    ac500 = get_device("ac500")
+    pa030 = get_device("pa030")
+    assert ac500 is not None
+    assert pa030 is not None
+
+    assert set(pa030.field_names()) == set(ac500.field_names())
+    assert pa030.register_ranges == ac500.register_ranges
+
+    assert pa030.get_field("b_v_total").scale == 0.01
+    assert ac500.get_field("b_v_total").scale == 0.1
+    assert pa030.get_field("b_c_total").scale == 0.1
+
+    assert not [n for n in pa030.field_names() if pa030.get_field(n).writable]
 
 
 def test_balco500_shares_balco260s_addresses_for_every_field_it_has():

@@ -35,6 +35,7 @@ bounds with [`probatio`][probatio] before anything reaches the device.
 | EP500Pro | `ep500p` | Beta - two real units ([evidence][ev-ep500p]) | AC/DC output switches |
 | FridgePower | `fp` | Confirmed on three real units ([evidence][ev-fp]) | DC output, grid charging switches |
 | Balco Transfer Hub | `balcotrans` | Confirmed on two real units against the app ([evidence][ev-hub]) | - |
+| Apex 300 | `pa030` | Beta - one real unit, read in full ([evidence][ev-pa030]) | - |
 
 Notes:
 
@@ -46,16 +47,21 @@ Notes:
   and PV registers carry the connected power station's values. Its firmware
   serves no writable register, and its energy counters stay at zero, so
   neither is in the profile.
-- **AC500 / EP500Pro / AC200L** share one register layout (the AC500's) with
-  per-device scales. SOC thresholds are read-only on them; energies and PV
-  fields on the AC200L and EP500Pro are carried over unverified. None of
-  them exposes per-pack data over Modbus TCP.
+- **AC500 / EP500Pro / AC200L / Apex 300** share one register layout (the
+  AC500's) with per-device scales. SOC thresholds are read-only on them;
+  energies and PV fields on the AC200L and EP500Pro are carried over
+  unverified. None of them exposes per-pack data over Modbus TCP.
+- **Apex 300** answered that layout in full on a real unit, and populates
+  what its cousins leave empty: the PV metadata and the energy counters. Its
+  pack voltage is 0.01 V, not AC500's 0.1. Nothing is writable - no write of
+  any kind has been tried on this model - and its grid frequency scale is
+  carried over from AC500, the unit having been read off-grid.
 - **FridgePower** is a Balco-family device on the Modbus side: the full
   BalcoXX register set, pack voltage at 0.01 V, signed grid power. Its SOC
   thresholds refuse writes (unlike the Balco 260's); the AC output and grid
   feed-in switches are untried.
-- `AC200L`, `EP500P` and `FP` are named after the type string the device
-  itself gives at register 50200.
+- `AC200L`, `EP500P`, `FP` and `PA030` are named after the type string the
+  device itself gives at register 50200.
 
 Field names, units and addresses come from
 [bluetti-registers][bluetti-registers]: every `devices/*.py` is generated
@@ -493,6 +499,7 @@ SOFTWARE.
 [ev-ep500p]: https://github.com/bluetti-community/bluetti-registers/issues/35
 [ev-fp]: https://github.com/bluetti-community/bluetti-registers/issues/38
 [ev-hub]: https://github.com/bluetti-community/bluetti-registers/issues/29
+[ev-pa030]: https://github.com/bluetti-community/bluetti-registers/issues/49
 [bluetti-registers]: https://github.com/bluetti-community/bluetti-registers
 [build-shield]: https://github.com/bluetti-community/bluetti-modbus/actions/workflows/tests.yml/badge.svg
 [build]: https://github.com/bluetti-community/bluetti-modbus/actions/workflows/tests.yml
