@@ -56,10 +56,10 @@ Notes:
   energies and PV fields on the AC200L and EP500Pro are carried over
   unverified. None of them exposes per-pack data over Modbus TCP.
 - **Apex 300** answered that layout in full on a real unit, and populates
-  what its cousins leave empty: the PV metadata and the energy counters. Its
-  pack voltage is 0.01 V, not AC500's 0.1. Nothing is writable - no write of
-  any kind has been tried on this model - and its grid frequency scale is
-  carried over from AC500, the unit having been read off-grid.
+  what its cousins leave empty: the PV metadata, the energy counters, and the
+  PV2 voltage and string currents at the Balco 260's addresses. Its pack
+  voltage is 0.01 V and its grid frequency 0.1 Hz, not AC500's 0.1 and 0.01.
+  Nothing is writable - no write of any kind has been tried on this model.
 - **FridgePower** is a Balco-family device on the Modbus side: the full
   BalcoXX register set, pack voltage at 0.01 V, signed grid power. Its SOC
   thresholds refuse writes (unlike the Balco 260's); the AC output and grid
