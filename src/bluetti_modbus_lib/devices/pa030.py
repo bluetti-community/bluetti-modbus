@@ -218,6 +218,7 @@ class PA030(BluettiDevice):
     ac_o_switch = field(
         t=FieldType.UINT16,
         address=57001,
+        writable=True,
     )
     dc_o_switch = field(
         t=FieldType.UINT16,
