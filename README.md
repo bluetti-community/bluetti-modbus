@@ -28,7 +28,7 @@ bounds with [`probatio`][probatio] before anything reaches the device.
 |---|---|---|---|
 | Balco 260 | `balco260` | Confirmed by BLUETTI and on real hardware | AC output, grid in/out switches, SOC thresholds |
 | Balco 500 | `balco500` | From BLUETTI's register spec, no unit seen yet | - |
-| EP2000 | `ep2000` | From BLUETTI's register spec, no unit seen yet | - |
+| EP2000 | `ep2000` | Read on one real unit ([evidence][ev-ep2000]) | - |
 | S Meter | `smeter` | Confirmed by BLUETTI and on real hardware | - |
 | AC500 | `ac500` | Confirmed on real hardware ([evidence][ev-ac500]) | AC/DC output switches |
 | AC200L | `ac200l` | Beta - confirmed on a real unit against its BLE readings ([evidence][ev-ac200l]) | AC/DC output switches |
@@ -41,8 +41,12 @@ Notes:
 
 - **Balco 260** reports up to five BC260 expansion packs - see
   [Multiple battery packs](#multiple-battery-packs-balco-260).
-- **Balco 500 / EP2000** come from BLUETTI's official register spec and have
-  not been read on real hardware, so nothing is writable there yet.
+- **Balco 500** comes from BLUETTI's official register spec and has not been
+  read on real hardware, so nothing is writable there yet.
+- **EP2000** comes from the same spec and has now been read on a real unit,
+  which settled its signed powers and two-part versions. On this model the
+  BLUETTI app's VPP option is what opens the Modbus TCP port - its web page
+  has no switch for it. Nothing is writable yet.
 - **Balco Transfer Hub** has no battery of its own: its SOC, battery voltage
   and PV registers carry the connected power station's values. Its firmware
   serves no writable register, and its energy counters stay at zero, so
@@ -496,6 +500,7 @@ SOFTWARE.
 [bluetti-registers-naming]: https://github.com/bluetti-community/bluetti-registers#naming-convention-for-field-names
 [ev-ac200l]: https://github.com/bluetti-community/bluetti-modbus/issues/76
 [ev-ac500]: https://github.com/bluetti-community/bluetti-registers/issues/13
+[ev-ep2000]: https://github.com/bluetti-community/bluetti-registers/issues/42
 [ev-ep500p]: https://github.com/bluetti-community/bluetti-registers/issues/35
 [ev-fp]: https://github.com/bluetti-community/bluetti-registers/issues/38
 [ev-hub]: https://github.com/bluetti-community/bluetti-registers/issues/29

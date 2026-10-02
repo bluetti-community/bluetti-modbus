@@ -1,6 +1,12 @@
 from ..base_devices import BluettiDevice
 from ..enums import *
-from ..fields import FieldType, dotted_version, field, nibble, reference_offset_current
+from ..fields import (
+    FieldType,
+    dotted_version_2part,
+    field,
+    nibble,
+    reference_offset_current,
+)
 
 # GENERATED FILE! DO NOT EDIT!
 
@@ -172,9 +178,9 @@ class EP2000(BluettiDevice):
         t=FieldType.UINT64,
         address=50206,
     )
-    d_ver_arm = dotted_version(50210)
+    d_ver_arm = dotted_version_2part(50210)
 
-    d_ver_dsp = dotted_version(50212)
+    d_ver_dsp = dotted_version_2part(50212)
 
     g_i_f = field(
         t=FieldType.UINT16,
@@ -251,7 +257,7 @@ class EP2000(BluettiDevice):
         address=50234,
     )
     g_1_i_p = field(
-        t=FieldType.UINT16,
+        t=FieldType.INT16,
         address=50235,
         unit="W",
     )
@@ -268,7 +274,7 @@ class EP2000(BluettiDevice):
         scale=0.1,
     )
     g_2_i_p = field(
-        t=FieldType.UINT16,
+        t=FieldType.INT16,
         address=50238,
         unit="W",
     )
@@ -285,7 +291,7 @@ class EP2000(BluettiDevice):
         scale=0.1,
     )
     g_3_i_p = field(
-        t=FieldType.UINT16,
+        t=FieldType.INT16,
         address=50241,
         unit="W",
     )
@@ -519,73 +525,73 @@ class EP2000(BluettiDevice):
         scale=0.1,
     )
     g_1_p_active = field(
-        t=FieldType.UINT16,
+        t=FieldType.INT16,
         address=50288,
         unit="W",
         count=2,
     )
     g_2_p_active = field(
-        t=FieldType.UINT16,
+        t=FieldType.INT16,
         address=50290,
         unit="W",
         count=2,
     )
     g_3_p_active = field(
-        t=FieldType.UINT16,
+        t=FieldType.INT16,
         address=50292,
         unit="W",
         count=2,
     )
     g_1_p_reactive = field(
-        t=FieldType.UINT16,
+        t=FieldType.INT16,
         address=50294,
         unit="W",
         count=2,
     )
     g_2_p_reactive = field(
-        t=FieldType.UINT16,
+        t=FieldType.INT16,
         address=50296,
         unit="W",
         count=2,
     )
     g_3_p_reactive = field(
-        t=FieldType.UINT16,
+        t=FieldType.INT16,
         address=50298,
         unit="W",
         count=2,
     )
     g_1_p_apparent = field(
-        t=FieldType.UINT16,
+        t=FieldType.INT16,
         address=50300,
         unit="W",
         count=2,
     )
     g_2_p_apparent = field(
-        t=FieldType.UINT16,
+        t=FieldType.INT16,
         address=50302,
         unit="W",
         count=2,
     )
     g_3_p_apparent = field(
-        t=FieldType.UINT16,
+        t=FieldType.INT16,
         address=50304,
         unit="W",
         count=2,
     )
     d_inverter_1_p_active_internal = field(
-        t=FieldType.UINT16,
+        t=FieldType.INT16,
         address=50306,
         unit="W",
         count=2,
     )
     d_inverter_2_p_active_internal = field(
-        t=FieldType.UINT16,
+        t=FieldType.INT16,
         address=50308,
         unit="W",
         count=2,
     )
     d_inverter_3_p_active_internal = field(
-        t=FieldType.UINT16,
+        t=FieldType.INT16,
         address=50310,
         unit="W",
         count=2,
@@ -690,13 +696,13 @@ class EP2000(BluettiDevice):
         t=FieldType.UINT16,
         address=51210,
     )
-    b_ver_1 = dotted_version(51211)
+    b_ver_1 = dotted_version_2part(51211)
 
-    b_ver_2 = dotted_version(51213)
+    b_ver_2 = dotted_version_2part(51213)
 
-    b_ver_3 = dotted_version(51215)
+    b_ver_3 = dotted_version_2part(51215)
 
-    b_ver_4 = dotted_version(51217)
+    b_ver_4 = dotted_version_2part(51217)
 
     b_v = field(
         t=FieldType.UINT16,
@@ -781,7 +787,7 @@ class EP2000(BluettiDevice):
         t=FieldType.UINT64,
         address=53007,
     )
-    d_iot_ver = dotted_version(53011)
+    d_iot_ver = dotted_version_2part(53011)
 
     ac_o_switch = field(
         t=FieldType.UINT16,
@@ -810,78 +816,78 @@ class EP2000(BluettiDevice):
         address=57030,
     )
     d_p_active_target_l1 = field(
-        t=FieldType.UINT16,
+        t=FieldType.INT16,
         address=57032,
         unit="W",
         count=2,
     )
     d_p_active_target_l2 = field(
-        t=FieldType.UINT16,
+        t=FieldType.INT16,
         address=57034,
         unit="W",
         count=2,
     )
     d_p_active_target_l3 = field(
-        t=FieldType.UINT16,
+        t=FieldType.INT16,
         address=57036,
         unit="W",
         count=2,
     )
     d_p_reactive_target_l1 = field(
-        t=FieldType.UINT16,
+        t=FieldType.INT16,
         address=57038,
         unit="W",
         count=2,
     )
     d_p_reactive_target_l2 = field(
-        t=FieldType.UINT16,
+        t=FieldType.INT16,
         address=57040,
         unit="W",
         count=2,
     )
     d_p_reactive_target_l3 = field(
-        t=FieldType.UINT16,
+        t=FieldType.INT16,
         address=57042,
         unit="W",
         count=2,
     )
     d_p_apparent_target_l1 = field(
-        t=FieldType.UINT16,
+        t=FieldType.INT16,
         address=57044,
         unit="W",
         count=2,
     )
     d_p_apparent_target_l2 = field(
-        t=FieldType.UINT16,
+        t=FieldType.INT16,
         address=57046,
         unit="W",
         count=2,
     )
     d_p_apparent_target_l3 = field(
-        t=FieldType.UINT16,
+        t=FieldType.INT16,
         address=57048,
         unit="W",
         count=2,
     )
     d_p_output_level_pct = field(
-        t=FieldType.UINT16,
+        t=FieldType.INT16,
         address=57050,
-        unit="W",
+        unit="%",
     )
     d_p_limit_timeout = field(
         t=FieldType.UINT16,
         address=57051,
-        unit="W",
+        unit="s",
     )
     d_p_limit_ramp_time = field(
         t=FieldType.UINT16,
         address=57052,
-        unit="W",
+        unit="s",
     )
     d_p_limit_ramp_rate_pct = field(
         t=FieldType.UINT16,
         address=57053,
-        unit="W",
+        unit="%",
     )
     d_battery_control = field(
         t=FieldType.UINT16,
