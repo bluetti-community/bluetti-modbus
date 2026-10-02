@@ -261,12 +261,13 @@ def test_ep2000_decodes_the_first_real_unit_as_its_app_does():
     assert ep2000.get_field("d_iot_ver").convert(905231) == "9052.31"
     assert ep2000.get_field("d_ver_arm").convert(503222) == "5032.22"
     assert ep2000.get_field("b_ver_1").convert(107418) == "1074.18"
-    # b_c is the plain 0.1 A value the sheet documents, not the Balco
-    # family's 30000 offset: raw 230 is the 23.0 A of b_c_total (the offset
-    # made it 2977.0 A), and raw 62 against 6.3 A on a second unit.
+    # b_c is a signed 0.1 A value, not the Balco family's 30000 offset: raw
+    # 230 is the 23.0 A of b_c_total (the offset made it 2977.0 A), raw 62
+    # against 6.3 A on a second unit, and 65518 is -1.8 A while discharging.
     b_c = ep2000.get_field("b_c")
     assert b_c.convert is None
     assert b_c.scale == 0.1
+    assert b_c.signed
     balco260 = get_device("balco260")
     assert balco260 is not None
     assert balco260.get_field("b_c").convert is not None
