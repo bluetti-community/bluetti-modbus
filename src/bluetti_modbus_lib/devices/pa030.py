@@ -11,6 +11,8 @@ class PA030(BluettiDevice):
         (50004, 50004),
         (50006, 50006),
         (50012, 50013),
+        (50014, 50015),
+        (50016, 50017),
         (50018, 50019),
         (50022, 50022),
         (50023, 50026),
@@ -64,6 +66,20 @@ class PA030(BluettiDevice):
     ac_o_e_total = field(
         t=FieldType.UINT32,
         address=50012,
+        unit="kWh",
+        scale=0.1,
+        count=2,
+    )
+    pv_i_e_total = field(
+        t=FieldType.UINT32,
+        address=50014,
+        unit="kWh",
+        scale=0.1,
+        count=2,
+    )
+    g_i_e_total = field(
+        t=FieldType.UINT32,
+        address=50016,
         unit="kWh",
         scale=0.1,
         count=2,
@@ -206,6 +222,7 @@ class PA030(BluettiDevice):
     dc_o_switch = field(
         t=FieldType.UINT16,
         address=57005,
+        writable=True,
     )
     g_i_switch = field(
         t=FieldType.UINT16,

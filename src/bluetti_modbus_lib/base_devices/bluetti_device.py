@@ -58,6 +58,10 @@ _INTERNAL_WRITE_ADDRESS: dict[str, dict[int, int]] = {
         57005: 2012,  # dc_o_switch - DC_SWITCH, captured on a real FridgePower
         57009: 2207,  # g_i_switch - CTRL_GRID, same as the Balco 260
     },
+    "PA030": {
+        57001: 2011,  # ac_o_switch - AC_SWITCH, captured on a real Apex 300
+        57005: 2012,  # dc_o_switch - DC_SWITCH, the Balco family's, not 3008
+    },
 }
 
 # How many times a transient corrupted/truncated-reply error gets retried

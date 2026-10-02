@@ -28,14 +28,14 @@ bounds with [`probatio`][probatio] before anything reaches the device.
 |---|---|---|---|
 | Balco 260 | `balco260` | Confirmed by BLUETTI and on real hardware | AC output, grid in/out switches, SOC thresholds |
 | Balco 500 | `balco500` | From BLUETTI's register spec, no unit seen yet | - |
-| EP2000 | `ep2000` | Read on one real unit ([evidence][ev-ep2000]) | - |
+| EP2000 | `ep2000` | Read on two real units ([evidence][ev-ep2000]) | - |
 | S Meter | `smeter` | Confirmed by BLUETTI and on real hardware | - |
 | AC500 | `ac500` | Confirmed on real hardware ([evidence][ev-ac500]) | AC/DC output switches |
 | AC200L | `ac200l` | Beta - confirmed on a real unit against its BLE readings ([evidence][ev-ac200l]) | AC/DC output switches |
 | EP500Pro | `ep500p` | Beta - two real units ([evidence][ev-ep500p]) | AC/DC output switches |
 | FridgePower | `fp` | Confirmed on three real units ([evidence][ev-fp]) | DC output, grid charging switches |
 | Balco Transfer Hub | `balcotrans` | Confirmed on two real units against the app ([evidence][ev-hub]) | - |
-| Apex 300 | `pa030` | Beta - one real unit, read in full ([evidence][ev-pa030]) | - |
+| Apex 300 | `pa030` | Confirmed on a real unit against its app ([evidence][ev-pa030]) | DC output switch |
 
 Notes:
 
@@ -59,7 +59,8 @@ Notes:
   what its cousins leave empty: the PV metadata, the energy counters, and the
   PV2 voltage and string currents at the Balco 260's addresses. Its pack
   voltage is 0.01 V and its grid frequency 0.1 Hz, not AC500's 0.1 and 0.01.
-  Nothing is writable - no write of any kind has been tried on this model.
+  The DC output switch is writable; it confirms at the Balco family's internal
+  address (2012), not the AC family's 3008.
 - **FridgePower** is a Balco-family device on the Modbus side: the full
   BalcoXX register set, pack voltage at 0.01 V, signed grid power. Its SOC
   thresholds refuse writes (unlike the Balco 260's); the AC output and grid
