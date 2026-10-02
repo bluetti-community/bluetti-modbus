@@ -614,15 +614,8 @@ async def test_write_knows_the_pa030_switch_echoes(caplog):
         device.modbus_unit.write_register = AsyncMock(  # type: ignore[method-assign]
             side_effect=_mismatched_confirmation(6, echo, 1)
         )
-        field = device.get_field(field_name)
-        assert field is not None
-        was_writable = field.writable
-        field.writable = True  # ac_o_switch is read-only in the profile
-        try:
-            with caplog.at_level(logging.DEBUG, logger="bluetti_modbus_lib"):
-                await device.write(field_name, 1)  # must not raise
-        finally:
-            field.writable = was_writable
+        with caplog.at_level(logging.DEBUG, logger="bluetti_modbus_lib"):
+            await device.write(field_name, 1)  # must not raise
 
         assert (
             f"{field_name} ({address}) confirmed at internal register {echo}"
