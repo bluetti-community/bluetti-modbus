@@ -1,12 +1,6 @@
 from ..base_devices import BluettiDevice
 from ..enums import *
-from ..fields import (
-    FieldType,
-    dotted_version_2part,
-    field,
-    nibble,
-    reference_offset_current,
-)
+from ..fields import FieldType, dotted_version_2part, field, nibble
 
 # GENERATED FILE! DO NOT EDIT!
 
@@ -710,8 +704,12 @@ class EP2000(BluettiDevice):
         unit="V",
         scale=0.1,
     )
-    b_c = reference_offset_current(51220, reference=30000)
-
+    b_c = field(
+        t=FieldType.UINT16,
+        address=51220,
+        unit="A",
+        scale=0.1,
+    )
     b_soc = field(
         t=FieldType.UINT16,
         address=51221,

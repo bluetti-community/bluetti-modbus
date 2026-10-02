@@ -174,6 +174,12 @@ WIDE_INT_FIELDS = {
 # reference_offset_current()'s own docstring for why b_c needs this.
 REFERENCE_OFFSET_CURRENT_FIELDS = {"b_c": 30000}
 
+# Devices whose b_c is the plain 0.1 A value BLUETTI's sheet documents, not
+# the Balco family's offset: 51220 read 230 against a b_c_total of 23.0 A
+# on one real EP2000, 62 against 6.3 A on another
+# (bluetti-registers#42, hassio-bluetti-modbus#145).
+REFERENCE_OFFSET_CURRENT_EXEMPT = {"EP2000"}
+
 # Single documented bit inside an otherwise-"reserved" register - see
 # bit_flag()'s own docstring. d_status (55111, S Meter): bit0/1 reserved,
 # bit2 online status (bluetti-registers#14 / the official Cassandra Protocol
@@ -226,7 +232,10 @@ for d in schema:
     uses_range = False
 
     for f in d["fields"]:
-        if f["name"] in REFERENCE_OFFSET_CURRENT_FIELDS:
+        if (
+            f["name"] in REFERENCE_OFFSET_CURRENT_FIELDS
+            and name not in REFERENCE_OFFSET_CURRENT_EXEMPT
+        ):
             uses_reference_offset_current = True
             reference = REFERENCE_OFFSET_CURRENT_FIELDS[f["name"]]
             fields += f"""
