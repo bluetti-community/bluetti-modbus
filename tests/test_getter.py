@@ -227,3 +227,31 @@ def test_get_device_smeter():
 
 def test_get_device_unknown_type_returns_none():
     assert get_device("not-a-real-device") is None
+
+
+def test_ep2000_decodes_the_first_real_unit_as_its_app_does():
+    # The first EP2000 read over Modbus TCP (bluetti-registers#42), raw words
+    # as the unit sent them while grid-charging. Bidirectional power is signed
+    # - the three phases add up to g_i_p_local, 17717 W, once they are - and
+    # the versions are two-part, as the unit's own web page prints them.
+    ep2000 = get_device("ep2000")
+    assert ep2000 is not None
+
+    phases = [ep2000.get_field(f"g_{i}_i_p") for i in (1, 2, 3)]
+    assert all(f.signed for f in phases)
+    raw = [59011, 58865, 61015]
+    as_int16 = [w - 65536 if w >= 32768 else w for w in raw]
+    assert as_int16 == [-6525, -6671, -4521]
+    assert sum(as_int16) == -17717
+
+    assert ep2000.get_field("d_inverter_1_p_active_internal").signed
+    assert ep2000.get_field("d_p_active_target_l1").signed
+    assert ep2000.get_field("d_p_limit_timeout").unit == "s"
+    assert ep2000.get_field("d_p_output_level_pct").unit == "%"
+
+    assert ep2000.get_field("d_iot_ver").convert(905231) == "9052.31"
+    assert ep2000.get_field("d_ver_arm").convert(503222) == "5032.22"
+    assert ep2000.get_field("b_ver_1").convert(107418) == "1074.18"
+    # b_c read 2977.0 A on that unit's older install; this decode is the
+    # current one, against the 30000 reference: the 23.0 A of b_c_total.
+    assert ep2000.get_field("b_c").convert(29770) == 23.0
