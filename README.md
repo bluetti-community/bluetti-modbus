@@ -28,14 +28,14 @@ bounds with [`probatio`][probatio] before anything reaches the device.
 |---|---|---|---|
 | Balco 260 | `balco260` | Confirmed by BLUETTI and on real hardware | AC output, grid in/out switches, SOC thresholds |
 | Balco 500 | `balco500` | From BLUETTI's register spec, no unit seen yet | - |
-| EP2000 | `ep2000` | Read on one real unit ([evidence][ev-ep2000]) | - |
+| EP2000 | `ep2000` | Read on two real units ([evidence][ev-ep2000]) | - |
 | S Meter | `smeter` | Confirmed by BLUETTI and on real hardware | - |
 | AC500 | `ac500` | Confirmed on real hardware ([evidence][ev-ac500]) | AC/DC output switches |
 | AC200L | `ac200l` | Beta - confirmed on a real unit against its BLE readings ([evidence][ev-ac200l]) | AC/DC output switches |
 | EP500Pro | `ep500p` | Beta - two real units ([evidence][ev-ep500p]) | AC/DC output switches |
 | FridgePower | `fp` | Confirmed on three real units ([evidence][ev-fp]) | DC output, grid charging switches |
 | Balco Transfer Hub | `balcotrans` | Confirmed on two real units against the app ([evidence][ev-hub]) | - |
-| Apex 300 | `pa030` | Beta - one real unit, read in full ([evidence][ev-pa030]) | - |
+| Apex 300 | `pa030` | Confirmed on a real unit against its app ([evidence][ev-pa030]) | DC output switch |
 
 Notes:
 
