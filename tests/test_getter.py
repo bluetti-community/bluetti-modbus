@@ -107,26 +107,35 @@ def test_ep500p_is_ac500s_register_set_with_read_only_thresholds():
     assert writable(ep500p) == {"ac_o_switch", "dc_o_switch"}
 
 
-def test_pa030_is_ac500s_register_set_read_only_with_its_own_pack_scale():
+def test_pa030_is_ac500s_register_set_read_only_with_its_own_scales():
     # PA030 is the Apex 300, named after the type string the device gives at
     # 50200. A real unit answered the whole AC500 profile - every field, 31
-    # isolated block reads, no errors (bluetti-registers#49) - so the two
-    # share a register set and a read plan. Two things differ: the pack
-    # voltage is 0.01 here (raw 5339 is 53.39 V on a 51.2 V 16S LFP pack,
-    # not 533.9 V), and nothing is writable, no write of any kind having
-    # been tried on this model. Catches the generated file drifting from
-    # that.
+    # isolated block reads, no errors (bluetti-registers#49) - and on top of
+    # it the PV2 voltage and both string currents, at the Balco 260's
+    # addresses (hassio-bluetti-modbus#143). Its own scales: the pack voltage
+    # is 0.01 (raw 5339 is 53.39 V on a 51.2 V 16S LFP pack, not 533.9 V) and
+    # the grid frequency the generic 0.1 (raw 500 on the mains). Nothing is
+    # writable, no write of any kind having been tried on this model.
+    # Catches the generated file drifting from that.
     ac500 = get_device("ac500")
+    balco260 = get_device("balco260")
     pa030 = get_device("pa030")
     assert ac500 is not None
+    assert balco260 is not None
     assert pa030 is not None
 
-    assert set(pa030.field_names()) == set(ac500.field_names())
-    assert pa030.register_ranges == ac500.register_ranges
+    extra = {"pv_1_i_c", "pv_2_i_v", "pv_2_i_c"}
+    assert set(pa030.field_names()) == set(ac500.field_names()) | extra
+    for name in extra:
+        assert pa030.get_field(name).address == balco260.get_field(name).address
 
     assert pa030.get_field("b_v_total").scale == 0.01
     assert ac500.get_field("b_v_total").scale == 0.1
     assert pa030.get_field("b_c_total").scale == 0.1
+    assert pa030.get_field("g_i_f").scale == 0.1
+    assert ac500.get_field("g_i_f").scale == 0.01
+    assert pa030.get_field("pv_2_i_v").scale == 0.1
+    assert pa030.get_field("pv_2_i_c").scale == 0.1
 
     assert not [n for n in pa030.field_names() if pa030.get_field(n).writable]
 
