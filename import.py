@@ -1,6 +1,6 @@
 import requests
 
-tag = "0.0.52"
+tag = "0.0.53"
 url = f"https://github.com/bluetti-community/bluetti-registers/releases/download/{tag}/modbus-tcp.json"
 
 output = "src/bluetti_modbus_lib/devices/"
@@ -309,7 +309,9 @@ for d in schema:
         # (bluetti-registers#35, its second owner); b_soc_low/b_soc_high
         # refuse a write there and g_i_switch's effect is unseen, so the
         # schema carries no writeable flag for those (EP500P overrides).
-        if name in ("Balco260", "AC500", "AC200L", "EP500P", "FP") and f.get(
+        # PA030: dc_o_switch toggled and read back on a real Apex 300
+        # (bluetti-registers#49); everything else carries no writeable flag.
+        if name in ("Balco260", "AC500", "AC200L", "EP500P", "FP", "PA030") and f.get(
             "writeable"
         ):
             if "num_min" in f and "num_max" in f:

@@ -59,7 +59,8 @@ Notes:
   what its cousins leave empty: the PV metadata, the energy counters, and the
   PV2 voltage and string currents at the Balco 260's addresses. Its pack
   voltage is 0.01 V and its grid frequency 0.1 Hz, not AC500's 0.1 and 0.01.
-  Nothing is writable - no write of any kind has been tried on this model.
+  The DC output switch is writable; it confirms at the Balco family's internal
+  address (2012), not the AC family's 3008.
 - **FridgePower** is a Balco-family device on the Modbus side: the full
   BalcoXX register set, pack voltage at 0.01 V, signed grid power. Its SOC
   thresholds refuse writes (unlike the Balco 260's); the AC output and grid

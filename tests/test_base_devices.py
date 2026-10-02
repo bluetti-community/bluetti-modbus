@@ -601,6 +601,37 @@ async def test_write_reraises_for_a_field_that_does_not_exist():
 
 
 @pytest.mark.asyncio
+async def test_write_knows_the_pa030_switch_echoes(caplog):
+    # Captured on a real Apex 300 (bluetti-registers#49): the output switches
+    # confirm at the Balco family's 2011 / 2012, not the AC family's 3008.
+    from bluetti_modbus_lib.devices import PA030
+
+    for field_name, address, echo in (
+        ("ac_o_switch", 57001, 2011),
+        ("dc_o_switch", 57005, 2012),
+    ):
+        device = PA030(MockModbusConnection().for_unit(1))
+        device.modbus_unit.write_register = AsyncMock(  # type: ignore[method-assign]
+            side_effect=_mismatched_confirmation(6, echo, 1)
+        )
+        field = device.get_field(field_name)
+        assert field is not None
+        was_writable = field.writable
+        field.writable = True  # ac_o_switch is read-only in the profile
+        try:
+            with caplog.at_level(logging.DEBUG, logger="bluetti_modbus_lib"):
+                await device.write(field_name, 1)  # must not raise
+        finally:
+            field.writable = was_writable
+
+        assert (
+            f"{field_name} ({address}) confirmed at internal register {echo}"
+            in caplog.text
+        )
+    assert not [r for r in caplog.records if r.levelno >= logging.WARNING]
+
+
+@pytest.mark.asyncio
 async def test_write_knows_the_fp_switch_echoes(caplog):
     # Captured on a real FridgePower (bluetti-registers#38, 2026-09-21): the
     # DC output switch confirms at 2012 and the grid charging switch at 2207

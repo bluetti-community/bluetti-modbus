@@ -114,8 +114,8 @@ def test_pa030_is_ac500s_register_set_read_only_with_its_own_scales():
     # it the PV2 voltage and both string currents, at the Balco 260's
     # addresses (hassio-bluetti-modbus#143). Its own scales: the pack voltage
     # is 0.01 (raw 5339 is 53.39 V on a 51.2 V 16S LFP pack, not 533.9 V) and
-    # the grid frequency the generic 0.1 (raw 500 on the mains). Nothing is
-    # writable, no write of any kind having been tried on this model.
+    # the grid frequency the generic 0.1 (raw 500 on the mains). The DC output
+    # switch is the one writable field: toggled and read back on that unit.
     # Catches the generated file drifting from that.
     ac500 = get_device("ac500")
     balco260 = get_device("balco260")
@@ -124,7 +124,7 @@ def test_pa030_is_ac500s_register_set_read_only_with_its_own_scales():
     assert balco260 is not None
     assert pa030 is not None
 
-    extra = {"pv_1_i_c", "pv_2_i_v", "pv_2_i_c"}
+    extra = {"pv_1_i_c", "pv_2_i_v", "pv_2_i_c", "pv_i_e_total", "g_i_e_total"}
     assert set(pa030.field_names()) == set(ac500.field_names()) | extra
     for name in extra:
         assert pa030.get_field(name).address == balco260.get_field(name).address
@@ -137,7 +137,9 @@ def test_pa030_is_ac500s_register_set_read_only_with_its_own_scales():
     assert pa030.get_field("pv_2_i_v").scale == 0.1
     assert pa030.get_field("pv_2_i_c").scale == 0.1
 
-    assert not [n for n in pa030.field_names() if pa030.get_field(n).writable]
+    assert [n for n in pa030.field_names() if pa030.get_field(n).writable] == [
+        "dc_o_switch"
+    ]
 
 
 def test_balco500_shares_balco260s_addresses_for_every_field_it_has():
