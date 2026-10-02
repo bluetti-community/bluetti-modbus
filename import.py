@@ -1,6 +1,6 @@
 import requests
 
-tag = "0.0.51"
+tag = "0.0.52"
 url = f"https://github.com/bluetti-community/bluetti-registers/releases/download/{tag}/modbus-tcp.json"
 
 output = "src/bluetti_modbus_lib/devices/"
@@ -174,9 +174,10 @@ WIDE_INT_FIELDS = {
 # reference_offset_current()'s own docstring for why b_c needs this.
 REFERENCE_OFFSET_CURRENT_FIELDS = {"b_c": 30000}
 
-# Devices whose b_c is the plain 0.1 A value BLUETTI's sheet documents, not
-# the Balco family's offset: 51220 read 230 against a b_c_total of 23.0 A
-# on one real EP2000, 62 against 6.3 A on another
+# Devices whose b_c is a plain 0.1 A value as bluetti-registers declares it
+# (signed on the EP2000), not the Balco family's offset: 51220 read 230
+# against a b_c_total of 23.0 A on one real EP2000, 62 against 6.3 A and
+# 65518 (-1.8 A, discharging) against 2.0 A on another
 # (bluetti-registers#42, hassio-bluetti-modbus#145).
 REFERENCE_OFFSET_CURRENT_EXEMPT = {"EP2000"}
 

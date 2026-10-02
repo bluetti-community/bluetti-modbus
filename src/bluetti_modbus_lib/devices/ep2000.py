@@ -705,7 +705,7 @@ class EP2000(BluettiDevice):
         scale=0.1,
     )
     b_c = field(
-        t=FieldType.UINT16,
+        t=FieldType.INT16,
         address=51220,
         unit="A",
         scale=0.1,
