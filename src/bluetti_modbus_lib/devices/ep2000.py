@@ -474,50 +474,6 @@ class EP2000(BluettiDevice):
         unit="A",
         scale=0.1,
     )
-    pv_3_i_type = field(
-        t=FieldType.ENUM,
-        address=50276,
-        enum_type=PvType,
-    )
-    pv_3_i_p = field(
-        t=FieldType.UINT16,
-        address=50277,
-        unit="W",
-    )
-    pv_3_i_v = field(
-        t=FieldType.UINT16,
-        address=50278,
-        unit="V",
-        scale=0.1,
-    )
-    pv_3_i_c = field(
-        t=FieldType.UINT16,
-        address=50279,
-        unit="A",
-        scale=0.1,
-    )
-    pv_4_i_type = field(
-        t=FieldType.ENUM,
-        address=50280,
-        enum_type=PvType,
-    )
-    pv_4_i_p = field(
-        t=FieldType.UINT16,
-        address=50281,
-        unit="W",
-    )
-    pv_4_i_v = field(
-        t=FieldType.UINT16,
-        address=50282,
-        unit="V",
-        scale=0.1,
-    )
-    pv_4_i_c = field(
-        t=FieldType.UINT16,
-        address=50283,
-        unit="A",
-        scale=0.1,
-    )
     g_1_p_active = field(
         t=FieldType.INT16,
         address=50288,
@@ -727,7 +683,7 @@ class EP2000(BluettiDevice):
     b_t_avg = field(
         t=FieldType.INT16,
         address=51224,
-        unit="°C",
+        unit="°F",
     )
     b_cell_count = field(
         t=FieldType.UINT16,

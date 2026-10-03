@@ -43,10 +43,12 @@ Notes:
   [Multiple battery packs](#multiple-battery-packs-balco-260).
 - **Balco 500** comes from BLUETTI's official register spec and has not been
   read on real hardware, so nothing is writable there yet.
-- **EP2000** comes from the same spec and has now been read on a real unit,
-  which settled its signed powers and two-part versions. On this model the
-  BLUETTI app's VPP option is what opens the Modbus TCP port - its web page
-  has no switch for it. Nothing is writable yet.
+- **EP2000** comes from the same spec and has been read on real units, which
+  settled its signed powers, two-part versions and signed pack current. Its
+  two MPPTs are reported as PV1 and PV2 (no PV3/PV4), and its pack
+  temperature is in °F. On this model the BLUETTI app's VPP option is what
+  opens the Modbus TCP port - its web page has no switch for it. Nothing is
+  writable yet.
 - **Balco Transfer Hub** has no battery of its own: its SOC, battery voltage
   and PV registers carry the connected power station's values. Its firmware
   serves no writable register, and its energy counters stay at zero, so
