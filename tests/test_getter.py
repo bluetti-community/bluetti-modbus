@@ -210,13 +210,17 @@ def test_ep2000_shares_balco260s_confirmed_addresses():
     # EP2000's register map is a strict superset of Balco260's, sourced from
     # BLUETTI's own official register spec (bluetti-registers PR ingesting
     # bluetti-official/bluetti-modbus-tcp-slave's Cassandra Protocol doc) -
-    # every address the two devices share should decode identically.
+    # every address the two devices share should decode identically. PV3 and
+    # PV4 are the exception: the EP2000 has two MPPTs, and those slots read
+    # impossible values there.
     balco260 = get_device("balco260")
     ep2000 = get_device("ep2000")
     assert balco260 is not None
     assert ep2000 is not None
 
     for name in balco260.field_names():
+        if name.startswith(("pv_3_", "pv_4_")):
+            continue
         balco_field = balco260.get_field(name)
         ep2000_field = ep2000.get_field(name)
         assert ep2000_field is not None, f"EP2000 is missing {name}"
@@ -274,3 +278,12 @@ def test_ep2000_decodes_the_first_real_unit_as_its_app_does():
     balco260 = get_device("balco260")
     assert balco260 is not None
     assert balco260.get_field("b_c").convert is not None
+    # Two MPPTs, reported as PV1 and PV2; the next slots read impossible
+    # values (0 V, 132 W, 2300+ A). The pack temperature is in Fahrenheit.
+    names = set(ep2000.field_names())
+    assert {"pv_1_i_p", "pv_2_i_p"} <= names
+    assert not {n for n in names if n.startswith(("pv_3_", "pv_4_"))}
+    assert ep2000.get_field("b_t_avg").unit == "°F"
+    fp = get_device("fp")
+    assert fp is not None
+    assert fp.get_field("b_t_avg").unit == "°C"
