@@ -1,6 +1,6 @@
 import requests
 
-tag = "0.0.55"
+tag = "0.0.56"
 url = f"https://github.com/bluetti-community/bluetti-registers/releases/download/{tag}/modbus-tcp.json"
 
 output = "src/bluetti_modbus_lib/devices/"
@@ -327,6 +327,9 @@ for d in schema:
 
         if "scale" in f:
             fields += f"\n        scale={f['scale']},"
+
+        if "offset" in f:
+            fields += f"\n        offset={f['offset']},"
 
         # bluetti-registers' schema also carries "category"/"state_class"/
         # "device_class" per field, but this library deliberately doesn't

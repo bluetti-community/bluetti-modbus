@@ -75,6 +75,20 @@ def test_field_uint16_and_int16():
     assert signed.signed is True
 
 
+def test_field_offset_applies_after_scale():
+    f = field(FieldType.INT16, 51224, unit="°C", offset=-40)
+    assert isinstance(f, NumberField)
+    assert f.decode([61]) == 21
+    assert f.decode([0xFFFF]) == -41
+    assert f.unit == "°C"
+    assert field(FieldType.UINT32, 1, scale=0.1, offset=5).decode([100, 0]) == 15.0
+
+
+def test_field_offset_is_refused_where_it_has_no_meaning():
+    with pytest.raises(ValueError):
+        field(FieldType.STRING, 1, offset=-40)
+
+
 def test_field_uint32():
     reg = field(FieldType.UINT32, 12, scale=0.1)
 
