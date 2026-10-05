@@ -248,6 +248,37 @@ class FieldType(Enum):
     ENUM = "enum"
 
 
+def _offset_number(
+    t: FieldType,
+    address: int,
+    *,
+    scale: float,
+    offset: float,
+    unit: str | None,
+) -> NumberField[Any]:
+    """A read-only number decoded as raw * scale + offset.
+
+    The EP2000 reports temperatures as degrees C plus 40 (offset -40).
+    """
+    widths = {
+        FieldType.INT16: (1, True),
+        FieldType.UINT16: (1, False),
+        FieldType.INT32: (2, True),
+        FieldType.UINT32: (2, False),
+    }
+    if t not in widths:
+        raise ValueError(f"offset is not supported for {t}")
+    count, signed = widths[t]
+    return NumberField(
+        address,
+        count=count,
+        signed=signed,
+        convert=lambda raw: raw * scale + offset,
+        word_order="little",
+        unit=unit,
+    )
+
+
 def field(
     t: FieldType,
     address: int,
@@ -258,7 +289,10 @@ def field(
     length: int = 1,
     count: int = 1,
     enum_type: type[Enum] | None = None,
+    offset: float = 0,
 ) -> RegisterField[Any]:
+    if offset:
+        return _offset_number(t, address, scale=scale, offset=offset, unit=unit)
     match t:
         case FieldType.INT16:
             return int16(address, scale=scale, writable=writable, unit=unit)

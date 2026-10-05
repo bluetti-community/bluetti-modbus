@@ -279,11 +279,12 @@ def test_ep2000_decodes_the_first_real_unit_as_its_app_does():
     assert balco260 is not None
     assert balco260.get_field("b_c").convert is not None
     # Two MPPTs, reported as PV1 and PV2; the next slots read impossible
-    # values (0 V, 132 W, 2300+ A). The pack temperature is in Fahrenheit.
+    # values (0 V, 132 W, 2300+ A). The pack temperature is degrees C plus 40.
     names = set(ep2000.field_names())
     assert {"pv_1_i_p", "pv_2_i_p"} <= names
     assert not {n for n in names if n.startswith(("pv_3_", "pv_4_"))}
-    assert ep2000.get_field("b_t_avg").unit == "°F"
+    assert ep2000.get_field("b_t_avg").unit == "°C"
+    assert ep2000.get_field("b_t_avg").decode([61]) == 21
     fp = get_device("fp")
     assert fp is not None
     assert fp.get_field("b_t_avg").unit == "°C"

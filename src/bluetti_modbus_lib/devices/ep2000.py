@@ -683,7 +683,8 @@ class EP2000(BluettiDevice):
     b_t_avg = field(
         t=FieldType.INT16,
         address=51224,
-        unit="°F",
+        unit="°C",
+        offset=-40,
     )
     b_cell_count = field(
         t=FieldType.UINT16,
