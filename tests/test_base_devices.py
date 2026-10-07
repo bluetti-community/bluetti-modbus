@@ -508,6 +508,21 @@ async def test_write_knows_the_ep500p_dc_switch_echo(caplog):
 
 
 @pytest.mark.asyncio
+async def test_write_knows_the_ep500p_grid_charging_echo(caplog):
+    # Captured on a real EP500Pro with write_probe: 57009 confirms at 3011.
+    device = EP500P(MockModbusConnection().for_unit(1))
+    device.modbus_unit.write_register = AsyncMock(  # type: ignore[method-assign]
+        side_effect=_mismatched_confirmation(6, 3011, 1)
+    )
+
+    with caplog.at_level(logging.DEBUG, logger="bluetti_modbus_lib"):
+        await device.write("g_i_switch", 1)  # must not raise
+
+    assert "g_i_switch (57009) confirmed at internal register 3011" in caplog.text
+    assert not [r for r in caplog.records if r.levelno >= logging.WARNING]
+
+
+@pytest.mark.asyncio
 async def test_write_reports_an_echo_for_a_device_with_no_entries_at_all(caplog):
     # A device class the table does not know (nothing captured on it yet):
     # the echo is accepted and reported as not on file, never raised.

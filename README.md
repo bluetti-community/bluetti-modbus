@@ -32,7 +32,7 @@ bounds with [`probatio`][probatio] before anything reaches the device.
 | S Meter | `smeter` | Confirmed by BLUETTI and on real hardware | - |
 | AC500 | `ac500` | Confirmed on real hardware ([evidence][ev-ac500]) | AC/DC output switches |
 | AC200L | `ac200l` | Beta - confirmed on a real unit against its BLE readings ([evidence][ev-ac200l]) | AC/DC output switches |
-| EP500Pro | `ep500p` | Beta - two real units ([evidence][ev-ep500p]) | AC/DC output switches |
+| EP500Pro | `ep500p` | Confirmed on two real units ([evidence][ev-ep500p]) | AC/DC output, grid charging switches |
 | FridgePower | `fp` | Confirmed on three real units ([evidence][ev-fp]) | DC output, grid charging switches |
 | Balco Transfer Hub | `balcotrans` | Confirmed on two real units against the app ([evidence][ev-hub]) | - |
 | Apex 300 | `pa030` | Confirmed on a real unit against its app ([evidence][ev-pa030]) | AC/DC output switches |
