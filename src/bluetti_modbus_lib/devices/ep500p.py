@@ -10,6 +10,7 @@ class EP500P(BluettiDevice):
         (50002, 50002),
         (50004, 50004),
         (50006, 50006),
+        (50008, 50008),
         (50012, 50013),
         (50018, 50019),
         (50022, 50022),
@@ -55,6 +56,12 @@ class EP500P(BluettiDevice):
     g_i_p_total = field(
         t=FieldType.INT16,
         address=50006,
+        unit="W",
+        count=1,
+    )
+    d_inverter_total = field(
+        t=FieldType.INT16,
+        address=50008,
         unit="W",
         count=1,
     )
@@ -191,6 +198,7 @@ class EP500P(BluettiDevice):
     g_i_switch = field(
         t=FieldType.UINT16,
         address=57009,
+        writable=True,
     )
     b_soc_low = field(
         t=FieldType.UINT16,

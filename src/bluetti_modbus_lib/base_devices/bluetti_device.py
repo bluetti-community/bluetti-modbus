@@ -53,6 +53,7 @@ _INTERNAL_WRITE_ADDRESS: dict[str, dict[int, int]] = {
     },
     "EP500P": {
         57005: 3008,  # dc_o_switch - captured on a real EP500Pro
+        57009: 3011,  # g_i_switch - captured on a real EP500Pro
     },
     "FP": {
         57005: 2012,  # dc_o_switch - DC_SWITCH, captured on a real FridgePower
