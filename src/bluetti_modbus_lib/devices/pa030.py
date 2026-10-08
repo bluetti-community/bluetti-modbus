@@ -10,6 +10,7 @@ class PA030(BluettiDevice):
         (50002, 50002),
         (50004, 50004),
         (50006, 50006),
+        (50008, 50008),
         (50012, 50013),
         (50014, 50015),
         (50016, 50017),
@@ -25,6 +26,15 @@ class PA030(BluettiDevice):
         (50217, 50217),
         (50219, 50219),
         (50229, 50229),
+        (50234, 50234),
+        (50235, 50235),
+        (50236, 50236),
+        (50237, 50237),
+        (50254, 50254),
+        (50255, 50255),
+        (50256, 50256),
+        (50257, 50257),
+        (50258, 50258),
         (50267, 50267),
         (50268, 50268),
         (50269, 50269),
@@ -38,6 +48,16 @@ class PA030(BluettiDevice):
         (51002, 51002),
         (51003, 51003),
         (51004, 51004),
+        (51005, 51005),
+        (51006, 51006),
+        (51007, 51007),
+        (51200, 51205),
+        (51206, 51209),
+        (51210, 51210),
+        (51211, 51212),
+        (51221, 51221),
+        (51234, 51234),
+        (51235, 51235),
         (57001, 57001),
         (57005, 57005),
         (57009, 57009),
@@ -60,6 +80,12 @@ class PA030(BluettiDevice):
     g_i_p_total = field(
         t=FieldType.INT16,
         address=50006,
+        unit="W",
+        count=1,
+    )
+    d_inverter_total = field(
+        t=FieldType.INT16,
+        address=50008,
         unit="W",
         count=1,
     )
@@ -146,6 +172,55 @@ class PA030(BluettiDevice):
         scale=0.1,
         count=1,
     )
+    d_phase_count = field(
+        t=FieldType.UINT16,
+        address=50234,
+    )
+    g_1_i_p = field(
+        t=FieldType.INT16,
+        address=50235,
+        unit="W",
+        count=1,
+    )
+    g_1_i_v = field(
+        t=FieldType.UINT16,
+        address=50236,
+        unit="V",
+        scale=0.1,
+    )
+    g_1_i_c = field(
+        t=FieldType.INT16,
+        address=50237,
+        unit="A",
+        scale=0.1,
+    )
+    d_inverter_phase_count = field(
+        t=FieldType.UINT16,
+        address=50254,
+    )
+    d_inverter_1_status = field(
+        t=FieldType.ENUM,
+        address=50255,
+        enum_type=InverterStatus,
+    )
+    d_inverter_1_p = field(
+        t=FieldType.INT16,
+        address=50256,
+        unit="W",
+        count=1,
+    )
+    d_inverter_1_v = field(
+        t=FieldType.UINT16,
+        address=50257,
+        unit="V",
+        scale=0.1,
+    )
+    d_inverter_1_c = field(
+        t=FieldType.UINT16,
+        address=50258,
+        unit="A",
+        scale=0.1,
+    )
     pv_dc_count = nibble(50267, high=False)
 
     pv_ac_count = nibble(50267, high=True)
@@ -214,6 +289,50 @@ class PA030(BluettiDevice):
         t=FieldType.UINT16,
         address=51004,
         unit="%",
+    )
+    b_soh_total = field(
+        t=FieldType.UINT16,
+        address=51005,
+        unit="%",
+    )
+    b_status = field(
+        t=FieldType.ENUM,
+        address=51006,
+        enum_type=PackChargingStatus,
+    )
+    b_time_to_full_total = field(
+        t=FieldType.UINT16,
+        address=51007,
+        unit="min",
+    )
+    b_type = field(
+        t=FieldType.STRING,
+        address=51200,
+        length=6,
+    )
+    b_serial = field(
+        t=FieldType.UINT64,
+        address=51206,
+        count=4,
+    )
+    b_ver_count = field(
+        t=FieldType.UINT16,
+        address=51210,
+    )
+    b_ver_1 = dotted_version_2part(51211)
+
+    b_soc = field(
+        t=FieldType.UINT16,
+        address=51221,
+        unit="%",
+    )
+    b_cell_count = field(
+        t=FieldType.UINT16,
+        address=51234,
+    )
+    b_ntc_count = field(
+        t=FieldType.UINT16,
+        address=51235,
     )
     ac_o_switch = field(
         t=FieldType.UINT16,

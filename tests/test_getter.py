@@ -117,6 +117,9 @@ def test_pa030_is_ac500s_register_set_read_only_with_its_own_scales():
     # is 0.01 (raw 5339 is 53.39 V on a 51.2 V 16S LFP pack, not 533.9 V) and
     # the grid frequency the generic 0.1 (raw 500 on the mains). The two output
     # switches are the writable fields: toggled and read back on that unit.
+    # A unit on the grid also fills the inverter's and the grid phase's flow
+    # registers, the totals' health, status and time to full, and the pack
+    # block for its own battery, all at the Balco 260's addresses.
     # Catches the generated file drifting from that.
     ac500 = get_device("ac500")
     balco260 = get_device("balco260")
@@ -125,7 +128,33 @@ def test_pa030_is_ac500s_register_set_read_only_with_its_own_scales():
     assert balco260 is not None
     assert pa030 is not None
 
-    extra = {"pv_1_i_c", "pv_2_i_v", "pv_2_i_c", "pv_i_e_total", "g_i_e_total"}
+    extra = {
+        "pv_1_i_c",
+        "pv_2_i_v",
+        "pv_2_i_c",
+        "pv_i_e_total",
+        "g_i_e_total",
+        "d_inverter_total",
+        "d_phase_count",
+        "g_1_i_p",
+        "g_1_i_v",
+        "g_1_i_c",
+        "d_inverter_phase_count",
+        "d_inverter_1_status",
+        "d_inverter_1_p",
+        "d_inverter_1_v",
+        "d_inverter_1_c",
+        "b_soh_total",
+        "b_status",
+        "b_time_to_full_total",
+        "b_type",
+        "b_serial",
+        "b_ver_count",
+        "b_ver_1",
+        "b_soc",
+        "b_cell_count",
+        "b_ntc_count",
+    }
     assert set(pa030.field_names()) == set(ac500.field_names()) | extra
     for name in extra:
         assert pa030.get_field(name).address == balco260.get_field(name).address
