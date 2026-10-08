@@ -154,6 +154,7 @@ def test_pa030_is_ac500s_register_set_read_only_with_its_own_scales():
         "b_soc",
         "b_cell_count",
         "b_ntc_count",
+        "d_iot_ver",
     }
     assert set(pa030.field_names()) == set(ac500.field_names()) | extra
     for name in extra:

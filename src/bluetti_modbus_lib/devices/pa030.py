@@ -58,6 +58,7 @@ class PA030(BluettiDevice):
         (51221, 51221),
         (51234, 51234),
         (51235, 51235),
+        (53011, 53012),
         (57001, 57001),
         (57005, 57005),
         (57009, 57009),
@@ -334,6 +335,8 @@ class PA030(BluettiDevice):
         t=FieldType.UINT16,
         address=51235,
     )
+    d_iot_ver = dotted_version_2part(53011)
+
     ac_o_switch = field(
         t=FieldType.UINT16,
         address=57001,
