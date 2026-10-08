@@ -56,10 +56,12 @@ Notes:
 - **AC500 / EP500Pro / AC200L / Apex 300** share one register layout (the
   AC500's) with per-device scales. SOC thresholds are read-only on them;
   energies and PV fields on the AC200L and EP500Pro are carried over
-  unverified. None of them exposes per-pack data over Modbus TCP.
+  unverified. Only the Apex 300 exposes pack data over Modbus TCP.
 - **Apex 300** answered that layout in full on a real unit, and populates
-  what its cousins leave empty: the PV metadata, the energy counters, and the
-  PV2 voltage and string currents at the Balco 260's addresses. Its pack
+  what its cousins leave empty: the PV metadata, the energy counters, the
+  PV2 voltage and string currents, the inverter's and grid phase's flows, and
+  its own battery's pack block, at the Balco 260's addresses. Its totals
+  cover expansion batteries too. Its pack
   voltage is 0.01 V and its grid frequency 0.1 Hz, not AC500's 0.1 and 0.01.
   Both output switches are writable; they confirm at the Balco family's
   internal addresses (2011, 2012), not the AC family's 3008.
