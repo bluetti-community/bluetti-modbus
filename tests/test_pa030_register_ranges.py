@@ -27,7 +27,7 @@ async def test_a_unit_on_the_grid_decodes_as_its_app_shows():
     # Raw words read one register at a time from an Apex 300 charging from
     # the grid with a B500K attached (bluetti-registers#49). The app showed
     # 583 W from the grid, 18 % overall, 11 % on the unit's own pack and BMS
-    # v1073.08.
+    # v1073.08; the owner reported IoT v8026.14.
     words = {
         50006: 0x0249,
         50008: 0xFDB7,
@@ -58,6 +58,8 @@ async def test_a_unit_on_the_grid_decodes_as_its_app_shows():
         51221: 12,
         51234: 16,
         51235: 4,
+        53011: 0x3F36,
+        53012: 0x000C,
     }
     unit = MockModbusConnection().for_unit(1)
     for address in range(50001, 57020):
@@ -76,4 +78,5 @@ async def test_a_unit_on_the_grid_decodes_as_its_app_shows():
     assert values["b_type"] == "AP300"
     assert values["b_serial"] == 2551110969658
     assert values["b_ver_1"] == "1073.08"
+    assert values["d_iot_ver"] == "8026.14"
     assert values["b_soc"] == 12
