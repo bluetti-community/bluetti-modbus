@@ -428,3 +428,17 @@ async def test_other_devices_keep_their_connection_after_a_read():
     await client.read()
 
     assert mock_conn.connected is True
+
+
+@pytest.mark.asyncio
+async def test_an_smeter_read_starts_on_a_fresh_connection():
+    # Another read (a diagnostics dump, say) may have left the link open.
+    client, mock_conn = _client("smeter")
+    await mock_conn.connect()
+
+    with patch.object(
+        mock_conn, "disconnect", wraps=mock_conn.disconnect
+    ) as disconnect:
+        await client.read()
+
+    assert disconnect.await_count == 2
