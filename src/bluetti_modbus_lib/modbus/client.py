@@ -245,4 +245,10 @@ class BluettiModbusClient:
                 f"{name} is in values, so it must be a registered field"
             )
             results.append(ClientReturnValue(name=name, unit=field.unit, value=value))
+
+        # An S Meter answers its measurements only on the first read of a
+        # connection and zeros on every read after it, so each read gets a
+        # fresh one; the next request reconnects by itself.
+        if isinstance(self.device, SMeter):
+            await self.conn.disconnect()
         return results
