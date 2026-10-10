@@ -1,7 +1,7 @@
 from collections.abc import Mapping
 from typing import Any
 
-from modbus_connection import ModbusConnection
+from modbus_connection import ModbusConnection, ModbusUnit
 
 from .balco260 import Balco260
 
@@ -114,7 +114,16 @@ def battery_pack(connection: ModbusConnection, slave_id: int) -> Balco260:
     comment for how this was confirmed, and pack_is_reporting() for the one
     thing to check on the values before showing them.
     """
-    device = Balco260(connection.for_unit(slave_id))
+    return battery_pack_component(connection.for_unit(slave_id))
+
+
+def battery_pack_component(unit: ModbusUnit) -> Balco260:
+    """battery_pack() on a unit already opened at the pack's slave address.
+
+    For a caller that is handed units rather than a connection - Home
+    Assistant's shared Modbus connections give one unit per slave address.
+    """
+    device = Balco260(unit)
     device.restrict_fields(PACK_INFO_FIELDS)
     return device
 
@@ -127,6 +136,11 @@ def aggregate_pack_summary(connection: ModbusConnection) -> Balco260:
     this needs its own component at a different slave address rather than
     being part of the main Balco260 device's own read.
     """
-    device = Balco260(connection.for_unit(AGGREGATE_SLAVE_ID))
+    return aggregate_pack_summary_component(connection.for_unit(AGGREGATE_SLAVE_ID))
+
+
+def aggregate_pack_summary_component(unit: ModbusUnit) -> Balco260:
+    """aggregate_pack_summary() on a unit already opened at AGGREGATE_SLAVE_ID."""
+    device = Balco260(unit)
     device.restrict_fields(AGGREGATE_SUMMARY_FIELDS)
     return device

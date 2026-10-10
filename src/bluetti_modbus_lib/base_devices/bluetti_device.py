@@ -207,7 +207,10 @@ class BluettiDevice(Component):
           dropped right before this last failure is raised, so whichever
           request follows (a caller's own outer retry, or simply the next
           poll cycle) opens a fresh one instead of repeating into the same
-          stuck link.
+          stuck link. On a connection shared with other holders (Home
+          Assistant's), that drops it for them too; their next request
+          reconnects by itself (modbus-connection 4.12.4 and later also
+          reconnect a request that was already waiting its turn).
 
         Anything else (e.g. an illegal address/function code) is a permanent
         condition retrying can't fix, and is not retried here - callers that

@@ -9,7 +9,9 @@ from bluetti_modbus_lib.devices.battery_pack import (
     MAX_BATTERY_PACKS,
     PACK_INFO_FIELDS,
     aggregate_pack_summary,
+    aggregate_pack_summary_component,
     battery_pack,
+    battery_pack_component,
     pack_is_reporting,
     pack_slave_id,
 )
@@ -144,6 +146,32 @@ async def test_aggregate_pack_summary_reads_from_slave_250():
     summary = aggregate_pack_summary(conn)
     await summary.async_update_with_retry()
 
+    assert summary.values["d_num_battery_packs"] == 4
+
+
+@pytest.mark.asyncio
+async def test_battery_pack_component_reads_the_unit_it_is_given():
+    # A caller handed units, not a connection (Home Assistant's shared
+    # connections), opens the pack's slave address itself.
+    conn = MockModbusConnection()
+    conn.for_unit(41).holding[51221] = 85
+
+    pack = battery_pack_component(conn.for_unit(pack_slave_id(2)))
+    await pack.async_update_with_retry()
+
+    assert set(pack.field_names()) == PACK_INFO_FIELDS
+    assert pack.values["b_soc"] == 85
+
+
+@pytest.mark.asyncio
+async def test_aggregate_pack_summary_component_reads_the_unit_it_is_given():
+    conn = MockModbusConnection()
+    conn.for_unit(AGGREGATE_SLAVE_ID).holding[51001] = 4
+
+    summary = aggregate_pack_summary_component(conn.for_unit(AGGREGATE_SLAVE_ID))
+    await summary.async_update_with_retry()
+
+    assert set(summary.field_names()) == AGGREGATE_SUMMARY_FIELDS
     assert summary.values["d_num_battery_packs"] == 4
 
 
