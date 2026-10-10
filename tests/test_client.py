@@ -407,3 +407,24 @@ def test_the_client_builds_against_the_declared_dependency_floor():
 
     with patch("modbus_connection.tmodbus.ModbusConnection", _floor_connection):
         BluettiModbusClient("10.0.0.1", 502, "balco260")
+
+
+@pytest.mark.asyncio
+async def test_an_smeter_read_drops_the_connection_so_the_next_one_is_fresh():
+    # An S Meter serves its measurements only on a connection's first read.
+    client, mock_conn = _client("smeter")
+
+    await client.read()
+    assert mock_conn.connected is False
+    await client.read()
+
+    assert mock_conn.connected is False
+
+
+@pytest.mark.asyncio
+async def test_other_devices_keep_their_connection_after_a_read():
+    client, mock_conn = _client("balco260")
+
+    await client.read()
+
+    assert mock_conn.connected is True
