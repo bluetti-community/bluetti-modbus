@@ -233,6 +233,10 @@ class BluettiModbusClient:
         # fresh connection on every read is exactly the pattern that has caused
         # this device's Modbus TCP stack to become unresponsive under load in
         # the past. Call aclose() when actually done with this client.
+        # An S Meter's measurements are only right on a connection's first
+        # read (see below), so drop a link another read left open first.
+        if isinstance(self.device, SMeter) and self.conn.connected:
+            await self.conn.disconnect()
         await self.conn.connect()
 
         LOGGER.debug("Reading device data")
