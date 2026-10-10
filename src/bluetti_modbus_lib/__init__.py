@@ -17,7 +17,9 @@ from .devices import (
     Balcotrans,
     SMeter,
     aggregate_pack_summary,
+    aggregate_pack_summary_component,
     battery_pack,
+    battery_pack_component,
     get_device,
     pack_is_reporting,
     pack_slave_id,
@@ -30,7 +32,7 @@ from .enums import (
     PvType,
 )
 from .exceptions import BluettiModbusConnectionError, BluettiModbusError
-from .modbus import BluettiModbusClient
+from .modbus import BluettiModbusClient, read_values
 
 __all__ = [
     "AC200L",
@@ -57,8 +59,11 @@ __all__ = [
     "PvType",
     "SMeter",
     "aggregate_pack_summary",
+    "aggregate_pack_summary_component",
     "battery_pack",
+    "battery_pack_component",
     "get_device",
     "pack_is_reporting",
     "pack_slave_id",
+    "read_values",
 ]
