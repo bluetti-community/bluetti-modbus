@@ -45,47 +45,47 @@ class SMeter(BluettiDevice):
     ac_a_p = field(
         t=FieldType.FLOAT32,
         address=55126,
-        unit="kW",
+        unit="W",
     )
     ac_b_p = field(
         t=FieldType.FLOAT32,
         address=55128,
-        unit="kW",
+        unit="W",
     )
     ac_c_p = field(
         t=FieldType.FLOAT32,
         address=55130,
-        unit="kW",
+        unit="W",
     )
     ac_a_p_reactive = field(
         t=FieldType.FLOAT32,
         address=55132,
-        unit="kvar",
+        unit="var",
     )
     ac_b_p_reactive = field(
         t=FieldType.FLOAT32,
         address=55134,
-        unit="kvar",
+        unit="var",
     )
     ac_c_p_reactive = field(
         t=FieldType.FLOAT32,
         address=55136,
-        unit="kvar",
+        unit="var",
     )
     ac_a_p_apparent = field(
         t=FieldType.FLOAT32,
         address=55138,
-        unit="kVA",
+        unit="VA",
     )
     ac_b_p_apparent = field(
         t=FieldType.FLOAT32,
         address=55140,
-        unit="kVA",
+        unit="VA",
     )
     ac_c_p_apparent = field(
         t=FieldType.FLOAT32,
         address=55142,
-        unit="kVA",
+        unit="VA",
     )
     ac_a_pf = field(
         t=FieldType.FLOAT32,
@@ -122,17 +122,17 @@ class SMeter(BluettiDevice):
     ac_p_total = field(
         t=FieldType.FLOAT32,
         address=55158,
-        unit="kW",
+        unit="W",
     )
     ac_p_reactive_total = field(
         t=FieldType.FLOAT32,
         address=55160,
-        unit="kvar",
+        unit="var",
     )
     ac_p_apparent_total = field(
         t=FieldType.FLOAT32,
         address=55162,
-        unit="kVA",
+        unit="VA",
     )
     ac_pf_total = field(
         t=FieldType.FLOAT32,

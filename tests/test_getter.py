@@ -319,3 +319,21 @@ def test_ep2000_decodes_the_first_real_unit_as_its_app_does():
     fp = get_device("fp")
     assert fp is not None
     assert fp.get_field("b_t_avg").unit == "°C"
+
+
+def test_smeter_powers_are_in_w_var_and_va():
+    # A real S Meter serves its powers in W, var and VA: its total active
+    # power matches the W on its own web page, where the register list's kW
+    # would put a household's load at hundreds of kW.
+    smeter = get_device("smeter")
+    assert smeter is not None
+
+    units = {name: smeter.get_field(name).unit for name in smeter.field_names()}
+    for phase in ("a", "b", "c"):
+        assert units[f"ac_{phase}_p"] == "W"
+        assert units[f"ac_{phase}_p_reactive"] == "var"
+        assert units[f"ac_{phase}_p_apparent"] == "VA"
+    assert units["ac_p_total"] == "W"
+    assert units["ac_p_reactive_total"] == "var"
+    assert units["ac_p_apparent_total"] == "VA"
+    assert units["g_i_e_total"] == "kWh"
