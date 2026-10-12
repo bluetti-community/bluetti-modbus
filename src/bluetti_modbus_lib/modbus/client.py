@@ -7,6 +7,7 @@ from modbus_connection import ModbusSerialParams, ModbusTcpParams, ModbusTlsPara
 
 from ..devices import (
     AC200L,
+    AC240,
     AC500,
     EP500P,
     EP2000,
@@ -213,6 +214,7 @@ class BluettiModbusClient:
             raise ValueError(f"Unsupported device type: {device_type!r}")
         self.device: (
             AC200L
+            | AC240
             | AC500
             | FP
             | Balco260

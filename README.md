@@ -36,6 +36,7 @@ bounds with [`probatio`][probatio] before anything reaches the device.
 | FridgePower | `fp` | Confirmed on three real units ([evidence][ev-fp]) | DC output, grid charging switches |
 | Balco Transfer Hub | `balcotrans` | Confirmed on two real units against the app ([evidence][ev-hub]) | - |
 | Apex 300 | `pa030` | Confirmed on a real unit against its app ([evidence][ev-pa030]) | AC/DC output switches |
+| AC240 | `ac240` | Read on a real unit, register by register ([evidence][ev-ac240]) | AC/DC output, AC ECO, power lifting, grid charging (Custom UPS mode only) switches |
 
 Notes:
 
@@ -510,6 +511,7 @@ SOFTWARE.
 [ev-fp]: https://github.com/bluetti-community/bluetti-registers/issues/38
 [ev-hub]: https://github.com/bluetti-community/bluetti-registers/issues/29
 [ev-pa030]: https://github.com/bluetti-community/bluetti-registers/issues/49
+[ev-ac240]: https://github.com/bluetti-community/bluetti-registers/issues/65
 [bluetti-registers]: https://github.com/bluetti-community/bluetti-registers
 [build-shield]: https://github.com/bluetti-community/bluetti-modbus/actions/workflows/tests.yml/badge.svg
 [build]: https://github.com/bluetti-community/bluetti-modbus/actions/workflows/tests.yml
