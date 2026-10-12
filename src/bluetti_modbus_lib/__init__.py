@@ -2,6 +2,7 @@
 
 from .devices import (
     AC200L,
+    AC240,
     AC500,
     AGGREGATE_SLAVE_ID,
     AGGREGATE_SUMMARY_FIELDS,
@@ -36,6 +37,7 @@ from .modbus import BluettiModbusClient, read_values
 
 __all__ = [
     "AC200L",
+    "AC240",
     "AC500",
     "AGGREGATE_SLAVE_ID",
     "AGGREGATE_SUMMARY_FIELDS",

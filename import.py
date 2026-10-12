@@ -1,6 +1,6 @@
 import requests
 
-tag = "0.0.60"
+tag = "0.0.61"
 url = f"https://github.com/bluetti-community/bluetti-registers/releases/download/{tag}/modbus-tcp.json"
 
 output = "src/bluetti_modbus_lib/devices/"
@@ -89,8 +89,10 @@ SINGLE_REGISTER_TOTALS_DEVICES = {"AC500", "AC200L", "EP500P", "PA030"}
 # PA030 (the Apex 300) for the first reason again: the AC500 profile's
 # one-field blocks are exactly what read on a real unit, 31 of them without
 # an error, on a model BLUETTI's register list does not cover either
-# (bluetti-registers#49).
-ISOLATED_RANGE_DEVICES = {"AC500", "AC200L", "EP500P", "Balcotrans", "PA030"}
+# (bluetti-registers#49). AC240 for the same reason: a full single-register
+# scan of a real unit read the AC500 register set one field at a time, on a
+# model BLUETTI's list does not cover (bluetti-registers#65).
+ISOLATED_RANGE_DEVICES = {"AC500", "AC200L", "EP500P", "Balcotrans", "PA030", "AC240"}
 
 # Devices whose settings block (57001 and up) is read as runs of adjacent
 # declared registers, never bridged across an undeclared one, while the
@@ -311,9 +313,19 @@ for d in schema:
         # schema carries no writeable flag for those (EP500P overrides).
         # PA030: ac_o_switch/dc_o_switch toggled and read back on a real
         # Apex 300 (bluetti-registers#49); the SOC thresholds carry no flag.
-        if name in ("Balco260", "AC500", "AC200L", "EP500P", "FP", "PA030") and f.get(
-            "writeable"
-        ):
+        # AC240: ac_o_switch, dc_o_switch, ac_eco_switch and
+        # ac_power_lifting_switch written and read back on a real unit, and
+        # g_i_switch too, though only in the "Custom UPS" charging mode
+        # (bluetti-registers#65); the SOC thresholds carry no flag.
+        if name in (
+            "Balco260",
+            "AC500",
+            "AC200L",
+            "EP500P",
+            "FP",
+            "PA030",
+            "AC240",
+        ) and f.get("writeable"):
             if "num_min" in f and "num_max" in f:
                 uses_range = True
                 fields += (

@@ -3,6 +3,7 @@ from typing import cast
 from modbus_connection import ModbusUnit
 
 from .ac200l import AC200L
+from .ac240 import AC240
 from .ac500 import AC500
 from .balco260 import Balco260
 from .balco500 import Balco500
@@ -18,6 +19,7 @@ def get_device(
     d: str, unit: ModbusUnit | None = None
 ) -> (
     AC200L
+    | AC240
     | AC500
     | FP
     | Balco260
@@ -52,6 +54,8 @@ def get_device(
         return FP(unit)
     if d == "pa030":
         return PA030(unit)
+    if d == "ac240":
+        return AC240(unit)
     if d == "smeter":
         return SMeter(unit)
     else:

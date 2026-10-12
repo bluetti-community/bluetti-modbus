@@ -1,5 +1,6 @@
 from bluetti_modbus_lib.devices import (
     AC200L,
+    AC240,
     AC500,
     EP500P,
     EP2000,
@@ -43,6 +44,10 @@ def test_get_device_fp():
 
 def test_get_device_pa030():
     assert isinstance(get_device("pa030"), PA030)
+
+
+def test_get_device_ac240():
+    assert isinstance(get_device("ac240"), AC240)
 
 
 def test_fp_is_the_full_balco_set_plus_dc_switch_read_only():
