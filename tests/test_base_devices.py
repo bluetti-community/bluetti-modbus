@@ -640,6 +640,33 @@ async def test_write_knows_the_pa030_switch_echoes(caplog):
 
 
 @pytest.mark.asyncio
+async def test_write_knows_the_ac240_switch_echoes(caplog):
+    # Captured on a real AC240 (bluetti-registers#65): the DC output and
+    # grid charging switches confirm at the AC family's 3008 / 3011, power
+    # lifting and AC ECO at 3066 / 3063. On file, so debug.
+    from bluetti_modbus_lib.devices import AC240
+
+    for field_name, address, echo in (
+        ("dc_o_switch", 57005, 3008),
+        ("g_i_switch", 57009, 3011),
+        ("ac_power_lifting_switch", 57022, 3066),
+        ("ac_eco_switch", 57024, 3063),
+    ):
+        device = AC240(MockModbusConnection().for_unit(1))
+        device.modbus_unit.write_register = AsyncMock(  # type: ignore[method-assign]
+            side_effect=_mismatched_confirmation(6, echo, 1)
+        )
+        with caplog.at_level(logging.DEBUG, logger="bluetti_modbus_lib"):
+            await device.write(field_name, 1)  # must not raise
+
+        assert (
+            f"{field_name} ({address}) confirmed at internal register {echo}"
+            in caplog.text
+        )
+    assert not [r for r in caplog.records if r.levelno >= logging.WARNING]
+
+
+@pytest.mark.asyncio
 async def test_write_knows_the_fp_switch_echoes(caplog):
     # Captured on a real FridgePower (bluetti-registers#38, 2026-09-21): the
     # DC output switch confirms at 2012 and the grid charging switch at 2207
