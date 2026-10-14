@@ -64,6 +64,7 @@ _INTERNAL_WRITE_ADDRESS: dict[str, dict[int, int]] = {
         57005: 2012,  # dc_o_switch - DC_SWITCH, the Balco family's, not 3008
     },
     "AC240": {
+        57001: 3007,  # ac_o_switch - captured on a real AC240 (AC_SWITCH)
         57005: 3008,  # dc_o_switch - captured on a real AC240, as on the AC200L
         57009: 3011,  # g_i_switch - captured on a real AC240, as on the EP500Pro
         57022: 3066,  # ac_power_lifting_switch - captured on a real AC240
