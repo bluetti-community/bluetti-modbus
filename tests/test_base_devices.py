@@ -641,12 +641,14 @@ async def test_write_knows_the_pa030_switch_echoes(caplog):
 
 @pytest.mark.asyncio
 async def test_write_knows_the_ac240_switch_echoes(caplog):
-    # Captured on a real AC240 (bluetti-registers#65): the DC output and
-    # grid charging switches confirm at the AC family's 3008 / 3011, power
-    # lifting and AC ECO at 3066 / 3063. On file, so debug.
+    # Captured on a real AC240 (bluetti-registers#65, and its owner's
+    # Home Assistant log): the AC and DC output and grid charging switches
+    # confirm at the AC family's 3007 / 3008 / 3011, power lifting and AC
+    # ECO at 3066 / 3063. On file, so debug.
     from bluetti_modbus_lib.devices import AC240
 
     for field_name, address, echo in (
+        ("ac_o_switch", 57001, 3007),
         ("dc_o_switch", 57005, 3008),
         ("g_i_switch", 57009, 3011),
         ("ac_power_lifting_switch", 57022, 3066),
