@@ -272,7 +272,8 @@ from the mDNS *service name* ("Bluetti HEMS") that discovery actually matches on
    **WS** (WebSocket).
 2. Log in (`admin`; the password is the device's Bluetooth password set in the BLUETTI app - blank
    if you never set one - not your app account password). A single
-   WebSocket connection appears in the list, to `ws://<device-ip>/8`. Click it, then open its
+   WebSocket connection appears in the list, to `ws://<device-ip>/8` or `ws://<device-ip>/ws`
+   depending on the firmware. Click it, then open its
    **Messages** tab (Firefox: **Response**).
 3. Walk through the page - the network status page, Settings → Modbus TCP, the firmware/about
    page. Each screen sends a request like `{"type": "getConfig", "data": {}}` and gets a
@@ -281,6 +282,10 @@ from the mDNS *service name* ("Bluetti HEMS") that discovery actually matches on
      integration checks before offering a discovered S Meter)
    - `getVersionRsp` → `data.firmwares[].version`
    - `getNetworkStatusRsp` → `data.mdns_hostname`, plus IP/MAC details (Balco 260: confirmed)
+   - FridgePower, on `/ws`: a `login` message (`{"username": "admin", "password": ""}`) answered
+     by `loginRsp`, then `getDevicesInfo` → `device_info` (model, version, serial) and
+     `getMonitorInfo` → `monitorInfo` (live readings as `group`/`name`/`value`/`unit` records)
+     ([freakdesign/bluetti-fridgepower-local](https://github.com/freakdesign/bluetti-fridgepower-local))
 
    On a Balco 260 the connection needs the token the page obtains at login - which is why you
    log in through the page rather than scripting it; the S Meter answers without any.
