@@ -314,6 +314,13 @@ def test_ep2000_decodes_the_first_real_unit_as_its_app_does():
     balco260 = get_device("balco260")
     assert balco260 is not None
     assert balco260.get_field("b_c").convert is not None
+    # The Balco 500's is a plain unsigned 0.1 A value: raw 265 is the 26.5 A
+    # of b_c_total while charging (the offset made it 2973.5 A).
+    balco500_b_c = get_device("balco500").get_field("b_c")
+    assert balco500_b_c.convert is None
+    assert balco500_b_c.scale == 0.1
+    assert not balco500_b_c.signed
+    assert balco500_b_c.decode([265]) == 26.5
     # Two MPPTs, reported as PV1 and PV2; the next slots read impossible
     # values (0 V, 132 W, 2300+ A). The pack temperature is degrees C plus 40.
     names = set(ep2000.field_names())
