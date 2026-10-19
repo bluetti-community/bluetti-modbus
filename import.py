@@ -223,6 +223,12 @@ NIBBLE_FIELDS = {"pv_dc_count": False, "pv_ac_count": True}
 # just stops serving real data after the tenth register of a block.
 MAX_SPAN_OVERRIDES = {"Balco260": 20, "FP": 20, "Balcotrans": 10}
 
+# Devices on which only some of the fields the schema declares writeable
+# have taken a write on real hardware; the others stay read-only. EP2000:
+# the grid feed-in switch (57010) confirmed a same-value write, then 1 -> 0
+# and back, each read back (bluetti-registers#42).
+WRITABLE_FIELDS_ONLY = {"EP2000": {"g_o_switch"}}
+
 for d in schema:
     name = d["name"]
     file_name = str(name).lower() + ".py"
@@ -325,7 +331,11 @@ for d in schema:
             "FP",
             "PA030",
             "AC240",
-        ) and f.get("writeable"):
+        ) or f["name"] in WRITABLE_FIELDS_ONLY.get(name, set()):
+            writable = bool(f.get("writeable"))
+        else:
+            writable = False
+        if writable:
             if "num_min" in f and "num_max" in f:
                 uses_range = True
                 fields += (
