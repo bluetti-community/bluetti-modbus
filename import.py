@@ -180,8 +180,10 @@ REFERENCE_OFFSET_CURRENT_FIELDS = {"b_c": 30000}
 # (signed on the EP2000), not the Balco family's offset: 51220 read 230
 # against a b_c_total of 23.0 A on one real EP2000, 62 against 6.3 A and
 # 65518 (-1.8 A, discharging) against 2.0 A on another
-# (bluetti-registers#42, hassio-bluetti-modbus#145).
-REFERENCE_OFFSET_CURRENT_EXEMPT = {"EP2000"}
+# (bluetti-registers#42, hassio-bluetti-modbus#145). Balco500: unsigned,
+# 51220 read 8, 265 and 508 against a b_c_total of 0.4, 26.5 and 50.3 A,
+# idle, charging and discharging (bluetti-registers#68).
+REFERENCE_OFFSET_CURRENT_EXEMPT = {"EP2000", "Balco500"}
 
 # Single documented bit inside an otherwise-"reserved" register - see
 # bit_flag()'s own docstring. d_status (55111, S Meter): bit0/1 reserved,
