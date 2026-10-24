@@ -35,7 +35,7 @@ bounds with [`probatio`][probatio] before anything reaches the device.
 | EP500Pro | `ep500p` | Confirmed on two real units ([evidence][ev-ep500p]) | AC/DC output, grid charging switches |
 | FridgePower | `fp` | Confirmed on three real units ([evidence][ev-fp]) | DC output, grid charging switches |
 | Balco Transfer Hub | `balcotrans` | Confirmed on two real units against the app ([evidence][ev-hub]) | - |
-| Apex 300 | `pa030` | Confirmed on a real unit against its app ([evidence][ev-pa030]) | AC/DC output switches |
+| Apex 300 | `pa030` | Confirmed on a real unit against its app ([evidence][ev-pa030]) | AC/DC output and grid charging switches |
 | AC240 | `ac240` | Read on a real unit, register by register ([evidence][ev-ac240]) | AC/DC output, AC ECO, power lifting, grid charging (Custom UPS mode only) switches |
 
 Notes:
