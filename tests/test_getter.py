@@ -125,8 +125,9 @@ def test_pa030_is_ac500s_register_set_read_only_with_its_own_scales():
     # and read back on real units.
     # A unit on the grid also fills the inverter's and the grid phase's flow
     # registers, the totals' health, status and time to full, and the pack
-    # block for its own battery, all at the Balco 260's addresses.
-    # Catches the generated file drifting from that.
+    # block for its own battery, all at the Balco 260's addresses. A
+    # split-phase unit adds the AC output per leg and the inverter's second
+    # leg, at the same addresses. Catches the generated file drifting from that.
     ac500 = get_device("ac500")
     balco260 = get_device("balco260")
     pa030 = get_device("pa030")
@@ -161,6 +162,16 @@ def test_pa030_is_ac500s_register_set_read_only_with_its_own_scales():
         "b_cell_count",
         "b_ntc_count",
         "d_iot_ver",
+        "ac_phase_count",
+        "ac_1_o_p",
+        "ac_1_o_v",
+        "ac_1_o_c",
+        "ac_2_o_p",
+        "ac_2_o_v",
+        "ac_2_o_c",
+        "d_inverter_2_status",
+        "d_inverter_2_v",
+        "d_inverter_2_c",
     }
     assert set(pa030.field_names()) == set(ac500.field_names()) | extra
     for name in extra:

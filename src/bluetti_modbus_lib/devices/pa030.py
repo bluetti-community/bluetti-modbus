@@ -30,11 +30,21 @@ class PA030(BluettiDevice):
         (50235, 50235),
         (50236, 50236),
         (50237, 50237),
+        (50244, 50244),
+        (50245, 50245),
+        (50246, 50246),
+        (50247, 50247),
+        (50248, 50248),
+        (50249, 50249),
+        (50250, 50250),
         (50254, 50254),
         (50255, 50255),
         (50256, 50256),
         (50257, 50257),
         (50258, 50258),
+        (50259, 50259),
+        (50261, 50261),
+        (50262, 50262),
         (50267, 50267),
         (50268, 50268),
         (50269, 50269),
@@ -195,6 +205,44 @@ class PA030(BluettiDevice):
         unit="A",
         scale=0.1,
     )
+    ac_phase_count = field(
+        t=FieldType.UINT16,
+        address=50244,
+    )
+    ac_1_o_p = field(
+        t=FieldType.UINT16,
+        address=50245,
+        unit="W",
+    )
+    ac_1_o_v = field(
+        t=FieldType.UINT16,
+        address=50246,
+        unit="V",
+        scale=0.1,
+    )
+    ac_1_o_c = field(
+        t=FieldType.UINT16,
+        address=50247,
+        unit="A",
+        scale=0.1,
+    )
+    ac_2_o_p = field(
+        t=FieldType.UINT16,
+        address=50248,
+        unit="W",
+    )
+    ac_2_o_v = field(
+        t=FieldType.UINT16,
+        address=50249,
+        unit="V",
+        scale=0.1,
+    )
+    ac_2_o_c = field(
+        t=FieldType.UINT16,
+        address=50250,
+        unit="A",
+        scale=0.1,
+    )
     d_inverter_phase_count = field(
         t=FieldType.UINT16,
         address=50254,
@@ -219,6 +267,23 @@ class PA030(BluettiDevice):
     d_inverter_1_c = field(
         t=FieldType.UINT16,
         address=50258,
+        unit="A",
+        scale=0.1,
+    )
+    d_inverter_2_status = field(
+        t=FieldType.ENUM,
+        address=50259,
+        enum_type=InverterStatus,
+    )
+    d_inverter_2_v = field(
+        t=FieldType.UINT16,
+        address=50261,
+        unit="V",
+        scale=0.1,
+    )
+    d_inverter_2_c = field(
+        t=FieldType.UINT16,
+        address=50262,
         unit="A",
         scale=0.1,
     )
