@@ -624,6 +624,7 @@ async def test_write_knows_the_pa030_switch_echoes(caplog):
     for field_name, address, echo in (
         ("ac_o_switch", 57001, 2011),
         ("dc_o_switch", 57005, 2012),
+        ("g_i_switch", 57009, 2207),
     ):
         device = PA030(MockModbusConnection().for_unit(1))
         device.modbus_unit.write_register = AsyncMock(  # type: ignore[method-assign]

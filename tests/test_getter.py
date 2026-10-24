@@ -121,7 +121,8 @@ def test_pa030_is_ac500s_register_set_read_only_with_its_own_scales():
     # addresses (hassio-bluetti-modbus#143). Its own scales: the pack voltage
     # is 0.01 (raw 5339 is 53.39 V on a 51.2 V 16S LFP pack, not 533.9 V) and
     # the grid frequency the generic 0.1 (raw 500 on the mains). The two output
-    # switches are the writable fields: toggled and read back on that unit.
+    # switches and the grid charging switch are the writable fields: toggled
+    # and read back on real units.
     # A unit on the grid also fills the inverter's and the grid phase's flow
     # registers, the totals' health, status and time to full, and the pack
     # block for its own battery, all at the Balco 260's addresses.
@@ -176,6 +177,7 @@ def test_pa030_is_ac500s_register_set_read_only_with_its_own_scales():
     assert {n for n in pa030.field_names() if pa030.get_field(n).writable} == {
         "ac_o_switch",
         "dc_o_switch",
+        "g_i_switch",
     }
 
 
