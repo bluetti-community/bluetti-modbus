@@ -80,3 +80,46 @@ async def test_a_unit_on_the_grid_decodes_as_its_app_shows():
     assert values["b_ver_1"] == "1073.08"
     assert values["d_iot_ver"] == "8026.14"
     assert values["b_soc"] == 12
+
+
+@pytest.mark.asyncio
+async def test_a_split_phase_unit_reports_both_legs():
+    # Raw words read one register at a time from a 120/240 V Apex 300 with a
+    # load on both legs (bluetti-registers#49): the two AC output legs add
+    # up to the 577 W total the unit reported at the same time.
+    words = {
+        50002: 576,
+        50244: 2,
+        50245: 455,
+        50246: 1227,
+        50247: 44,
+        50248: 122,
+        50249: 1208,
+        50250: 12,
+        50254: 2,
+        50255: 3,
+        50259: 1,
+        50261: 1212,
+        50262: 12,
+    }
+    unit = MockModbusConnection().for_unit(1)
+    for address in range(50001, 57020):
+        unit.holding[address] = words.get(address, 0)
+    device = PA030(unit)
+
+    await device.async_update_with_retry()
+
+    values = device.values
+    assert values["ac_phase_count"] == 2
+    assert (values["ac_1_o_p"], values["ac_1_o_v"], values["ac_1_o_c"]) == (
+        455,
+        122.7,
+        4.4,
+    )
+    assert (values["ac_2_o_p"], values["ac_2_o_v"], values["ac_2_o_c"]) == (
+        122,
+        120.8,
+        1.2,
+    )
+    assert values["d_inverter_2_status"].name == "OffGrid"
+    assert (values["d_inverter_2_v"], values["d_inverter_2_c"]) == (121.2, 1.2)
