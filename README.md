@@ -72,6 +72,7 @@ Notes:
   feed-in switches are untried.
 - `AC200L`, `EP500P`, `FP` and `PA030` are named after the type string the
   device itself gives at register 50200.
+- An AC240P reads with the `ac240` profile ([evidence][ev-ac240p]).
 
 Field names, units and addresses come from
 [bluetti-registers][bluetti-registers]: every `devices/*.py` is generated
@@ -511,6 +512,7 @@ SOFTWARE.
 [ev-fp]: https://github.com/bluetti-community/bluetti-registers/issues/38
 [ev-hub]: https://github.com/bluetti-community/bluetti-registers/issues/29
 [ev-pa030]: https://github.com/bluetti-community/bluetti-registers/issues/49
+[ev-ac240p]: https://github.com/bluetti-community/bluetti-registers/issues/67
 [ev-ac240]: https://github.com/bluetti-community/bluetti-registers/issues/65
 [bluetti-registers]: https://github.com/bluetti-community/bluetti-registers
 [build-shield]: https://github.com/bluetti-community/bluetti-modbus/actions/workflows/tests.yml/badge.svg
