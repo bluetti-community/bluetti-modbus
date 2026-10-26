@@ -415,7 +415,6 @@ class PA030(BluettiDevice):
     g_i_switch = field(
         t=FieldType.UINT16,
         address=57009,
-        writable=True,
     )
     b_soc_low = field(
         t=FieldType.UINT16,

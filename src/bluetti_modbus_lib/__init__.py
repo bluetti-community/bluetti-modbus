@@ -26,6 +26,8 @@ from .devices import (
     pack_slave_id,
 )
 from .enums import (
+    FAULT_DESCRIPTIONS,
+    WARNING_DESCRIPTIONS,
     InverterFault,
     InverterStatus,
     InverterWarning,
@@ -44,10 +46,12 @@ __all__ = [
     "EP500P",
     "EP2000",
     "EXPANSION_PACK_FIRST_SLAVE_ID",
+    "FAULT_DESCRIPTIONS",
     "FP",
     "MAX_BATTERY_PACKS",
     "PA030",
     "PACK_INFO_FIELDS",
+    "WARNING_DESCRIPTIONS",
     "Balco260",
     "Balco500",
     "Balcotrans",

@@ -624,7 +624,6 @@ async def test_write_knows_the_pa030_switch_echoes(caplog):
     for field_name, address, echo in (
         ("ac_o_switch", 57001, 2011),
         ("dc_o_switch", 57005, 2012),
-        ("g_i_switch", 57009, 2207),
     ):
         device = PA030(MockModbusConnection().for_unit(1))
         device.modbus_unit.write_register = AsyncMock(  # type: ignore[method-assign]
@@ -637,6 +636,23 @@ async def test_write_knows_the_pa030_switch_echoes(caplog):
             f"{field_name} ({address}) confirmed at internal register {echo}"
             in caplog.text
         )
+    assert not [r for r in caplog.records if r.levelno >= logging.WARNING]
+
+
+@pytest.mark.asyncio
+async def test_write_knows_the_ac500_ac_switch_echo(caplog):
+    # Captured on a real AC500 (a Home Assistant log): the AC output switch
+    # confirms at 3007, as on the AC240. On file, so debug.
+    from bluetti_modbus_lib.devices import AC500
+
+    device = AC500(MockModbusConnection().for_unit(1))
+    device.modbus_unit.write_register = AsyncMock(  # type: ignore[method-assign]
+        side_effect=_mismatched_confirmation(6, 3007, 1)
+    )
+    with caplog.at_level(logging.DEBUG, logger="bluetti_modbus_lib"):
+        await device.write("ac_o_switch", 1)  # must not raise
+
+    assert "ac_o_switch (57001) confirmed at internal register 3007" in caplog.text
     assert not [r for r in caplog.records if r.levelno >= logging.WARNING]
 
 
