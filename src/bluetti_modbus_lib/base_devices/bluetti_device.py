@@ -51,6 +51,9 @@ _INTERNAL_WRITE_ADDRESS: dict[str, dict[int, int]] = {
     "AC200L": {
         57005: 3008,  # dc_o_switch - captured on a real AC200L
     },
+    "AC500": {
+        57001: 3007,  # ac_o_switch - captured on a real AC500, as on the AC240
+    },
     "EP500P": {
         57005: 3008,  # dc_o_switch - captured on a real EP500Pro
         57009: 3011,  # g_i_switch - captured on a real EP500Pro

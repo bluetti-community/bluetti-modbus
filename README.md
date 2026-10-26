@@ -22,6 +22,13 @@ accept writes for (output switches, SOC thresholds - see the table) support
 `await device.write(field_name, value)`, validated against the schema's own
 bounds with [`probatio`][probatio] before anything reaches the device.
 
+The inverter's fault (`d_inverter_fault`, 50027-50031) and warning
+(`d_inverter_warning`, 50023-50026) registers decode as flags, one per
+BLUETTI E code from its [fault and alarm table][fault-table]:
+`[code.name for code in values["d_inverter_fault"]]` lists the active codes
+(`["E012"]`), and `FAULT_DESCRIPTIONS` / `WARNING_DESCRIPTIONS` give their
+meaning.
+
 ## Supported devices
 
 | Device | `get_device()` id | Status | Writable |
@@ -35,7 +42,7 @@ bounds with [`probatio`][probatio] before anything reaches the device.
 | EP500Pro | `ep500p` | Confirmed on two real units ([evidence][ev-ep500p]) | AC/DC output, grid charging switches |
 | FridgePower | `fp` | Confirmed on three real units ([evidence][ev-fp]) | DC output, grid charging switches |
 | Balco Transfer Hub | `balcotrans` | Confirmed on two real units against the app ([evidence][ev-hub]) | - |
-| Apex 300 | `pa030` | Confirmed on a real unit against its app ([evidence][ev-pa030]) | AC/DC output and grid charging switches |
+| Apex 300 | `pa030` | Confirmed on a real unit against its app ([evidence][ev-pa030]) | AC/DC output switches |
 | AC240 | `ac240` | Read on a real unit, register by register ([evidence][ev-ac240]) | AC/DC output, AC ECO, power lifting, grid charging (Custom UPS mode only) switches |
 
 Notes:
@@ -512,6 +519,7 @@ SOFTWARE.
 [ev-fp]: https://github.com/bluetti-community/bluetti-registers/issues/38
 [ev-hub]: https://github.com/bluetti-community/bluetti-registers/issues/29
 [ev-pa030]: https://github.com/bluetti-community/bluetti-registers/issues/49
+[fault-table]: https://github.com/bluetti-official/bluetti-modbus-tcp-slave/blob/b96ba38ebd8306dd76c9eeb3951983643538c2f1/doc/Bluetti-Modbus-Open-Protocol-Fault-and-Alarm-Table.xlsx
 [ev-ac240p]: https://github.com/bluetti-community/bluetti-registers/issues/67
 [ev-ac240]: https://github.com/bluetti-community/bluetti-registers/issues/65
 [bluetti-registers]: https://github.com/bluetti-community/bluetti-registers

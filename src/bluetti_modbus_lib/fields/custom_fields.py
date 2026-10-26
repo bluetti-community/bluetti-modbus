@@ -1,10 +1,11 @@
-from enum import Enum, unique
+from enum import Enum, IntFlag, unique
 from typing import Any
 
 from modbus_connection.model import (
     RegisterField,
     WriteValidator,
     enum,
+    flags,
     float32,
     int32,
     uint32,
@@ -321,6 +322,11 @@ def field(
             # FieldType.ENUM - the None default only exists because the
             # other FieldTypes don't use this parameter at all.
             assert enum_type is not None, "FieldType.ENUM requires enum_type"
+            # A bit field (the inverter fault and warning registers): every
+            # set bit is its own code, so the words decode as a combination
+            # of flags rather than one member.
+            if issubclass(enum_type, IntFlag):
+                return flags(address, enum_type, count=count, word_order="little")
             # writable passed through like every other branch: an enum is
             # how a mode/selector register is declared, and bluetti-registers
             # marks those writeable (helpers.py gives any `*_mode` field
