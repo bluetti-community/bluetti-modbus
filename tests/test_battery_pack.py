@@ -15,6 +15,7 @@ from bluetti_modbus_lib.devices.battery_pack import (
     pack_is_reporting,
     pack_slave_id,
 )
+from bluetti_modbus_lib.enums.pack_charging_status import PackChargingStatus
 
 
 def test_max_battery_packs_is_five():
@@ -175,6 +176,32 @@ async def test_aggregate_pack_summary_component_reads_the_unit_it_is_given():
     assert summary.values["d_num_battery_packs"] == 4
 
 
+@pytest.mark.asyncio
+async def test_aggregate_pack_summary_decodes_a_real_four_pack_read():
+    # 51001-51008 as a Balco260 with three BC260 packs answered them at
+    # the aggregate slave, idle at full charge.
+    conn = MockModbusConnection()
+    unit = conn.for_unit(AGGREGATE_SLAVE_ID)
+    for address, raw in zip(
+        range(51001, 51009), [4, 265, 8, 100, 98, 0, 0, 45600], strict=True
+    ):
+        unit.holding[address] = raw
+
+    summary = aggregate_pack_summary_component(unit)
+    await summary.async_update_with_retry()
+
+    assert summary.values == {
+        "d_num_battery_packs": 4,
+        "b_v_total": pytest.approx(26.5),
+        "b_c_total": pytest.approx(0.8),
+        "b_soc_total": 100,
+        "b_soh_total": 98,
+        "b_status": PackChargingStatus.Idle,
+        "b_time_to_full_total": 0,
+        "b_time_to_empty_total": 45600,
+    }
+
+
 def test_a_reporting_pack_has_its_type_string_and_a_voltage():
     # Slot 42 of a Balco260 with three BC260 packs (2026-09-18, #55).
     assert pack_is_reporting(
@@ -184,12 +211,12 @@ def test_a_reporting_pack_has_its_type_string_and_a_voltage():
 
 def test_a_silent_pack_answers_its_serial_number_and_zeros():
     # Slot 41 of that same unit: the inverter knows the pack, the pack
-    # reports nothing - and b_c's raw 0 would decode to 3000 A.
+    # reports nothing - b_c's raw 0 decodes to None.
     values = {
         "b_type": "",
         "b_serial": 2615112301352,
         "b_v": 0.0,
-        "b_c": 3000.0,
+        "b_c": None,
         "b_soc": 0,
     }
     assert not pack_is_reporting(values)

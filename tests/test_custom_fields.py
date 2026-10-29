@@ -180,6 +180,14 @@ def test_reference_offset_current_decodes_magnitude_around_the_reference():
     assert reg.decode([30000]) == 0
 
 
+def test_reference_offset_current_raw_zero_is_unknown():
+    # A reporting BC260 pack (BC260, 26.6 V, SOC 100) sent a raw 0, which
+    # would otherwise decode to 3000 A.
+    reg = reference_offset_current(51220, reference=30000)
+
+    assert reg.decode([0]) is None
+
+
 def test_dotted_version_decodes_major_minor_patch():
     # Raw values captured from a real Balco 260 (registers 51211 - BMS - and
     # 53011 - IoT module), both matching what the BLUETTI app shows for the
