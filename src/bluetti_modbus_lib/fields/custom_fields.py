@@ -125,10 +125,14 @@ def reference_offset_current(
     below the reference mean discharging, above mean charging, but only the
     magnitude is available at this register - the direction isn't encoded
     here (see https://github.com/bluetti-community/bluetti-modbus/issues/8).
+
+    A raw 0 decodes to None: it would read as 3000 A, and a BC260 pack that
+    reports its type, voltage and SOC was seen sending it.
     """
     return NumberField(
         address,
         convert=lambda raw: abs(raw - reference) * 0.1,
+        nan=0,
         word_order="little",
         unit=unit,
     )

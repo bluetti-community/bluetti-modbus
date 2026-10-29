@@ -95,8 +95,7 @@ def pack_is_reporting(values: Mapping[str, Any]) -> bool:
     serial number but reports nothing else: type string empty, voltage,
     SOC, SOH, cycle count, versions and energies all 0 - a firmware issue
     BLUETTI has confirmed and plans to fix. Such a slot must not be shown
-    as "0 %, 0 V" (or, worse, as 3000 A: b_c's raw 0 is 30000 below its
-    reference); a consumer treats it as absent until it reports. A
+    as "0 %, 0 V"; a consumer treats it as absent until it reports. A
     reporting pack always has its type string and a non-zero voltage.
     """
     return bool(values.get("b_type")) or bool(values.get("b_v"))
