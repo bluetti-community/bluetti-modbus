@@ -188,6 +188,7 @@ def test_pa030_is_ac500s_register_set_read_only_with_its_own_scales():
     assert {n for n in pa030.field_names() if pa030.get_field(n).writable} == {
         "ac_o_switch",
         "dc_o_switch",
+        "g_i_switch",
     }
 
 

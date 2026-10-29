@@ -4,6 +4,7 @@ from typing import Any
 from modbus_connection import ModbusConnection, ModbusUnit
 
 from .balco260 import Balco260
+from .fp import FP
 
 # BLUETTI confirmed by email (2026-08-29, to the maintainer) that b_soc/b_soh
 # (51221/51222) are per-pack values, read "using the corresponding slave
@@ -142,4 +143,41 @@ def aggregate_pack_summary_component(unit: ModbusUnit) -> Balco260:
     """aggregate_pack_summary() on a unit already opened at AGGREGATE_SLAVE_ID."""
     device = Balco260(unit)
     device.restrict_fields(AGGREGATE_SUMMARY_FIELDS)
+    return device
+
+
+# A FridgePower with one BC200 (bluetti-registers#38) answered the "Each Pack
+# Base Information" block at units 1, 41, 42 and 43: 1 and 41 are the
+# built-in battery (type "FP", same voltage and SOC), but only 41 carries its
+# cycle count and energies - 1 reads 0 for them, as it did on every
+# FridgePower read so far; 42 is the BC200 (type "BC200", its own serial,
+# firmware, SOC, cycles and energies, its voltage within 0.03 V of the
+# built-in battery's); 43, an empty slot, reads all zeros, serial included.
+# d_num_battery_packs, read at the device's own unit, counts both: 2.
+FP_BUILT_IN_PACK_SLAVE_ID = 41
+
+
+def fp_pack_slave_id(pack_num: int) -> int:
+    """The Modbus slave address of a FridgePower's battery pack pack_num.
+
+    Pack 1 is the built-in battery, at FP_BUILT_IN_PACK_SLAVE_ID; pack 2 is
+    the first BC200, at the next address, and so on - the numbering
+    d_num_battery_packs counts in. Bounded like pack_slave_id(); only packs
+    1 and 2 have been seen on real hardware.
+    """
+    if not 1 <= pack_num <= MAX_BATTERY_PACKS + 1:
+        msg = f"pack_num must be 1..{MAX_BATTERY_PACKS + 1}, got {pack_num}"
+        raise ValueError(msg)
+    return FP_BUILT_IN_PACK_SLAVE_ID + pack_num - 1
+
+
+def fp_battery_pack_component(unit: ModbusUnit) -> FP:
+    """A FridgePower component restricted to one pack's own registers.
+
+    The same fields as battery_pack_component(), decoded with the
+    FridgePower's own scales (0.01 V), on a unit opened at fp_pack_slave_id().
+    pack_is_reporting() tells a filled slot from an empty one.
+    """
+    device = FP(unit)
+    device.restrict_fields(PACK_INFO_FIELDS)
     return device

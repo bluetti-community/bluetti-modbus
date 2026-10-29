@@ -7,6 +7,7 @@ from .balcotrans import Balcotrans as Balcotrans
 from .battery_pack import AGGREGATE_SLAVE_ID as AGGREGATE_SLAVE_ID
 from .battery_pack import AGGREGATE_SUMMARY_FIELDS as AGGREGATE_SUMMARY_FIELDS
 from .battery_pack import EXPANSION_PACK_FIRST_SLAVE_ID as EXPANSION_PACK_FIRST_SLAVE_ID
+from .battery_pack import FP_BUILT_IN_PACK_SLAVE_ID as FP_BUILT_IN_PACK_SLAVE_ID
 from .battery_pack import MAX_BATTERY_PACKS as MAX_BATTERY_PACKS
 from .battery_pack import PACK_INFO_FIELDS as PACK_INFO_FIELDS
 from .battery_pack import aggregate_pack_summary as aggregate_pack_summary
@@ -15,6 +16,8 @@ from .battery_pack import (
 )
 from .battery_pack import battery_pack as battery_pack
 from .battery_pack import battery_pack_component as battery_pack_component
+from .battery_pack import fp_battery_pack_component as fp_battery_pack_component
+from .battery_pack import fp_pack_slave_id as fp_pack_slave_id
 from .battery_pack import pack_is_reporting as pack_is_reporting
 from .battery_pack import pack_slave_id as pack_slave_id
 from .ep500p import EP500P as EP500P

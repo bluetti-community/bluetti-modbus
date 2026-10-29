@@ -618,12 +618,14 @@ async def test_write_reraises_for_a_field_that_does_not_exist():
 @pytest.mark.asyncio
 async def test_write_knows_the_pa030_switch_echoes(caplog):
     # Captured on a real Apex 300 (bluetti-registers#49): the output switches
-    # confirm at the Balco family's 2011 / 2012, not the AC family's 3008.
+    # and the grid charging switch confirm at the Balco family's 2011 / 2012 /
+    # 2207, not the AC family's 3008.
     from bluetti_modbus_lib.devices import PA030
 
     for field_name, address, echo in (
         ("ac_o_switch", 57001, 2011),
         ("dc_o_switch", 57005, 2012),
+        ("g_i_switch", 57009, 2207),
     ):
         device = PA030(MockModbusConnection().for_unit(1))
         device.modbus_unit.write_register = AsyncMock(  # type: ignore[method-assign]

@@ -42,7 +42,7 @@ meaning.
 | EP500Pro | `ep500p` | Confirmed on two real units ([evidence][ev-ep500p]) | AC/DC output, grid charging switches |
 | FridgePower | `fp` | Confirmed on three real units ([evidence][ev-fp]) | DC output, grid charging switches |
 | Balco Transfer Hub | `balcotrans` | Confirmed on two real units against the app ([evidence][ev-hub]) | - |
-| Apex 300 | `pa030` | Confirmed on a real unit against its app ([evidence][ev-pa030]) | AC/DC output switches |
+| Apex 300 | `pa030` | Confirmed on a real unit against its app ([evidence][ev-pa030]) | AC/DC output, grid charging (Custom working mode only) switches |
 | AC240 | `ac240` | Read on a real unit, register by register ([evidence][ev-ac240]) | AC/DC output, AC ECO, power lifting, grid charging (Custom UPS mode only) switches |
 
 Notes:
@@ -210,7 +210,21 @@ firmware issue BLUETTI has acknowledged). `pack_is_reporting(values)` tells
 a reporting pack from such a slot; while it is False, treat the pack as
 absent rather than as "0 %, 0 V".
 
-These helpers are Balco 260 only. On the AC500, EP500Pro and AC200L,
+A FridgePower numbers its packs the same way from a different start: pack 1,
+the built-in battery, also answers at `FP_BUILT_IN_PACK_SLAVE_ID` (41), and
+only there with its cycle count and energies (they read 0 at the device's own
+unit id); BC200 packs follow at 42 and up. `fp_pack_slave_id()` and
+`fp_battery_pack_component()` are the FridgePower's counterparts, decoding
+with its own scales:
+
+```python
+from bluetti_modbus_lib import fp_battery_pack_component, fp_pack_slave_id
+
+bc200 = fp_battery_pack_component(connection.for_unit(fp_pack_slave_id(2)))
+await bc200.async_update_with_retry()
+```
+
+These helpers cover the Balco 260 and the FridgePower. On the AC500, EP500Pro and AC200L,
 `d_num_battery_packs` is a fixed maximum, not a count, and registers
 51200-51249 are a window onto whichever pack the BLUETTI app has selected -
 the selector is not reachable over Modbus TCP, so per-pack data cannot be
