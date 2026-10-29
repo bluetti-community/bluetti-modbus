@@ -1,17 +1,20 @@
 import pytest
 from modbus_connection.mock import MockModbusConnection
 
-from bluetti_modbus_lib.devices import Balco260
+from bluetti_modbus_lib.devices import FP, Balco260
 from bluetti_modbus_lib.devices.battery_pack import (
     AGGREGATE_SLAVE_ID,
     AGGREGATE_SUMMARY_FIELDS,
     EXPANSION_PACK_FIRST_SLAVE_ID,
+    FP_BUILT_IN_PACK_SLAVE_ID,
     MAX_BATTERY_PACKS,
     PACK_INFO_FIELDS,
     aggregate_pack_summary,
     aggregate_pack_summary_component,
     battery_pack,
     battery_pack_component,
+    fp_battery_pack_component,
+    fp_pack_slave_id,
     pack_is_reporting,
     pack_slave_id,
 )
@@ -231,3 +234,50 @@ def test_a_pack_whose_type_string_read_failed_still_counts_by_its_voltage():
     # Slot 43 of that unit answered a transient timeout on the type string
     # in one run while voltage, SOC and cycles came through.
     assert pack_is_reporting({"b_v": 27.1, "b_soc": 79})
+
+
+def test_fp_packs_start_with_the_built_in_battery_at_41():
+    assert FP_BUILT_IN_PACK_SLAVE_ID == 41
+    assert fp_pack_slave_id(1) == 41
+    assert fp_pack_slave_id(2) == 42
+    assert fp_pack_slave_id(MAX_BATTERY_PACKS + 1) == 41 + MAX_BATTERY_PACKS
+
+
+@pytest.mark.parametrize("pack_num", [0, MAX_BATTERY_PACKS + 2])
+def test_fp_pack_slave_id_rejects_out_of_range_pack_numbers(pack_num):
+    with pytest.raises(ValueError):
+        fp_pack_slave_id(pack_num)
+
+
+@pytest.mark.asyncio
+async def test_fp_battery_pack_component_decodes_a_real_bc200_read():
+    # Unit 42 of a FridgePower with one BC200 (bluetti-registers#38).
+    conn = MockModbusConnection()
+    unit = conn.for_unit(fp_pack_slave_id(2))
+    for address, words in {
+        51200: [0x4342, 0x3032, 0x0030, 0, 0, 0],
+        51210: [1],
+        51211: [0xC800, 0x0BFB],
+        51219: [0x07A8, 0x7504, 0x003D, 0x0064, 0x000B],
+        51234: [6, 3, 0x5ECE, 0, 0x5492, 0],
+    }.items():
+        for offset, word in enumerate(words):
+            unit.holding[address + offset] = word
+
+    pack = fp_battery_pack_component(unit)
+    await pack.async_update_with_retry()
+
+    assert isinstance(pack, FP)
+    assert set(pack.field_names()) == PACK_INFO_FIELDS
+    values = pack.values
+    assert values["b_type"] == "BC200"
+    assert values["b_ver_1"] == "20105.01.12"
+    assert values["b_v"] == pytest.approx(19.60)
+    assert values["b_c"] == pytest.approx(4.4)
+    assert values["b_soc"] == 61
+    assert values["b_soh"] == 100
+    assert values["b_cycle_count"] == 11
+    assert values["b_cell_count"] == 6
+    assert values["b_i_e"] == 24270
+    assert values["b_o_e"] == 21650
+    assert pack_is_reporting(values)
