@@ -25,11 +25,6 @@ class EP500P(BluettiDevice):
         (50219, 50219),
         (50229, 50229),
         (50267, 50267),
-        (50268, 50268),
-        (50269, 50269),
-        (50270, 50270),
-        (50272, 50272),
-        (50273, 50273),
         (51001, 51001),
         (51002, 51002),
         (51003, 51003),
@@ -138,32 +133,6 @@ class EP500P(BluettiDevice):
 
     pv_ac_count = nibble(50267, high=True)
 
-    pv_1_i_type = field(
-        t=FieldType.ENUM,
-        address=50268,
-        enum_type=PvType,
-    )
-    pv_1_i_p = field(
-        t=FieldType.UINT16,
-        address=50269,
-        unit="W",
-    )
-    pv_1_i_v = field(
-        t=FieldType.UINT16,
-        address=50270,
-        unit="V",
-        scale=0.1,
-    )
-    pv_2_i_type = field(
-        t=FieldType.ENUM,
-        address=50272,
-        enum_type=PvType,
-    )
-    pv_2_i_p = field(
-        t=FieldType.UINT16,
-        address=50273,
-        unit="W",
-    )
     d_num_battery_packs = field(
         t=FieldType.UINT16,
         address=51001,
