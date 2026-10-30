@@ -93,15 +93,19 @@ def test_ep500p_is_ac500s_register_set_with_read_only_thresholds():
     # same decode, including the SOC thresholds at AC200L's addresses -
     # which refuse a write on this device, so they are read-only, unlike
     # Balco 260's. On top of AC500's set: the inverter's signed power at
-    # 50008, one register. Writable: the two output switches and grid
-    # charging (57009), each switched on real hardware. Catches the
-    # generated file drifting from that.
+    # 50008, one register. Without: the per-input PV block, which reads 0
+    # with PV coming in (bluetti-registers#35). Writable: the two output
+    # switches and grid charging (57009), each switched on real hardware.
+    # Catches the generated file drifting from that.
     ac500 = get_device("ac500")
     ep500p = get_device("ep500p")
     assert ac500 is not None
     assert ep500p is not None
 
-    assert set(ep500p.field_names()) == set(ac500.field_names()) | {"d_inverter_total"}
+    per_input_pv = {"pv_1_i_type", "pv_1_i_p", "pv_1_i_v", "pv_2_i_type", "pv_2_i_p"}
+    assert set(ep500p.field_names()) == (set(ac500.field_names()) - per_input_pv) | {
+        "d_inverter_total"
+    }
     inverter = ep500p.get_field("d_inverter_total")
     assert inverter.signed
     assert inverter.decode([63777]) == -1759

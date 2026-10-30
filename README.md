@@ -62,9 +62,10 @@ Notes:
   serves no writable register, and its energy counters stay at zero, so
   neither is in the profile.
 - **AC500 / EP500Pro / AC200L / Apex 300** share one register layout (the
-  AC500's) with per-device scales. SOC thresholds are read-only on them;
-  energies and PV fields on the AC200L and EP500Pro are carried over
-  unverified. Only the Apex 300 exposes pack data over Modbus TCP.
+  AC500's) with per-device scales. SOC thresholds are read-only on them.
+  The AC200L has one PV input, and the EP500Pro reports only its PV total;
+  their energies are carried over unverified. Only the Apex 300 exposes
+  pack data over Modbus TCP.
 - **Apex 300** answered that layout in full on a real unit, and populates
   what its cousins leave empty: the PV metadata, the energy counters, the
   PV2 voltage and string currents, the inverter's and grid phase's flows, and

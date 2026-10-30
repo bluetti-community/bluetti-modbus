@@ -27,8 +27,6 @@ class AC200L(BluettiDevice):
         (50268, 50268),
         (50269, 50269),
         (50270, 50270),
-        (50272, 50272),
-        (50273, 50273),
         (51002, 51002),
         (51003, 51003),
         (51004, 51004),
@@ -144,16 +142,6 @@ class AC200L(BluettiDevice):
         address=50270,
         unit="V",
         scale=0.1,
-    )
-    pv_2_i_type = field(
-        t=FieldType.ENUM,
-        address=50272,
-        enum_type=PvType,
-    )
-    pv_2_i_p = field(
-        t=FieldType.UINT16,
-        address=50273,
-        unit="W",
     )
     b_v_total = field(
         t=FieldType.UINT16,
