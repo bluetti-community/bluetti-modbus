@@ -10,7 +10,7 @@ from modbus_connection.exceptions import ModbusError
 from modbus_connection.model import RegisterField
 from probatio import Range
 
-from ..base_devices import BluettiDevice
+from ..base_devices import READ_BACK_ATTEMPTS, READ_BACK_DELAY, BluettiDevice
 from ..devices.getter import get_device
 from ..modbus import Backend
 from ._connection_args import (
@@ -162,17 +162,6 @@ async def read_field(
         return field.decode(words)
     finally:
         await conn.close()
-
-
-# How long to leave the device before reading a setting back, and how many
-# times to look again. A Balco 260 applies a write immediately but serves
-# the old value for a moment afterwards - a read straight after the write
-# returns the previous setting, and the next command shows the new one
-# (confirmed on real hardware: writing b_soc_low 15 -> 16 read back 15, and
-# the following run read 16). script/write_probe.py has always waited for
-# the same reason.
-READ_BACK_DELAY = 2.0
-READ_BACK_ATTEMPTS = 3
 
 
 async def write_field(
