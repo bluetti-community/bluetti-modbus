@@ -109,10 +109,9 @@ _TRANSIENT_CAUSES = (ModbusProtocolError, ModbusTimeoutError, ModbusConnectionEr
 READ_BACK_DELAY = 2.0
 READ_BACK_ATTEMPTS = 3
 
-# The setting registers BluettiDevice.write_register accepts - the ones
-# script/write_probe.py tests - with the values each can hold, used where
-# the profile's own field states no bound. 57001 is the AC output switch:
-# on a FridgePower it powers the fridge.
+# The setting registers BluettiDevice.write_register accepts where the
+# profile marks the field writable - the ones script/write_probe.py tests -
+# with the values each can hold, used where the field states no bound.
 WRITABLE_REGISTERS: dict[int, range] = {
     57001: range(2),  # ac_o_switch
     57005: range(2),  # dc_o_switch
@@ -210,9 +209,10 @@ class BluettiDevice(Component):
     ) -> RegisterWrite:
         """Write one setting register raw and read it back.
 
-        Only the registers in WRITABLE_REGISTERS that this profile has a
-        field for are accepted, with the field's own bound when it states
-        one, else the register's value range there - ValueError otherwise.
+        Only the registers in WRITABLE_REGISTERS whose field this profile
+        marks writable are accepted - a write confirmed on that device - with
+        the field's own bound when it states one, else the register's value
+        range there; ValueError otherwise.
         A confirmation at the setting's internal address counts as success,
         as in write(). The register is then read back after settle seconds,
         up to READ_BACK_ATTEMPTS times until it holds the value; whether it
@@ -224,7 +224,7 @@ class BluettiDevice(Component):
             (f for f in self._register_fields.values() if f.address == address),
             None,
         )
-        if allowed is None or field is None:
+        if allowed is None or field is None or not field.writable:
             raise ValueError(f"register {address} is not a setting this device writes")
         if callable(field.writable):
             try:

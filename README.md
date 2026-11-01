@@ -189,9 +189,9 @@ print(result.confirmed_at, result.read_back, result.applied)
   longer than the device's `max_span`. These devices may not answer a read
   outside them at all.
 - `write_register()` accepts only the setting registers in
-  `WRITABLE_REGISTERS` (57001, 57005, 57009, 57010, 57016, 57017) that the
-  profile has a field for, within the field's bound or else the register's
-  own range. It writes with function 0x06, never retries, then reads the
+  `WRITABLE_REGISTERS` (57001, 57005, 57009, 57010, 57016, 57017) whose
+  field the profile marks writable, within the field's bound or else the
+  register's own range. It writes with function 0x06, never retries, then reads the
   register back. `confirmed_at` is the address the confirmation carried:
   the register itself, or the setting's internal address on devices that
   echo that one.
