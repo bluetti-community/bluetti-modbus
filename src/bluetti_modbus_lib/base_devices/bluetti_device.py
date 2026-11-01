@@ -2,6 +2,7 @@ import asyncio
 import logging
 import struct
 from collections.abc import KeysView
+from dataclasses import dataclass
 from typing import Any, override
 
 from modbus_connection.exceptions import (
@@ -13,6 +14,7 @@ from modbus_connection.exceptions import (
     ServerDeviceBusyError,
 )
 from modbus_connection.model import Component, RegisterField
+from probatio.error import Invalid
 
 from ..exceptions import BluettiModbusConnectionError, BluettiModbusError
 
@@ -97,6 +99,46 @@ _TRANSIENT_RETRY_COUNT = 2
 # once while those were retried.
 _TRANSIENT_CAUSES = (ModbusProtocolError, ModbusTimeoutError, ModbusConnectionError)
 
+# How long to leave the device before reading a setting back, and how many
+# times to look again. A Balco 260 applies a write immediately but serves
+# the old value for a moment afterwards - a read straight after the write
+# returns the previous setting, and the next command shows the new one
+# (confirmed on real hardware: writing b_soc_low 15 -> 16 read back 15, and
+# the following run read 16). script/write_probe.py has always waited for
+# the same reason.
+READ_BACK_DELAY = 2.0
+READ_BACK_ATTEMPTS = 3
+
+# The setting registers BluettiDevice.write_register accepts - the ones
+# script/write_probe.py tests - with the values each can hold, used where
+# the profile's own field states no bound. 57001 is the AC output switch:
+# on a FridgePower it powers the fridge.
+WRITABLE_REGISTERS: dict[int, range] = {
+    57001: range(2),  # ac_o_switch
+    57005: range(2),  # dc_o_switch
+    57009: range(2),  # g_i_switch
+    57010: range(2),  # g_o_switch
+    57016: range(101),  # b_soc_low (%)
+    57017: range(101),  # b_soc_high (%)
+}
+
+
+@dataclass(frozen=True)
+class RegisterWrite:
+    """What BluettiDevice.write_register saw: where the device confirmed the
+    write, and what the register held once the device had settled."""
+
+    address: int
+    value: int
+    confirmed_at: int
+    """The address the confirmation carried: ``address`` itself for a plain
+    Modbus confirmation, else the setting's internal address."""
+    read_back: int
+
+    @property
+    def applied(self) -> bool:
+        return self.read_back == self.value
+
 
 class BluettiDevice(Component):
     max_gap = 5
@@ -115,6 +157,106 @@ class BluettiDevice(Component):
     def values(self) -> dict[str, Any]:
         """A copy of all field values decoded on the last update."""
         return dict(self._values)
+
+    def readable_ranges(self) -> tuple[tuple[int, int], ...]:
+        """The inclusive address runs read_registers accepts.
+
+        Those the profile declares the device serves, kept apart as its own
+        poll keeps them; else the runs that poll reads, field spans joined
+        across gaps of at most max_gap. An address outside them may get no
+        reply at all - a Balco 260 answers an unknown address read alone
+        with an exception but goes silent when it is part of a longer read.
+        """
+        if self.register_ranges is not None:
+            return tuple(sorted(self.register_ranges))
+        spans = sorted(
+            (field.address, field.address + field.count - 1)
+            for field in self._register_fields.values()
+        )
+        runs: list[tuple[int, int]] = []
+        for low, high in spans:
+            if runs and low - runs[-1][1] <= self.max_gap:
+                runs[-1] = (runs[-1][0], max(runs[-1][1], high))
+            else:
+                runs.append((low, high))
+        return tuple(runs)
+
+    async def read_registers(self, address: int, count: int) -> list[int]:
+        """Read raw holding registers inside one of readable_ranges.
+
+        Raises ValueError for a read that leaves those runs or is longer
+        than max_span, and BluettiModbusConnectionError when the read fails.
+        """
+        if not 1 <= count <= self.max_span:
+            raise ValueError(
+                f"count must be between 1 and {self.max_span} on this device, "
+                f"not {count}"
+            )
+        end = address + count - 1
+        if not any(
+            low <= address and end <= high for low, high in self.readable_ranges()
+        ):
+            raise ValueError(
+                f"registers {address}-{end} are outside the ranges this device's "
+                "profile reads"
+            )
+        try:
+            return await self.modbus_unit.read_holding_registers(address, count)
+        except ModbusError as err:
+            raise BluettiModbusConnectionError(str(err)) from err
+
+    async def write_register(
+        self, address: int, value: int, *, settle: float = READ_BACK_DELAY
+    ) -> RegisterWrite:
+        """Write one setting register raw and read it back.
+
+        Only the registers in WRITABLE_REGISTERS that this profile has a
+        field for are accepted, with the field's own bound when it states
+        one, else the register's value range there - ValueError otherwise.
+        A confirmation at the setting's internal address counts as success,
+        as in write(). The register is then read back after settle seconds,
+        up to READ_BACK_ATTEMPTS times until it holds the value; whether it
+        did is the result's applied, not an error. Any Modbus failure is
+        raised as BluettiModbusConnectionError; a write is never retried.
+        """
+        allowed = WRITABLE_REGISTERS.get(address)
+        field = next(
+            (f for f in self._register_fields.values() if f.address == address),
+            None,
+        )
+        if allowed is None or field is None:
+            raise ValueError(f"register {address} is not a setting this device writes")
+        if callable(field.writable):
+            try:
+                field.writable(value)
+            except Invalid as err:
+                raise ValueError(
+                    f"{value} is out of range for {address}: {err}"
+                ) from err
+        elif value not in allowed:
+            raise ValueError(
+                f"{value} is out of range for {address} "
+                f"({allowed.start}-{allowed.stop - 1})"
+            )
+
+        confirmed_at = address
+        try:
+            await self.modbus_unit.write_register(address, value)
+        except ModbusProtocolError as err:
+            echoed = _write_confirmation_address(err)
+            if echoed is None or echoed[1] != value:
+                raise BluettiModbusConnectionError(str(err)) from err
+            confirmed_at = echoed[0]
+        except ModbusError as err:
+            raise BluettiModbusConnectionError(str(err)) from err
+
+        read_back = value
+        for _ in range(READ_BACK_ATTEMPTS):
+            await asyncio.sleep(settle)
+            [read_back] = await self.read_registers(address, 1)
+            if read_back == value:
+                break
+        return RegisterWrite(address, value, confirmed_at, read_back)
 
     @override
     async def write(self, key: str, value: Any) -> None:

@@ -172,6 +172,32 @@ asyncio.run(main())
   exceptions, `BluettiModbusClient`, the enums, the pack helpers) is
   importable from `bluetti_modbus_lib` directly.
 
+### Raw registers
+
+For tests and diagnostics, a device reads and writes raw registers inside
+what its profile already covers:
+
+```python
+words = await device.read_registers(57016, 2)  # [b_soc_low, b_soc_high]
+
+result = await device.write_register(57017, 95)
+print(result.confirmed_at, result.read_back, result.applied)
+```
+
+- `read_registers()` accepts a read inside one of `readable_ranges()` (the
+  ranges the profile declares, or else the runs its own poll reads) and no
+  longer than the device's `max_span`. These devices may not answer a read
+  outside them at all.
+- `write_register()` accepts only the setting registers in
+  `WRITABLE_REGISTERS` (57001, 57005, 57009, 57010, 57016, 57017) that the
+  profile has a field for, within the field's bound or else the register's
+  own range. It writes with function 0x06, never retries, then reads the
+  register back. `confirmed_at` is the address the confirmation carried:
+  the register itself, or the setting's internal address on devices that
+  echo that one.
+- A request outside these limits raises `ValueError` before anything is
+  sent; a Modbus failure raises `BluettiModbusConnectionError`.
+
 ### Multiple battery packs (Balco 260)
 
 A Balco 260 takes up to `MAX_BATTERY_PACKS` (5) BC260 packs. Pack 1's own

@@ -1,5 +1,6 @@
 """Unofficial async client for BLUETTI power stations over Modbus."""
 
+from .base_devices import WRITABLE_REGISTERS, RegisterWrite
 from .devices import (
     AC200L,
     AC240,
@@ -56,6 +57,7 @@ __all__ = [
     "PA030",
     "PACK_INFO_FIELDS",
     "WARNING_DESCRIPTIONS",
+    "WRITABLE_REGISTERS",
     "Balco260",
     "Balco500",
     "Balcotrans",
@@ -67,6 +69,7 @@ __all__ = [
     "InverterWarning",
     "PackChargingStatus",
     "PvType",
+    "RegisterWrite",
     "SMeter",
     "aggregate_pack_summary",
     "aggregate_pack_summary_component",
