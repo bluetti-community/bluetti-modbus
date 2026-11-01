@@ -35,7 +35,7 @@ meaning.
 |---|---|---|---|
 | Balco 260 | `balco260` | Confirmed by BLUETTI and on real hardware | AC output, grid in/out switches, SOC thresholds |
 | Balco 500 | `balco500` | From BLUETTI's register spec, no unit seen yet | - |
-| EP2000 | `ep2000` | Read on five real units ([evidence][ev-ep2000]) | Grid feed-in switch |
+| EP2000 | `ep2000` | Read on five real units ([evidence][ev-ep2000]) | AC output, grid feed-in switches |
 | S Meter | `smeter` | Confirmed by BLUETTI and on real hardware | - |
 | AC500 | `ac500` | Confirmed on real hardware ([evidence][ev-ac500]) | AC/DC output switches |
 | AC200L | `ac200l` | Beta - confirmed on a real unit against its BLE readings ([evidence][ev-ac200l]) | AC/DC output switches |
