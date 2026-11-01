@@ -227,9 +227,10 @@ MAX_SPAN_OVERRIDES = {"Balco260": 20, "FP": 20, "Balcotrans": 10}
 
 # Devices on which only some of the fields the schema declares writeable
 # have taken a write on real hardware; the others stay read-only. EP2000:
-# the grid feed-in switch (57010) confirmed a same-value write, then 1 -> 0
-# and back, each read back (bluetti-registers#42).
-WRITABLE_FIELDS_ONLY = {"EP2000": {"g_o_switch"}}
+# the AC output switch (57001) and the grid feed-in switch (57010) each
+# confirmed a same-value write, then 1 -> 0 and back, each read back
+# (bluetti-registers#42).
+WRITABLE_FIELDS_ONLY = {"EP2000": {"ac_o_switch", "g_o_switch"}}
 
 for d in schema:
     name = d["name"]

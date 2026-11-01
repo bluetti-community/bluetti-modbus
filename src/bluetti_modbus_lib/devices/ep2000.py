@@ -747,6 +747,7 @@ class EP2000(BluettiDevice):
     ac_o_switch = field(
         t=FieldType.UINT16,
         address=57001,
+        writable=True,
     )
     g_i_switch = field(
         t=FieldType.UINT16,
