@@ -222,13 +222,21 @@ async def test_write_register_bounds_a_field_without_a_validator():
 
 
 @pytest.mark.asyncio
-async def test_write_register_bounds_a_read_only_field():
-    # The FridgePower's SoC limits are read-only in the profile; the
-    # register's own 0-100 still applies.
-    device, _ = _device(FP)
+@pytest.mark.parametrize(
+    ("cls", "address"),
+    [
+        (FP, 57001),  # powers the fridge, never written on purpose
+        (FP, 57017),  # refuses writes on a real FridgePower
+        (EP2000, 57009),  # untested on hardware
+    ],
+)
+async def test_write_register_refuses_a_field_the_profile_keeps_read_only(cls, address):
+    device, unit = _device(cls)
+    unit.write_register = AsyncMock()  # type: ignore[method-assign]
 
-    with pytest.raises(ValueError, match=r"out of range for 57017 \(0-100\)"):
-        await device.write_register(57017, 101, settle=0)
+    with pytest.raises(ValueError, match="not a setting this device writes"):
+        await device.write_register(address, 1, settle=0)
+    unit.write_register.assert_not_called()
 
 
 @pytest.mark.asyncio
