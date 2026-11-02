@@ -474,6 +474,7 @@ class Balco500(BluettiDevice):
         t=FieldType.INT16,
         address=51224,
         unit="°C",
+        offset=-40,
     )
     b_cell_count = field(
         t=FieldType.UINT16,

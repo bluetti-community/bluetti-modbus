@@ -34,7 +34,7 @@ meaning.
 | Device | `get_device()` id | Status | Writable |
 |---|---|---|---|
 | Balco 260 | `balco260` | Confirmed by BLUETTI and on real hardware | AC output, grid in/out switches, SOC thresholds |
-| Balco 500 | `balco500` | From BLUETTI's register spec, no unit seen yet | - |
+| Balco 500 | `balco500` | Read on two real units ([evidence][ev-balco500]) | - |
 | EP2000 | `ep2000` | Read on five real units ([evidence][ev-ep2000]) | AC output, grid feed-in switches |
 | S Meter | `smeter` | Confirmed by BLUETTI and on real hardware | - |
 | AC500 | `ac500` | Confirmed on real hardware ([evidence][ev-ac500]) | AC/DC output switches |
@@ -49,8 +49,9 @@ Notes:
 
 - **Balco 260** reports up to five BC260 expansion packs - see
   [Multiple battery packs](#multiple-battery-packs-balco-260).
-- **Balco 500** comes from BLUETTI's official register spec and has not been
-  read on real hardware, so nothing is writable there yet.
+- **Balco 500** comes from BLUETTI's official register spec and has been read
+  on real units: its pack current is a plain 0.1 A magnitude and its pack
+  temperature is °C plus 40. Nothing is writable yet.
 - **EP2000** comes from the same spec and has been read on real units, which
   settled its signed powers, two-part versions and signed pack current. Its
   two MPPTs are reported as PV1 and PV2 (no PV3/PV4), and its pack
@@ -555,6 +556,7 @@ SOFTWARE.
 [bluetti-registers-naming]: https://github.com/bluetti-community/bluetti-registers#naming-convention-for-field-names
 [ev-ac200l]: https://github.com/bluetti-community/bluetti-modbus/issues/76
 [ev-ac500]: https://github.com/bluetti-community/bluetti-registers/issues/13
+[ev-balco500]: https://github.com/bluetti-community/bluetti-registers/issues/68
 [ev-ep2000]: https://github.com/bluetti-community/bluetti-registers/issues/42
 [ev-ep500p]: https://github.com/bluetti-community/bluetti-registers/issues/35
 [ev-fp]: https://github.com/bluetti-community/bluetti-registers/issues/38
