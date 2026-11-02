@@ -50,8 +50,9 @@ Notes:
 - **Balco 260** reports up to five BC260 expansion packs - see
   [Multiple battery packs](#multiple-battery-packs-balco-260).
 - **Balco 500** comes from BLUETTI's official register spec and has been read
-  on real units: its pack current is a plain 0.1 A magnitude and its pack
-  temperature is °C plus 40. Nothing is writable yet.
+  on real units: its pack current is a plain 0.1 A magnitude, its pack
+  temperature is °C plus 40, and its DSP version is at 50210, with no ARM
+  version served. Nothing is writable yet.
 - **EP2000** comes from the same spec and has been read on real units, which
   settled its signed powers, two-part versions and signed pack current. Its
   two MPPTs are reported as PV1 and PV2 (no PV3/PV4), and its pack

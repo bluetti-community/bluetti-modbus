@@ -68,7 +68,9 @@ def test_fp_is_the_full_balco_set_plus_dc_switch_read_only():
 
     assert set(fp.field_names()) >= set(balco500.field_names()) | {"dc_o_switch"}
     assert set(fp.field_names()) >= set(balco260.field_names())
-    for name in balco500.field_names():
+    # The Balco 500's DSP version sits at 50210 (see
+    # test_balco500_shares_balco260s_addresses_for_every_field_it_has).
+    for name in set(balco500.field_names()) - {"d_ver_dsp"}:
         assert fp.get_field(name).address == balco500.get_field(name).address, name
         assert fp.get_field(name).count == balco500.get_field(name).count, name
     assert fp.max_span == balco260.max_span == 20
@@ -225,7 +227,12 @@ def test_balco500_shares_balco260s_addresses_for_every_field_it_has():
         "pv_ac_p_local",
         "pv_i_e_local",
     }
-    for name in set(balco500.field_names()) - only_on_balco500:
+    # The one address that differs: the Balco 500 serves the version its
+    # app shows as DSP at 50210 and repeats the BMS one at 50212, with no
+    # third version, so it has d_ver_dsp at 50210 and no d_ver_arm.
+    assert "d_ver_arm" not in balco500.field_names()
+    assert balco500.get_field("d_ver_dsp").address == 50210
+    for name in set(balco500.field_names()) - only_on_balco500 - {"d_ver_dsp"}:
         assert balco500.get_field(name).address == balco260.get_field(name).address
 
 
