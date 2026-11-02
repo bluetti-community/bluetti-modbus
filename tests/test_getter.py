@@ -338,6 +338,10 @@ def test_ep2000_decodes_the_first_real_unit_as_its_app_does():
     assert balco500_b_c.scale == 0.1
     assert not balco500_b_c.signed
     assert balco500_b_c.decode([265]) == 26.5
+    # Its pack temperature is degrees C plus 40, as on the EP2000.
+    balco500_t = get_device("balco500").get_field("b_t_avg")
+    assert balco500_t.unit == "°C"
+    assert balco500_t.decode([54]) == 14
     # Two MPPTs, reported as PV1 and PV2; the next slots read impossible
     # values (0 V, 132 W, 2300+ A). The pack temperature is degrees C plus 40.
     names = set(ep2000.field_names())
