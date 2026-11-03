@@ -688,6 +688,45 @@ async def test_write_knows_the_ac240_switch_echoes(caplog):
 
 
 @pytest.mark.asyncio
+async def test_write_knows_the_ac200l_setting_echoes(caplog):
+    # Captured on a real AC200PL (bluetti-registers#48): power lifting
+    # confirms at 3066, as on the AC240, and the AC charging mode at 3065.
+    # On file, so debug.
+    from bluetti_modbus_lib import ChargingMode
+
+    for field_name, address, echo, value in (
+        ("ac_power_lifting_switch", 57022, 3066, 1),
+        ("d_charging_mode", 57023, 3065, ChargingMode.Turbo),
+    ):
+        device = AC200L(MockModbusConnection().for_unit(1))
+        device.modbus_unit.write_register = AsyncMock(  # type: ignore[method-assign]
+            side_effect=_mismatched_confirmation(6, echo, int(value))
+        )
+        with caplog.at_level(logging.DEBUG, logger="bluetti_modbus_lib"):
+            await device.write(field_name, value)  # must not raise
+
+        assert (
+            f"{field_name} ({address}) confirmed at internal register {echo}"
+            in caplog.text
+        )
+    assert not [r for r in caplog.records if r.levelno >= logging.WARNING]
+
+
+@pytest.mark.asyncio
+async def test_ac200l_charging_mode_writes_its_integer_value():
+    # A writable enum field is encoded with int(value), so ChargingMode has
+    # to be an IntEnum for the write to reach the register at all.
+    from bluetti_modbus_lib import ChargingMode
+
+    connection = MockModbusConnection()
+    device = AC200L(connection.for_unit(1))
+
+    await device.write("d_charging_mode", ChargingMode.Silent)
+
+    assert connection.for_unit(1).holding[57023] == 1
+
+
+@pytest.mark.asyncio
 async def test_write_knows_the_fp_switch_echoes(caplog):
     # Captured on a real FridgePower (bluetti-registers#38, 2026-09-21): the
     # DC output switch confirms at 2012 and the grid charging switch at 2207
