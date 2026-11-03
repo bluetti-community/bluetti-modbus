@@ -38,7 +38,7 @@ meaning.
 | EP2000 | `ep2000` | Read on five real units ([evidence][ev-ep2000]) | AC output, grid feed-in switches |
 | S Meter | `smeter` | Confirmed by BLUETTI and on real hardware | - |
 | AC500 | `ac500` | Confirmed on real hardware ([evidence][ev-ac500]) | AC/DC output switches |
-| AC200L | `ac200l` | Beta - confirmed on a real unit against its BLE readings ([evidence][ev-ac200l]) | AC/DC output switches |
+| AC200L | `ac200l` | Beta - confirmed on a real unit against its BLE readings ([evidence][ev-ac200l]) | AC/DC output, power lifting switches; AC charging mode |
 | EP500Pro | `ep500p` | Confirmed on two real units ([evidence][ev-ep500p]) | AC/DC output, grid charging switches |
 | FridgePower | `fp` | Confirmed on three real units ([evidence][ev-fp]) | DC output, grid charging switches |
 | Balco Transfer Hub | `balcotrans` | Confirmed on two real units against the app ([evidence][ev-hub]) | - |
@@ -82,7 +82,8 @@ Notes:
   feed-in switches are untried.
 - `AC200L`, `EP500P`, `FP` and `PA030` are named after the type string the
   device itself gives at register 50200.
-- An AC240P reads with the `ac240` profile ([evidence][ev-ac240p]).
+- An AC240P reads with the `ac240` profile ([evidence][ev-ac240p]), an AC200PL
+  with the `ac200l` profile ([evidence][ev-ac200pl]).
 
 Field names, units and addresses come from
 [bluetti-registers][bluetti-registers]: every `devices/*.py` is generated
@@ -565,6 +566,7 @@ SOFTWARE.
 [ev-pa030]: https://github.com/bluetti-community/bluetti-registers/issues/49
 [fault-table]: https://github.com/bluetti-official/bluetti-modbus-tcp-slave/blob/b96ba38ebd8306dd76c9eeb3951983643538c2f1/doc/Bluetti-Modbus-Open-Protocol-Fault-and-Alarm-Table.xlsx
 [ev-ac240p]: https://github.com/bluetti-community/bluetti-registers/issues/67
+[ev-ac200pl]: https://github.com/bluetti-community/bluetti-registers/issues/48
 [ev-ac240]: https://github.com/bluetti-community/bluetti-registers/issues/65
 [bluetti-registers]: https://github.com/bluetti-community/bluetti-registers
 [build-shield]: https://github.com/bluetti-community/bluetti-modbus/actions/workflows/tests.yml/badge.svg

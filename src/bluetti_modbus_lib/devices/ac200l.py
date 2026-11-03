@@ -34,6 +34,8 @@ class AC200L(BluettiDevice):
         (57005, 57005),
         (57016, 57016),
         (57017, 57017),
+        (57022, 57022),
+        (57023, 57023),
     )
 
     ac_o_p_total = field(
@@ -179,4 +181,15 @@ class AC200L(BluettiDevice):
         t=FieldType.UINT16,
         address=57017,
         unit="%",
+    )
+    ac_power_lifting_switch = field(
+        t=FieldType.UINT16,
+        address=57022,
+        writable=True,
+    )
+    d_charging_mode = field(
+        t=FieldType.ENUM,
+        address=57023,
+        writable=True,
+        enum_type=ChargingMode,
     )

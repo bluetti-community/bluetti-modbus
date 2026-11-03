@@ -32,6 +32,7 @@ from .devices import (
 from .enums import (
     FAULT_DESCRIPTIONS,
     WARNING_DESCRIPTIONS,
+    ChargingMode,
     InverterFault,
     InverterStatus,
     InverterWarning,
@@ -64,6 +65,7 @@ __all__ = [
     "BluettiModbusClient",
     "BluettiModbusConnectionError",
     "BluettiModbusError",
+    "ChargingMode",
     "InverterFault",
     "InverterStatus",
     "InverterWarning",
