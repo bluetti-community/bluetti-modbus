@@ -1,3 +1,5 @@
+from probatio import Range
+
 from ..base_devices import BluettiDevice
 from ..enums import *
 from ..fields import FieldType, dotted_version_2part, field, nibble
@@ -752,6 +754,7 @@ class EP2000(BluettiDevice):
     g_i_switch = field(
         t=FieldType.UINT16,
         address=57009,
+        writable=True,
     )
     g_o_switch = field(
         t=FieldType.UINT16,
@@ -761,11 +764,13 @@ class EP2000(BluettiDevice):
     b_soc_low = field(
         t=FieldType.UINT16,
         address=57016,
+        writable=Range(min=5, max=100),
         unit="%",
     )
     b_soc_high = field(
         t=FieldType.UINT16,
         address=57017,
+        writable=Range(min=5, max=100),
         unit="%",
     )
     d_ems_ctrl = field(

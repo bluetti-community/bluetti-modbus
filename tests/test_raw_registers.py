@@ -227,7 +227,6 @@ async def test_write_register_bounds_a_field_without_a_validator():
     [
         (FP, 57001),  # powers the fridge, never written on purpose
         (FP, 57017),  # refuses writes on a real FridgePower
-        (EP2000, 57009),  # untested on hardware
     ],
 )
 async def test_write_register_refuses_a_field_the_profile_keeps_read_only(cls, address):
