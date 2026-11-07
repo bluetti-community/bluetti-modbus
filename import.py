@@ -1,6 +1,6 @@
 import requests
 
-tag = "0.0.69"
+tag = "0.0.70"
 url = f"https://github.com/bluetti-community/bluetti-registers/releases/download/{tag}/modbus-tcp.json"
 
 output = "src/bluetti_modbus_lib/devices/"
@@ -227,10 +227,12 @@ MAX_SPAN_OVERRIDES = {"Balco260": 20, "FP": 20, "Balcotrans": 10}
 
 # Devices on which only some of the fields the schema declares writeable
 # have taken a write on real hardware; the others stay read-only. EP2000:
-# the AC output switch (57001) and the grid feed-in switch (57010) each
-# confirmed a same-value write, then 1 -> 0 and back, each read back
-# (bluetti-registers#42).
-WRITABLE_FIELDS_ONLY = {"EP2000": {"ac_o_switch", "g_o_switch"}}
+# the AC output (57001), grid charging (57009) and grid feed-in (57010)
+# switches and the SoC limits (57016, 57017) each confirmed a same-value
+# write, then a new value and back, each read back (bluetti-registers#42).
+WRITABLE_FIELDS_ONLY = {
+    "EP2000": {"ac_o_switch", "g_i_switch", "g_o_switch", "b_soc_low", "b_soc_high"}
+}
 
 for d in schema:
     name = d["name"]
