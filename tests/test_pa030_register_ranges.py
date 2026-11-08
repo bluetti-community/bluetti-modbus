@@ -144,3 +144,33 @@ async def test_the_charging_mode_reads_and_writes_custom():
 
     await device.write("d_charging_mode", ApexChargingMode.Silent)
     assert unit.holding[57023] == 1
+
+
+@pytest.mark.asyncio
+async def test_the_working_mode_and_grid_charging_current_read():
+    # 57020 follows the app's working mode (1, 2, 4, 5) and 57011 its Max.
+    # Grid Charging Current in whole amps (bluetti-registers#49); neither is
+    # writable.
+    from bluetti_modbus_lib import WorkingMode
+
+    for raw, mode in (
+        (1, WorkingMode.Custom),
+        (2, WorkingMode.SelfConsumption),
+        (4, WorkingMode.Backup),
+        (5, WorkingMode.TimeOfUse),
+    ):
+        connection = MockModbusConnection()
+        unit = connection.for_unit(1)
+        for address in range(50001, 57024):
+            unit.holding[address] = 0
+        unit.holding[57020] = raw
+        unit.holding[57011] = 7
+        device = PA030(unit)
+
+        await device.async_update_with_retry()
+        assert device.values["d_working_mode"] == mode
+        assert device.values["g_i_c_max"] == 7
+
+    device = PA030(MockModbusConnection().for_unit(1))
+    assert not device.get_field("d_working_mode").writable
+    assert not device.get_field("g_i_c_max").writable
