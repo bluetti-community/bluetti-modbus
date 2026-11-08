@@ -123,3 +123,24 @@ async def test_a_split_phase_unit_reports_both_legs():
     )
     assert values["d_inverter_2_status"].name == "OffGrid"
     assert (values["d_inverter_2_v"], values["d_inverter_2_c"]) == (121.2, 1.2)
+
+
+@pytest.mark.asyncio
+async def test_the_charging_mode_reads_and_writes_custom():
+    # 57023 reads 4 with Custom set in the app, and writing 4 switches the
+    # unit to Custom (bluetti-registers#49) - a value the AC200L's
+    # ChargingMode has not, hence ApexChargingMode.
+    from bluetti_modbus_lib import ApexChargingMode
+
+    connection = MockModbusConnection()
+    unit = connection.for_unit(1)
+    for address in range(50001, 57024):
+        unit.holding[address] = 0
+    unit.holding[57023] = 4
+    device = PA030(unit)
+
+    await device.async_update_with_retry()
+    assert device.values["d_charging_mode"] == ApexChargingMode.Custom
+
+    await device.write("d_charging_mode", ApexChargingMode.Silent)
+    assert unit.holding[57023] == 1

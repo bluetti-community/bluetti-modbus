@@ -74,6 +74,7 @@ class PA030(BluettiDevice):
         (57009, 57009),
         (57016, 57016),
         (57017, 57017),
+        (57023, 57023),
     )
 
     ac_o_p_total = field(
@@ -426,4 +427,10 @@ class PA030(BluettiDevice):
         t=FieldType.UINT16,
         address=57017,
         unit="%",
+    )
+    d_charging_mode = field(
+        t=FieldType.ENUM,
+        address=57023,
+        writable=True,
+        enum_type=ApexChargingMode,
     )
