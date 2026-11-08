@@ -72,8 +72,10 @@ class PA030(BluettiDevice):
         (57001, 57001),
         (57005, 57005),
         (57009, 57009),
+        (57011, 57011),
         (57016, 57016),
         (57017, 57017),
+        (57020, 57020),
         (57023, 57023),
     )
 
@@ -418,6 +420,11 @@ class PA030(BluettiDevice):
         address=57009,
         writable=True,
     )
+    g_i_c_max = field(
+        t=FieldType.UINT16,
+        address=57011,
+        unit="A",
+    )
     b_soc_low = field(
         t=FieldType.UINT16,
         address=57016,
@@ -427,6 +434,11 @@ class PA030(BluettiDevice):
         t=FieldType.UINT16,
         address=57017,
         unit="%",
+    )
+    d_working_mode = field(
+        t=FieldType.ENUM,
+        address=57020,
+        enum_type=WorkingMode,
     )
     d_charging_mode = field(
         t=FieldType.ENUM,

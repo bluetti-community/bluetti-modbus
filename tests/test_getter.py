@@ -181,9 +181,12 @@ def test_pa030_is_ac500s_register_set_read_only_with_its_own_scales():
         "d_inverter_2_c",
     }
     # The AC charging mode is not a Balco 260 field: it sits at the AC200L's
-    # address, with Custom added.
+    # address, with Custom added. The working mode and the grid charging
+    # current limit are the Apex 300's own, both read-only.
     assert set(pa030.field_names()) == set(ac500.field_names()) | extra | {
-        "d_charging_mode"
+        "d_charging_mode",
+        "d_working_mode",
+        "g_i_c_max",
     }
     for name in extra:
         assert pa030.get_field(name).address == balco260.get_field(name).address
