@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Test one documented setting register for writes, on the owner's terms.
+"""Test one setting register for writes, on the owner's terms.
 
 For a device whose profile is still read-only: reads the register, writes
 the value it already holds (which changes nothing on the device), and
@@ -10,7 +10,7 @@ library records per device (bluetti_device.py, _INTERNAL_WRITE_ADDRESS).
 With --value it then writes the new value, reads it back, and restores the
 original unless --keep is given.
 
-Only the documented setting registers are accepted, at unit id 1:
+Only these setting registers are accepted, at unit id 1:
 
     57001  AC output switch      - refused unless --allow-ac-output: on a
                                    FridgePower this powers the fridge
@@ -19,6 +19,9 @@ Only the documented setting registers are accepted, at unit id 1:
     57010  grid feed-in switch
     57016  battery SOC low threshold (%)
     57017  battery SOC high threshold (%)
+    57023  AC charging mode      - 0 Standard, 1 Silent, 2 Turbo, 4 Custom;
+                                   not in BLUETTI's list, read on an AC200PL
+                                   and an Apex 300
 
 Stop anything else polling the device first: in Home Assistant, disable
 the integration entry itself (the switch at the top of its page - disabling
@@ -38,6 +41,7 @@ import asyncio
 import json
 import struct
 import sys
+from collections.abc import Collection
 from datetime import UTC, datetime
 
 from modbus_connection import ModbusTcpParams
@@ -50,13 +54,14 @@ from modbus_connection.exceptions import (
 )
 from modbus_connection.tmodbus import ModbusConnection
 
-REGISTERS: dict[int, tuple[str, range]] = {
+REGISTERS: dict[int, tuple[str, Collection[int]]] = {
     57001: ("ac_o_switch", range(2)),
     57005: ("dc_o_switch", range(2)),
     57009: ("g_i_switch", range(2)),
     57010: ("g_o_switch", range(2)),
     57016: ("b_soc_low", range(101)),
     57017: ("b_soc_high", range(101)),
+    57023: ("d_charging_mode", (0, 1, 2, 4)),
 }
 DEVICES = (
     "balco260",
@@ -67,6 +72,7 @@ DEVICES = (
     "ac500",
     "ac200l",
     "ep500p",
+    "pa030",
 )
 
 
@@ -223,7 +229,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         type=int,
         choices=sorted(REGISTERS),
         required=True,
-        help="the documented setting register to test",
+        help="the setting register to test",
     )
     p.add_argument(
         "--value",
@@ -252,7 +258,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
             "57001 is the AC output switch; pass --allow-ac-output if you really mean it"
         )
     if args.value is not None and args.value not in REGISTERS[args.register][1]:
-        p.error(f"--value {args.value} is outside the register's range")
+        p.error(f"--value {args.value} is not one of the register's values")
     if args.keep and args.value is None:
         p.error("--keep needs --value")
     if args.output is None:
