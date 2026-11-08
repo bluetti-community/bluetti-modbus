@@ -32,6 +32,7 @@ from .devices import (
 from .enums import (
     FAULT_DESCRIPTIONS,
     WARNING_DESCRIPTIONS,
+    ApexChargingMode,
     ChargingMode,
     InverterFault,
     InverterStatus,
@@ -59,6 +60,7 @@ __all__ = [
     "PACK_INFO_FIELDS",
     "WARNING_DESCRIPTIONS",
     "WRITABLE_REGISTERS",
+    "ApexChargingMode",
     "Balco260",
     "Balco500",
     "Balcotrans",

@@ -642,6 +642,25 @@ async def test_write_knows_the_pa030_switch_echoes(caplog):
 
 
 @pytest.mark.asyncio
+async def test_write_knows_the_pa030_charging_mode_echo(caplog):
+    # Captured on a real Apex 300 (bluetti-registers#49): the AC charging
+    # mode confirms at 2020 for every value written. On file, so debug.
+    from bluetti_modbus_lib import ApexChargingMode
+    from bluetti_modbus_lib.devices import PA030
+
+    for value in ApexChargingMode:
+        device = PA030(MockModbusConnection().for_unit(1))
+        device.modbus_unit.write_register = AsyncMock(  # type: ignore[method-assign]
+            side_effect=_mismatched_confirmation(6, 2020, int(value))
+        )
+        with caplog.at_level(logging.DEBUG, logger="bluetti_modbus_lib"):
+            await device.write("d_charging_mode", value)  # must not raise
+
+    assert "d_charging_mode (57023) confirmed at internal register 2020" in caplog.text
+    assert not [r for r in caplog.records if r.levelno >= logging.WARNING]
+
+
+@pytest.mark.asyncio
 async def test_write_knows_the_ac500_ac_switch_echo(caplog):
     # Captured on a real AC500 (a Home Assistant log): the AC output switch
     # confirms at 3007, as on the AC240. On file, so debug.

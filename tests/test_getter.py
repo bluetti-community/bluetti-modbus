@@ -129,6 +129,7 @@ def test_pa030_is_ac500s_register_set_read_only_with_its_own_scales():
     # the grid frequency the generic 0.1 (raw 500 on the mains). The two output
     # switches are the writable fields: toggled and read back on real units.
     # The grid charging switch accepts a write but has no effect, so it is not.
+    # The AC charging mode takes a write too, the app following each value.
     # A unit on the grid also fills the inverter's and the grid phase's flow
     # registers, the totals' health, status and time to full, and the pack
     # block for its own battery, all at the Balco 260's addresses. A
@@ -179,9 +180,19 @@ def test_pa030_is_ac500s_register_set_read_only_with_its_own_scales():
         "d_inverter_2_v",
         "d_inverter_2_c",
     }
-    assert set(pa030.field_names()) == set(ac500.field_names()) | extra
+    # The AC charging mode is not a Balco 260 field: it sits at the AC200L's
+    # address, with Custom added.
+    assert set(pa030.field_names()) == set(ac500.field_names()) | extra | {
+        "d_charging_mode"
+    }
     for name in extra:
         assert pa030.get_field(name).address == balco260.get_field(name).address
+    ac200l = get_device("ac200l")
+    assert ac200l is not None
+    assert (
+        pa030.get_field("d_charging_mode").address
+        == ac200l.get_field("d_charging_mode").address
+    )
 
     assert pa030.get_field("b_v_total").scale == 0.01
     assert ac500.get_field("b_v_total").scale == 0.1
@@ -195,6 +206,7 @@ def test_pa030_is_ac500s_register_set_read_only_with_its_own_scales():
         "ac_o_switch",
         "dc_o_switch",
         "g_i_switch",
+        "d_charging_mode",
     }
 
 
