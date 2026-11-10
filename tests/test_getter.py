@@ -273,7 +273,8 @@ def test_balco500_has_only_one_pv_string_unlike_balco260s_four():
 def test_balco500_writes_only_the_soc_limits_tested_on_hardware():
     # Same policy as EP2000 (import.py's WRITABLE_FIELDS_ONLY): the schema
     # declares the switches writeable too, but only the SoC limits have
-    # taken a new value and back on a real unit.
+    # taken a new value and back on a real unit - within 5-100, as in the
+    # BLUETTI app.
     device = get_device("balco500")
     assert device is not None
 
@@ -281,7 +282,7 @@ def test_balco500_writes_only_the_soc_limits_tested_on_hardware():
     assert writable == {"b_soc_low", "b_soc_high"}
     for name in ("b_soc_low", "b_soc_high"):
         bound = device.get_field(name).writable
-        assert (bound.min, bound.max) == (0, 100)
+        assert (bound.min, bound.max) == (5, 100)
 
 
 def test_get_device_ep2000():
