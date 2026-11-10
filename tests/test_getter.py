@@ -266,15 +266,18 @@ def test_balco500_has_only_one_pv_string_unlike_balco260s_four():
         assert f"pv_{n}_i_type" not in names
 
 
-def test_balco500_writable_fields_stay_read_only_pending_confirmation():
-    # Same policy as EP2000: unconfirmed against real hardware, so nothing
-    # here is marked writable yet, even though the schema documents these
-    # as writable on Balco260 (see import.py's own device-name gate).
+def test_balco500_writes_only_the_soc_limits_tested_on_hardware():
+    # Same policy as EP2000 (import.py's WRITABLE_FIELDS_ONLY): the schema
+    # declares the switches writeable too, but only the SoC limits have
+    # taken a new value and back on a real unit.
     device = get_device("balco500")
     assert device is not None
 
-    for name in ("ac_o_switch", "g_i_switch", "g_o_switch", "b_soc_low", "b_soc_high"):
-        assert device.get_field(name).writable is False
+    writable = {n for n in device.field_names() if device.get_field(n).writable}
+    assert writable == {"b_soc_low", "b_soc_high"}
+    for name in ("b_soc_low", "b_soc_high"):
+        bound = device.get_field(name).writable
+        assert (bound.min, bound.max) == (0, 100)
 
 
 def test_get_device_ep2000():

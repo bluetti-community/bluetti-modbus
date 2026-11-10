@@ -34,7 +34,7 @@ meaning.
 | Device | `get_device()` id | Status | Writable |
 |---|---|---|---|
 | Balco 260 | `balco260` | Confirmed by BLUETTI and on real hardware | AC output, grid in/out switches, SOC thresholds |
-| Balco 500 | `balco500` | Read on two real units ([evidence][ev-balco500]) | - |
+| Balco 500 | `balco500` | Read on two real units ([evidence][ev-balco500]) | SOC thresholds |
 | EP2000 | `ep2000` | Read on five real units ([evidence][ev-ep2000]) | AC output, grid charging, grid feed-in switches, SOC thresholds |
 | S Meter | `smeter` | Confirmed by BLUETTI and on real hardware | - |
 | AC500 | `ac500` | Confirmed on real hardware ([evidence][ev-ac500]) | AC/DC output switches |
@@ -52,7 +52,8 @@ Notes:
 - **Balco 500** comes from BLUETTI's official register spec and has been read
   on real units: its pack current is a plain 0.1 A magnitude, its pack
   temperature is °C plus 40, and its DSP version is at 50210, with no ARM
-  version served. Nothing is writable yet.
+  version served. Its SOC thresholds are writable; they confirm at the
+  Balco 260's internal addresses (2022, 2023). Its switches stay read-only.
 - **EP2000** comes from the same spec and has been read on real units, which
   settled its signed powers, two-part versions and signed pack current. Its
   two MPPTs are reported as PV1 and PV2 (no PV3/PV4), and its pack

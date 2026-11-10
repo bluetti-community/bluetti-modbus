@@ -230,8 +230,11 @@ MAX_SPAN_OVERRIDES = {"Balco260": 20, "FP": 20, "Balcotrans": 10}
 # the AC output (57001), grid charging (57009) and grid feed-in (57010)
 # switches and the SoC limits (57016, 57017) each confirmed a same-value
 # write, then a new value and back, each read back (bluetti-registers#42).
+# Balco500: the SoC limits (57016, 57017) passed the same steps on a real
+# unit; its switches have not.
 WRITABLE_FIELDS_ONLY = {
-    "EP2000": {"ac_o_switch", "g_i_switch", "g_o_switch", "b_soc_low", "b_soc_high"}
+    "EP2000": {"ac_o_switch", "g_i_switch", "g_o_switch", "b_soc_low", "b_soc_high"},
+    "Balco500": {"b_soc_low", "b_soc_high"},
 }
 
 for d in schema:
