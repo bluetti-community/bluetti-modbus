@@ -644,10 +644,11 @@ async def test_write_knows_the_pa030_switch_echoes(caplog):
 @pytest.mark.asyncio
 async def test_write_knows_the_balco500_echoes(caplog):
     # Captured on a real Balco 500: the Balco 260's internal addresses. Its
-    # switches echoed 2207 / 2208 too, but are not writable yet.
+    # grid charging switch echoed 2207 too, but is not writable.
     from bluetti_modbus_lib.devices import Balco500
 
     for field_name, address, echo, value in (
+        ("g_o_switch", 57010, 2208, 1),
         ("b_soc_low", 57016, 2022, 25),
         ("b_soc_high", 57017, 2023, 85),
     ):
