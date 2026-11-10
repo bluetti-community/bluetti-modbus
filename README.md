@@ -54,6 +54,7 @@ Notes:
   temperature is °C plus 40, and its DSP version is at 50210, with no ARM
   version served. Its SOC thresholds are writable; they confirm at the
   Balco 260's internal addresses (2022, 2023). Its switches stay read-only.
+  Its working mode (57020) reads as the Apex 300's, read-only.
 - **EP2000** comes from the same spec and has been read on real units, which
   settled its signed powers, two-part versions and signed pack current. Its
   two MPPTs are reported as PV1 and PV2 (no PV3/PV4), and its pack
