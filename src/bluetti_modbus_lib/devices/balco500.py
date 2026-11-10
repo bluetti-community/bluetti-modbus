@@ -8,6 +8,20 @@ from ..fields import FieldType, dotted_version, field, nibble
 
 
 class Balco500(BluettiDevice):
+    register_ranges = (
+        (50001, 50031),
+        (50200, 50249),
+        (50250, 50271),
+        (51001, 51008),
+        (51200, 51224),
+        (51234, 51249),
+        (53001, 53012),
+        (57001, 57001),
+        (57009, 57010),
+        (57016, 57017),
+        (57020, 57020),
+    )
+
     d_num_inverters = field(
         t=FieldType.UINT16,
         address=50001,
@@ -557,4 +571,9 @@ class Balco500(BluettiDevice):
         address=57017,
         writable=Range(min=0, max=100),
         unit="%",
+    )
+    d_working_mode = field(
+        t=FieldType.ENUM,
+        address=57020,
+        enum_type=WorkingMode,
     )

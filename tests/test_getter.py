@@ -66,11 +66,13 @@ def test_fp_is_the_full_balco_set_plus_dc_switch_read_only():
     assert balco500 is not None and balco260 is not None
     assert fp is not None
 
-    assert set(fp.field_names()) >= set(balco500.field_names()) | {"dc_o_switch"}
+    # d_working_mode (57020) has been read on a Balco 500, not on an FP.
+    balco500_names = set(balco500.field_names()) - {"d_working_mode"}
+    assert set(fp.field_names()) >= balco500_names | {"dc_o_switch"}
     assert set(fp.field_names()) >= set(balco260.field_names())
     # The Balco 500's DSP version sits at 50210 (see
     # test_balco500_shares_balco260s_addresses_for_every_field_it_has).
-    for name in set(balco500.field_names()) - {"d_ver_dsp"}:
+    for name in balco500_names - {"d_ver_dsp"}:
         assert fp.get_field(name).address == balco500.get_field(name).address, name
         assert fp.get_field(name).count == balco500.get_field(name).count, name
     assert fp.max_span == balco260.max_span == 20
@@ -226,9 +228,11 @@ def test_balco500_shares_balco260s_addresses_for_every_field_it_has():
     # Balco260 dropped twelve registers its firmware never populates
     # (bluetti-registers#30, confirmed by BLUETTI) - Balco500 keeps them
     # until its own hardware says otherwise, so they are the only fields
-    # allowed to be on Balco500 and not on Balco260.
+    # allowed to be on Balco500 and not on Balco260, with the working mode
+    # (57020), read on a Balco 500 only.
     only_on_balco500 = set(balco500.field_names()) - set(balco260.field_names())
     assert only_on_balco500 == {
+        "d_working_mode",
         "ac_o_e_local",
         "ac_o_p_local",
         "b_t_avg",
