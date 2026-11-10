@@ -559,6 +559,7 @@ class Balco500(BluettiDevice):
     g_o_switch = field(
         t=FieldType.UINT16,
         address=57010,
+        writable=True,
     )
     b_soc_low = field(
         t=FieldType.UINT16,
