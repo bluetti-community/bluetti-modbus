@@ -642,6 +642,30 @@ async def test_write_knows_the_pa030_switch_echoes(caplog):
 
 
 @pytest.mark.asyncio
+async def test_write_knows_the_balco500_echoes(caplog):
+    # Captured on a real Balco 500: the Balco 260's internal addresses. Its
+    # switches echoed 2207 / 2208 too, but are not writable yet.
+    from bluetti_modbus_lib.devices import Balco500
+
+    for field_name, address, echo, value in (
+        ("b_soc_low", 57016, 2022, 25),
+        ("b_soc_high", 57017, 2023, 85),
+    ):
+        device = Balco500(MockModbusConnection().for_unit(1))
+        device.modbus_unit.write_register = AsyncMock(  # type: ignore[method-assign]
+            side_effect=_mismatched_confirmation(6, echo, value)
+        )
+        with caplog.at_level(logging.DEBUG, logger="bluetti_modbus_lib"):
+            await device.write(field_name, value)  # must not raise
+
+        assert (
+            f"{field_name} ({address}) confirmed at internal register {echo}"
+            in caplog.text
+        )
+    assert not [r for r in caplog.records if r.levelno >= logging.WARNING]
+
+
+@pytest.mark.asyncio
 async def test_write_knows_the_pa030_charging_mode_echo(caplog):
     # Captured on a real Apex 300 (bluetti-registers#49): the AC charging
     # mode confirms at 2020 for every value written. On file, so debug.
