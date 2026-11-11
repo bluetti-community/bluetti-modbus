@@ -378,17 +378,16 @@ async def test_b_soc_low_write_within_bounds_reaches_the_device():
 
 
 @pytest.mark.asyncio
-async def test_b_soc_low_write_above_the_bound_is_rejected():
+async def test_b_soc_high_write_below_the_bound_is_rejected():
     device, mock_conn = _balco260_with_unit()
 
-    # 95 - within the old, wider 0-100 range this field used to have, so
-    # this is a real regression check for the tightened 5-90 bound, not
-    # just any out-of-range value.
+    # 3 - within the register's own 0-100 but below the app's 5-100, so this
+    # checks the profile's bound, not just any out-of-range value.
     with pytest.raises(RangeInvalid):
-        await device.write("b_soc_low", 95)
+        await device.write("b_soc_high", 3)
 
     # Rejected before it ever reaches the device - nothing was written.
-    assert 57016 not in mock_conn.for_unit(1).holding
+    assert 57017 not in mock_conn.for_unit(1).holding
 
 
 @pytest.mark.asyncio

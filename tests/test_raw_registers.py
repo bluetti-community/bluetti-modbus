@@ -205,11 +205,11 @@ async def test_write_register_refuses_the_ep2000s_own_settings():
 
 @pytest.mark.asyncio
 async def test_write_register_applies_the_fields_own_bound():
-    # b_soc_low is 5-90 on a Balco 260, narrower than the register's 0-100.
+    # b_soc_low is 5-100 on a Balco 260, narrower than the register's 0-100.
     device, _ = _device()
 
     with pytest.raises(ValueError, match="out of range for 57016"):
-        await device.write_register(57016, 95, settle=0)
+        await device.write_register(57016, 3, settle=0)
 
 
 @pytest.mark.asyncio
