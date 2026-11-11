@@ -124,7 +124,7 @@ ISOLATED_SETTINGS_DEVICES = {"FP", "Balco500"}
 # multi-register uint fields (g_1_p_active, d_p_active_target_l1, d_export_
 # limit, etc.) - those are SunSpec/DER-style registers, which commonly pack
 # a mantissa and a separate scale factor rather than one plain wide integer,
-# and EP2000 is still spec-derived, unconfirmed hardware (see the README) -
+# and none of them has been checked as a wide integer on a real EP2000 -
 # widening them the same way as these confirmed Balco260 fields would be a
 # guess, not a verified fix. b_error (length 3) is also left alone: there's
 # no 3-register FieldType, and it's an already-undecoded raw bitmap with no
@@ -308,11 +308,12 @@ for d in schema:
         # probatio validator instead of a bare True, so an out-of-range
         # write is rejected before it ever reaches the device.
         #
-        # Balco260 and AC500 only for now, even though EP2000 shares (and
-        # adds to) the same writeable fields in the schema - EP2000 is still
-        # spec-derived, not verified against real hardware (see the
-        # README), and writing to an unconfirmed device's control
-        # registers is a materially bigger risk than reading from it.
+        # Only the devices listed below take every field the schema marks
+        # writeable; any other device takes only the fields
+        # WRITABLE_FIELDS_ONLY lists for it (EP2000, Balco500), or none. A
+        # write to a device's control registers is wired only once it has
+        # been tested on real hardware: writing is a materially bigger risk
+        # than reading.
         # AC500's ac_o_switch/dc_o_switch are each independently confirmed
         # writable on real hardware by a different tester (see
         # bluetti-official/bluetti-modbus-tcp-slave#5) - g_i_switch isn't
