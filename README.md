@@ -38,7 +38,7 @@ meaning.
 | EP2000 | `ep2000` | Read on five real units ([evidence][ev-ep2000]) | AC output, grid charging, grid feed-in switches, SOC thresholds |
 | S Meter | `smeter` | Confirmed by BLUETTI and on real hardware | - |
 | AC500 | `ac500` | Confirmed on real hardware ([evidence][ev-ac500]) | AC/DC output switches |
-| AC200L | `ac200l` | Beta - confirmed on a real unit against its BLE readings ([evidence][ev-ac200l]) | AC/DC output, power lifting switches; AC charging mode |
+| AC200L | `ac200l` | Confirmed on real units ([evidence][ev-ac200l]) | AC/DC output, power lifting switches; AC charging mode |
 | EP500Pro | `ep500p` | Confirmed on two real units ([evidence][ev-ep500p]) | AC/DC output, grid charging switches |
 | FridgePower | `fp` | Confirmed on three real units ([evidence][ev-fp]) | DC output, grid charging switches |
 | Balco Transfer Hub | `balcotrans` | Confirmed on two real units against the app ([evidence][ev-hub]) | - |
@@ -59,9 +59,10 @@ Notes:
 - **EP2000** comes from the same spec and has been read on real units, which
   settled its signed powers, two-part versions and signed pack current. Its
   two MPPTs are reported as PV1 and PV2 (no PV3/PV4), and its pack
-  temperature is in °F. On this model the BLUETTI app's VPP option is what
-  opens the Modbus TCP port - its web page has no switch for it. Nothing is
-  writable yet.
+  temperature is °C plus 40. On this model the BLUETTI app's VPP option is what
+  opens the Modbus TCP port - its web page has no switch for it. Its grid
+  charging switch only acts in the app's Custom working mode, while its
+  time-of-use settings allow charging.
 - **Balco Transfer Hub** has no battery of its own: its SOC, battery voltage
   and PV registers carry the connected power station's values. Its firmware
   serves no writable register, and its energy counters stay at zero, so
@@ -81,8 +82,9 @@ Notes:
   internal addresses (2011, 2012), not the AC family's 3008.
 - **FridgePower** is a Balco-family device on the Modbus side: the full
   BalcoXX register set, pack voltage at 0.01 V, signed grid power. Its SOC
-  thresholds refuse writes (unlike the Balco 260's); the AC output and grid
-  feed-in switches are untried.
+  thresholds refuse writes (unlike the Balco 260's); the AC output switch is
+  untried, and the unit is off-grid only, so its grid feed-in switch has
+  nothing to switch.
 - `AC200L`, `EP500P`, `FP` and `PA030` are named after the type string the
   device itself gives at register 50200.
 - An AC240P reads with the `ac240` profile ([evidence][ev-ac240p]), an AC200PL
@@ -429,13 +431,12 @@ This library is the Modbus layer for Home Assistant integrations built on
 top of it:
 
 - [`hassio-bluetti-modbus`][hassio-bluetti-modbus] - a HACS-installable
-  custom integration, vendoring this library directly (see its own README
-  for why).
+  custom integration, vendoring this library directly.
 - [`bluetti-home-assistant`][bluetti-home-assistant] - the cloud
   integration; its built-in Modbus path, now deprecated in favour of the
   one above, depends on this library via PyPI.
-- [home-assistant/core#180602][ha-core-pr] - an in-review attempt at a
-  built-in `home-assistant/core` integration for the Modbus-only path.
+- [home-assistant/core#180602][ha-core-pr] - the built-in `bluetti_modbus`
+  integration, in Home Assistant 2026.11 for the Balco 260.
 
 ## Relationship to Patrick762's `bluetti-modbus-lib`
 
@@ -476,7 +477,7 @@ automatically, no local setup required.
 To set it up manually instead: this project uses a plain `venv` + `pip`
 workflow - no Poetry, no Node tooling required. You need at least:
 
-- Python 3.13+
+- Python 3.12+
 
 ```bash
 python -m venv .venv
@@ -559,7 +560,7 @@ SOFTWARE.
 [bluetti-community]: https://github.com/bluetti-community
 [bluetti-home-assistant]: https://github.com/bluetti-community/bluetti-home-assistant
 [bluetti-registers-naming]: https://github.com/bluetti-community/bluetti-registers#naming-convention-for-field-names
-[ev-ac200l]: https://github.com/bluetti-community/bluetti-modbus/issues/76
+[ev-ac200l]: https://github.com/bluetti-community/bluetti-registers/issues/31
 [ev-ac500]: https://github.com/bluetti-community/bluetti-registers/issues/13
 [ev-balco500]: https://github.com/bluetti-community/bluetti-registers/issues/68
 [ev-ep2000]: https://github.com/bluetti-community/bluetti-registers/issues/42

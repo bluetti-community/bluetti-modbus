@@ -19,7 +19,7 @@ a wrong/missing/impossible value, this guide walks you through gathering the evi
 - A computer on the *same* local network as the device (Modbus TCP, port 502, isn't routable over
   the internet - this has to be a phone hotspot, home Wi-Fi, whatever network the device itself is
   on).
-- Python 3.10 or newer.
+- Python 3.12 or newer.
 
 ## 1. Install Python and this library
 
@@ -57,13 +57,13 @@ fastest way to see what's already working and what isn't:
 bluetti-modread -c <device-ip> -p 502 -t balco260
 ```
 
-Replace `balco260` with `ep2000` or `smeter` if that's your device (see the main
-[README](README.md) for a sample of what the output looks like). If a beta profile for your
+Replace `balco260` with your device's id from the Supported devices table of the main
+[README](README.md), which also shows a sample of the output. If a beta profile for your
 device exists on a branch (check open issues/PRs first), you can point pip at that branch instead
 of a released version, e.g.:
 
 ```
-pip install --force-reinstall "bluetti-modbus[cli] @ git+https://github.com/bluetti-community/bluetti-modbus@ac500-beta"
+pip install --force-reinstall "bluetti-modbus[cli] @ git+https://github.com/bluetti-community/bluetti-modbus@<branch>"
 ```
 
 If this runs cleanly and every value looks sane compared to the BLUETTI app, there may be nothing
@@ -319,7 +319,7 @@ matters, not register data.
 ## 6. Don't have this exact model? Adapt a similar one
 
 If your device shares a protocol family with one already supported (BLUETTI's AC500 and Balco260
-share most of the same "EBOX" register layout, for example), the fastest path is usually:
+share most of the same register layout, for example), the fastest path is usually:
 
 1. Start from the closest existing device's field list (e.g. `src/bluetti_modbus_lib/devices/balco260.py`).
 2. Query each address manually with a Modbus TCP client (a phone app works fine, or the scan

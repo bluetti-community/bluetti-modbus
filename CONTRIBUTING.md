@@ -10,26 +10,28 @@ an AI assistant. The rest of this document is for code changes.
 
 ## Before you start
 
-- `src/bluetti_modbus_lib/devices/balco260.py` and `ep2000.py` are
-  **generated** from [bluetti-registers][bluetti-registers] by `import.py`
-  (see the `GENERATED FILE! DO NOT EDIT!` header at the top of each). A
+- Every device file in `src/bluetti_modbus_lib/devices/` (all but
+  `getter.py` and `battery_pack.py`) is **generated** from
+  [bluetti-registers][bluetti-registers] by `import.py` (see the
+  `GENERATED FILE! DO NOT EDIT!` header at the top of each). A
   [scheduled workflow](.github/workflows/sync-devices.yml) already keeps them
-  in sync weekly - if a field is wrong, missing, or misnamed, the fix belongs
-  in `bluetti-registers`, not here. Everything else in `src/` is regular,
+  in sync weekly with the tag `import.py` pins - if a field is wrong,
+  missing, or misnamed, the fix belongs in `bluetti-registers`, not here. Everything else in `src/` is regular,
   hand-maintained code.
 - This library is primarily read-only by design (see the README's Architecture
   section) - it decodes what a device reports. The exception is the small,
   explicit set of fields `bluetti-registers`' schema itself marks
   `writeable` (a real, deliberate protocol fact - the device documents that
   register as writable, not something this library invents): `import.py`
-  wires those into `field(writable=...)`, bounded with a
+  wires those that took a write on real hardware (its per-device lists)
+  into `field(writable=...)`, bounded with a
   [`probatio`][probatio] validator when the schema also carries
   `num_min`/`num_max`. Adding write support for a field the schema does
   *not* already mark writeable is still the bigger design conversation worth
   an issue first - this isn't a general invitation to make arbitrary fields
   writable.
-- `bluetti_modbus_lib.devices.*` (Balco260/EP2000/SMeter) is the integration
-  surface other applications should build on; `bluetti_modbus_lib.modbus`
+- `bluetti_modbus_lib.devices.*` is the integration surface other
+  applications should build on; `bluetti_modbus_lib.modbus`
   (`BluettiModbusClient`) exists only for the `bluetti-modread` CLI and
   standalone/manual use.
 - `BluettiModbusClient`'s `backend=` parameter defaults to `"tmodbus"` since
@@ -41,18 +43,13 @@ an AI assistant. The rest of this document is for code changes.
   raises the same `ModbusTimeoutError` for both). `backend="pymodbus"`
   (`pip install 'bluetti-modbus[cli-pymodbus]'`) stays available for anyone
   who needs the previous default.
-- EP2000 support is currently spec-derived: BLUETTI's own official register
-  list confirms the register map (see `bluetti-registers`' provenance for
-  each field), but it isn't yet verified against real EP2000 hardware - the
-  original removal's report of a closed port 502 on one specific unit
-  ([bluetti-official/bluetti-home-assistant#125][ep2000-issue]) is still
-  unexplained. If you have an EP2000 and can confirm it actually answers
-  Modbus TCP, that report is exactly the kind of real-world confirmation
-  this project values.
+- EP2000 support comes from BLUETTI's official register list, corrected
+  from reads on real units ([bluetti-registers#42][ep2000-issue]). On that
+  model the BLUETTI app's VPP option is what opens port 502.
 
 ## Setting up a development environment
 
-Python 3.13+, plain `venv` + `pip` (no Poetry, no Node tooling):
+Python 3.12+, plain `venv` + `pip` (no Poetry, no Node tooling):
 
 ```bash
 python -m venv .venv
@@ -92,6 +89,6 @@ fix and an unrelated refactor are two PRs, not one. CI (`tests.yml`) has to
 be green before merge.
 
 [bluetti-registers]: https://github.com/bluetti-community/bluetti-registers
-[ep2000-issue]: https://github.com/bluetti-official/bluetti-home-assistant/issues/125
+[ep2000-issue]: https://github.com/bluetti-community/bluetti-registers/issues/42
 [probatio]: https://pypi.org/project/probatio/
 [truncated-frames-issue]: https://github.com/bluetti-community/bluetti-modbus/issues/29
