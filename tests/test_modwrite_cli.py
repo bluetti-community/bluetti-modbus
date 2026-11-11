@@ -47,16 +47,16 @@ def test_a_read_only_field_is_refused_and_names_the_writable_ones():
 
 
 def test_a_value_outside_the_declared_range_is_refused_with_the_bounds():
-    # Balco260's b_soc_low is Range(5, 90) - the device's own limits, so
+    # Balco260's b_soc_low is Range(5, 100) - the device's own limits, so
     # they are reported rather than discovered by the device rejecting it.
     device = _device()
     assert isinstance(device.get_field("b_soc_low").writable, Range)
 
     with pytest.raises(WriteRefused, match="outside what") as err:
-        prepare_write(device, "b_soc_low", "95", allow_ac_output=False)
+        prepare_write(device, "b_soc_low", "3", allow_ac_output=False)
 
     assert "5" in str(err.value)
-    assert "90" in str(err.value)
+    assert "100" in str(err.value)
 
 
 def test_a_value_inside_the_range_is_accepted():
