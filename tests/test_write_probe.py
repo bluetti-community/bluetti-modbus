@@ -36,6 +36,15 @@ def test_the_charging_mode_refuses_a_value_no_unit_has_shown(write_probe, value)
         write_probe.parse_args([*BASE, "--register", "57023", "--value", str(value)])
 
 
+@pytest.mark.parametrize("register", [57011, 57012])
+def test_a_same_value_only_register_takes_no_value(write_probe, register, capsys):
+    args = write_probe.parse_args([*BASE, "--register", str(register)])
+    assert (args.register, args.value) == (register, None)
+    with pytest.raises(SystemExit):
+        write_probe.parse_args([*BASE, "--register", str(register), "--value", "24"])
+    assert "same-value write only" in capsys.readouterr().err
+
+
 def test_a_same_value_write_needs_no_value(write_probe):
     args = write_probe.parse_args([*BASE, "--register", "57023"])
     assert args.value is None
