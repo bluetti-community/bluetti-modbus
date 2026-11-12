@@ -22,6 +22,12 @@ Only these setting registers are accepted, at unit id 1:
     57023  AC charging mode      - 0 Standard, 1 Silent, 2 Turbo, 4 Custom;
                                    not in BLUETTI's list, read on an AC200PL
                                    and an Apex 300
+    57011  max. grid charging current (A) - same-value write only
+    57012  not identified                 - same-value write only
+
+The last two take no --value: what they hold is written back, nothing else,
+which is enough to see whether the device accepts the write and at which
+internal address it confirms it.
 
 Stop anything else polling the device first: in Home Assistant, disable
 the integration entry itself (the switch at the top of its page - disabling
@@ -59,6 +65,9 @@ REGISTERS: dict[int, tuple[str, Collection[int]]] = {
     57005: ("dc_o_switch", range(2)),
     57009: ("g_i_switch", range(2)),
     57010: ("g_o_switch", range(2)),
+    # No values: a same-value write only, to capture the confirmation.
+    57011: ("g_i_c_max", ()),
+    57012: ("register_57012", ()),
     57016: ("b_soc_low", range(101)),
     57017: ("b_soc_high", range(101)),
     57023: ("d_charging_mode", (0, 1, 2, 4)),
@@ -257,7 +266,10 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         p.error(
             "57001 is the AC output switch; pass --allow-ac-output if you really mean it"
         )
-    if args.value is not None and args.value not in REGISTERS[args.register][1]:
+    values = REGISTERS[args.register][1]
+    if args.value is not None and not values:
+        p.error(f"{args.register} takes a same-value write only, no --value")
+    if args.value is not None and args.value not in values:
         p.error(f"--value {args.value} is not one of the register's values")
     if args.keep and args.value is None:
         p.error("--keep needs --value")
