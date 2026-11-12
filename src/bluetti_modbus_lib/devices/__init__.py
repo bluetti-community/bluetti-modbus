@@ -1,5 +1,6 @@
 from .ac200l import AC200L as AC200L
 from .ac240 import AC240 as AC240
+from .ac300 import AC300 as AC300
 from .ac500 import AC500 as AC500
 from .balco260 import Balco260 as Balco260
 from .balco500 import Balco500 as Balco500

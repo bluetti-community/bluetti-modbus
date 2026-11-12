@@ -4,6 +4,7 @@ from modbus_connection import ModbusUnit
 
 from .ac200l import AC200L
 from .ac240 import AC240
+from .ac300 import AC300
 from .ac500 import AC500
 from .balco260 import Balco260
 from .balco500 import Balco500
@@ -20,6 +21,7 @@ def get_device(
 ) -> (
     AC200L
     | AC240
+    | AC300
     | AC500
     | FP
     | Balco260
@@ -56,6 +58,8 @@ def get_device(
         return PA030(unit)
     if d == "ac240":
         return AC240(unit)
+    if d == "ac300":
+        return AC300(unit)
     if d == "smeter":
         return SMeter(unit)
     else:
