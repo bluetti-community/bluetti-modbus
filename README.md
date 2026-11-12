@@ -44,6 +44,7 @@ meaning.
 | Balco Transfer Hub | `balcotrans` | Confirmed on two real units against the app ([evidence][ev-hub]) | - |
 | Apex 300 | `pa030` | Confirmed on a real unit against its app ([evidence][ev-pa030]) | AC/DC output, grid charging (Custom working mode only) switches; AC charging mode |
 | AC240 | `ac240` | Read on a real unit, register by register ([evidence][ev-ac240]) | AC/DC output, AC ECO, power lifting, grid charging (Custom UPS mode only) switches |
+| AC300 | `ac300` | Read on a real unit against its app ([evidence][ev-ac300]) | DC output switch |
 
 Notes:
 
@@ -408,7 +409,7 @@ All confirmed on real hardware; the details live in the linked issues.
   `bluetti-modread -t <its own id>` on the device before building on it:
   a dump taken with a neighbouring profile proves the registers, not the
   read plan.
-- **AC500 and EP500Pro: unit id 1 only.** A request to any other unit id
+- **AC500, EP500Pro and AC300: unit id 1 only.** A request to any other unit id
   gets no reply, and on an AC500 it froze the Modbus TCP stack until a
   power cycle ([details][ev-ac500]). Nothing in this library, and nothing
   built on it, may address another unit id on that family.
@@ -572,6 +573,7 @@ SOFTWARE.
 [ev-ac240p]: https://github.com/bluetti-community/bluetti-registers/issues/67
 [ev-ac200pl]: https://github.com/bluetti-community/bluetti-registers/issues/48
 [ev-ac240]: https://github.com/bluetti-community/bluetti-registers/issues/65
+[ev-ac300]: https://github.com/bluetti-community/bluetti-registers/issues/47
 [bluetti-registers]: https://github.com/bluetti-community/bluetti-registers
 [build-shield]: https://github.com/bluetti-community/bluetti-modbus/actions/workflows/tests.yml/badge.svg
 [build]: https://github.com/bluetti-community/bluetti-modbus/actions/workflows/tests.yml
