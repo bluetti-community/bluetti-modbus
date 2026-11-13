@@ -17,14 +17,23 @@ def test_every_field_is_its_own_read_block():
     assert block_count == field_count
 
 
-def test_only_the_dc_output_switch_is_writable():
-    # The one write confirmed in the app on a real unit (bluetti-registers#47).
-    # The SOC limits refuse a write there.
+def test_only_the_output_switches_are_writable():
+    # The two writes confirmed on a real unit, the outputs following
+    # (bluetti-registers#47). The SOC limits refuse a write there.
     device = AC300(None)
 
     writable = {n for n in device.field_names() if device.get_field(n).writable}
 
-    assert writable == {"dc_o_switch"}
+    assert writable == {"ac_o_switch", "dc_o_switch"}
+
+
+def test_grid_charging_register_is_not_read():
+    # 57009 reads 1 with Grid Charge off as with it on on a real unit
+    # (bluetti-registers#47), so the profile does not carry it.
+    device = AC300(None)
+
+    assert "g_i_switch" not in device.field_names()
+    assert (57009, 57009) not in device.register_ranges
 
 
 @pytest.mark.asyncio
