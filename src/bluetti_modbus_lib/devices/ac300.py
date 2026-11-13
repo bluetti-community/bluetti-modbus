@@ -19,6 +19,7 @@ class AC300(BluettiDevice):
         (50214, 50214),
         (50215, 50215),
         (50217, 50217),
+        (50219, 50219),
         (50229, 50229),
         (51001, 51001),
         (51002, 51002),
@@ -91,6 +92,11 @@ class AC300(BluettiDevice):
         address=50217,
         unit="W",
         count=1,
+    )
+    pv_1_i_p = field(
+        t=FieldType.UINT16,
+        address=50219,
+        unit="W",
     )
     pv_i_e_local = field(
         t=FieldType.UINT16,

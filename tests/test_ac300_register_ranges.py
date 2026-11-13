@@ -48,3 +48,21 @@ async def test_raw_words_decode_as_read_on_the_unit():
     assert device.values["pv_i_e_local"] == pytest.approx(546.6)
     assert device.values["d_ver_arm"] == "4037.07"
     assert device.values["d_iot_ver"] == "9041.17"
+
+
+@pytest.mark.asyncio
+async def test_pv_input_1_power_reads_from_50219():
+    # 50219, the AC500's pv_i_p_local, reads the app's DC Input Power 1 on a
+    # real AC300, also checked on the device display (bluetti-registers#47):
+    # 131 W while the total read 375 W. No register carries the second input.
+    unit = MockModbusConnection().for_unit(1)
+    unit.holding[50004] = 375
+    unit.holding[50219] = 131
+    device = AC300(unit)
+
+    await device.async_update_with_retry()
+
+    assert device.values["pv_1_i_p"] == 131
+    assert device.values["pv_i_p_total"] == 375
+    assert "pv_2_i_p" not in device.field_names()
+    assert "pv_i_p_local" not in device.field_names()
