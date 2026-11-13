@@ -275,16 +275,23 @@ def test_balco500_has_only_one_pv_string_unlike_balco260s_four():
         assert f"pv_{n}_i_type" not in names
 
 
-def test_balco500_writes_only_the_soc_limits_tested_on_hardware():
+def test_balco500_writes_only_the_fields_tested_on_hardware():
     # Same policy as EP2000 (import.py's WRITABLE_FIELDS_ONLY): the schema
-    # declares the other switches writeable too, but only the grid feed-in
-    # switch and the SoC limits have taken a new value and back on a real
-    # unit - the limits within 5-100, as in the BLUETTI app.
+    # declares the grid charging switch writeable too, but only the system
+    # switch, the grid feed-in switch, the SoC limits and the working mode
+    # have taken a new value and back on a real unit - the limits within
+    # 5-100, as in the BLUETTI app.
     device = get_device("balco500")
     assert device is not None
 
     writable = {n for n in device.field_names() if device.get_field(n).writable}
-    assert writable == {"g_o_switch", "b_soc_low", "b_soc_high"}
+    assert writable == {
+        "ac_o_switch",
+        "g_o_switch",
+        "b_soc_low",
+        "b_soc_high",
+        "d_working_mode",
+    }
     for name in ("b_soc_low", "b_soc_high"):
         bound = device.get_field(name).writable
         assert (bound.min, bound.max) == (5, 100)

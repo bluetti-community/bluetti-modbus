@@ -642,18 +642,22 @@ async def test_write_knows_the_pa030_switch_echoes(caplog):
 
 @pytest.mark.asyncio
 async def test_write_knows_the_balco500_echoes(caplog):
-    # Captured on a real Balco 500: the Balco 260's internal addresses. Its
-    # grid charging switch echoed 2207 too, but is not writable.
+    # Captured on a real Balco 500: the Balco 260's internal addresses, and
+    # 2005 for the working mode. Its grid charging switch echoed 2207 too,
+    # but is not writable.
+    from bluetti_modbus_lib import BalcoWorkingMode
     from bluetti_modbus_lib.devices import Balco500
 
     for field_name, address, echo, value in (
+        ("ac_o_switch", 57001, 2011, 0),
+        ("d_working_mode", 57020, 2005, BalcoWorkingMode.Custom),
         ("g_o_switch", 57010, 2208, 1),
         ("b_soc_low", 57016, 2022, 25),
         ("b_soc_high", 57017, 2023, 85),
     ):
         device = Balco500(MockModbusConnection().for_unit(1))
         device.modbus_unit.write_register = AsyncMock(  # type: ignore[method-assign]
-            side_effect=_mismatched_confirmation(6, echo, value)
+            side_effect=_mismatched_confirmation(6, echo, int(value))
         )
         with caplog.at_level(logging.DEBUG, logger="bluetti_modbus_lib"):
             await device.write(field_name, value)  # must not raise
