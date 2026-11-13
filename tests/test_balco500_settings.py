@@ -22,12 +22,13 @@ def test_settings_registers_are_read_in_runs_of_adjacent_declared_registers():
 
 
 @pytest.mark.asyncio
-async def test_the_working_mode_reads_as_the_apps():
-    # 57020 read 1 in Custom and 4 in Backup on a real unit, the Apex 300's
-    # numbering; not write-tested, so read-only.
-    from bluetti_modbus_lib import WorkingMode
+async def test_the_working_mode_reads_and_writes_as_the_apps():
+    # 57020 read 1 in Custom, 2 in Self-Consumption and 4 in Backup on a real
+    # unit, the Apex 300's numbering; Custom and Backup each written and read
+    # back there, the app following.
+    from bluetti_modbus_lib import BalcoWorkingMode
 
-    for raw, mode in ((1, WorkingMode.Custom), (4, WorkingMode.Backup)):
+    for raw, mode in ((m.value, m) for m in BalcoWorkingMode):
         unit = MockModbusConnection().for_unit(1)
         for address in range(50001, 57021):
             unit.holding[address] = 0
@@ -37,4 +38,7 @@ async def test_the_working_mode_reads_as_the_apps():
         await device.async_update_with_retry()
         assert device.values["d_working_mode"] == mode
 
-    assert not Balco500(None).get_field("d_working_mode").writable
+        await device.write("d_working_mode", BalcoWorkingMode.Backup)
+        assert unit.holding[57020] == 4
+
+    assert [m.name for m in BalcoWorkingMode] == ["Custom", "SelfConsumption", "Backup"]

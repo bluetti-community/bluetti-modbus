@@ -551,6 +551,7 @@ class Balco500(BluettiDevice):
     ac_o_switch = field(
         t=FieldType.UINT16,
         address=57001,
+        writable=True,
     )
     g_i_switch = field(
         t=FieldType.UINT16,
@@ -576,5 +577,6 @@ class Balco500(BluettiDevice):
     d_working_mode = field(
         t=FieldType.ENUM,
         address=57020,
-        enum_type=WorkingMode,
+        writable=True,
+        enum_type=BalcoWorkingMode,
     )

@@ -52,10 +52,12 @@ _INTERNAL_WRITE_ADDRESS: dict[str, dict[int, int]] = {
         57017: 2023,  # b_soc_high - SYS_SOC_HIGH_CAPACITY
     },
     "Balco500": {
+        57001: 2011,  # ac_o_switch - AC_SWITCH, captured on a real Balco 500
         57009: 2207,  # g_i_switch - CTRL_GRID, captured on a real Balco 500
         57010: 2208,  # g_o_switch - CTRL_FEED, captured on a real Balco 500
         57016: 2022,  # b_soc_low - captured on a real Balco 500, as on the Balco 260
         57017: 2023,  # b_soc_high - captured on a real Balco 500, as on the Balco 260
+        57020: 2005,  # d_working_mode - WORKING_MODE, captured on a real Balco 500
     },
     "AC200L": {
         57005: 3008,  # dc_o_switch - captured on a real AC200L

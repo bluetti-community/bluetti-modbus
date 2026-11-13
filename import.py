@@ -1,6 +1,6 @@
 import requests
 
-tag = "0.0.76"
+tag = "0.0.78"
 url = f"https://github.com/bluetti-community/bluetti-registers/releases/download/{tag}/modbus-tcp.json"
 
 output = "src/bluetti_modbus_lib/devices/"
@@ -241,11 +241,18 @@ MAX_SPAN_OVERRIDES = {"Balco260": 20, "FP": 20, "Balcotrans": 10}
 # the AC output (57001), grid charging (57009) and grid feed-in (57010)
 # switches and the SoC limits (57016, 57017) each confirmed a same-value
 # write, then a new value and back, each read back (bluetti-registers#42).
-# Balco500: the SoC limits (57016, 57017) and the grid feed-in switch
-# (57010) passed the same steps on a real unit; its other switches have not.
+# Balco500: the system switch (57001), the grid feed-in switch (57010), the
+# SoC limits (57016, 57017) and the working mode (57020) passed the same
+# steps on a real unit; its grid charging switch (57009) has not.
 WRITABLE_FIELDS_ONLY = {
     "EP2000": {"ac_o_switch", "g_i_switch", "g_o_switch", "b_soc_low", "b_soc_high"},
-    "Balco500": {"g_o_switch", "b_soc_low", "b_soc_high"},
+    "Balco500": {
+        "ac_o_switch",
+        "g_o_switch",
+        "b_soc_low",
+        "b_soc_high",
+        "d_working_mode",
+    },
 }
 
 for d in schema:
