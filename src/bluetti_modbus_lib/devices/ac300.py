@@ -28,7 +28,6 @@ class AC300(BluettiDevice):
         (53011, 53012),
         (57001, 57001),
         (57005, 57005),
-        (57009, 57009),
         (57016, 57016),
         (57017, 57017),
     )
@@ -131,15 +130,12 @@ class AC300(BluettiDevice):
     ac_o_switch = field(
         t=FieldType.UINT16,
         address=57001,
+        writable=True,
     )
     dc_o_switch = field(
         t=FieldType.UINT16,
         address=57005,
         writable=True,
-    )
-    g_i_switch = field(
-        t=FieldType.UINT16,
-        address=57009,
     )
     b_soc_low = field(
         t=FieldType.UINT16,

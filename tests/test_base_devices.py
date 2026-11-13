@@ -706,19 +706,24 @@ async def test_write_knows_the_ac500_ac_switch_echo(caplog):
 
 
 @pytest.mark.asyncio
-async def test_write_knows_the_ac300_dc_switch_echo(caplog):
-    # Captured on a real AC300 (bluetti-registers#47): the DC output switch
-    # confirms at 3008, as on the rest of the AC family. On file, so debug.
+@pytest.mark.parametrize(
+    ("name", "address", "echo"),
+    [("ac_o_switch", 57001, 3007), ("dc_o_switch", 57005, 3008)],
+)
+async def test_write_knows_the_ac300_switch_echoes(caplog, name, address, echo):
+    # Captured on a real AC300 (bluetti-registers#47): the AC and DC output
+    # switches confirm at 3007 and 3008, as on the rest of the AC family.
+    # On file, so debug.
     from bluetti_modbus_lib.devices import AC300
 
     device = AC300(MockModbusConnection().for_unit(1))
     device.modbus_unit.write_register = AsyncMock(  # type: ignore[method-assign]
-        side_effect=_mismatched_confirmation(6, 3008, 1)
+        side_effect=_mismatched_confirmation(6, echo, 1)
     )
     with caplog.at_level(logging.DEBUG, logger="bluetti_modbus_lib"):
-        await device.write("dc_o_switch", 1)  # must not raise
+        await device.write(name, 1)  # must not raise
 
-    assert "dc_o_switch (57005) confirmed at internal register 3008" in caplog.text
+    assert f"{name} ({address}) confirmed at internal register {echo}" in caplog.text
     assert not [r for r in caplog.records if r.levelno >= logging.WARNING]
 
 

@@ -44,7 +44,7 @@ meaning.
 | Balco Transfer Hub | `balcotrans` | Confirmed on two real units against the app ([evidence][ev-hub]) | - |
 | Apex 300 | `pa030` | Confirmed on a real unit against its app ([evidence][ev-pa030]) | AC/DC output, grid charging (Custom working mode only) switches; AC charging mode |
 | AC240 | `ac240` | Read on a real unit, register by register ([evidence][ev-ac240]) | AC/DC output, AC ECO, power lifting, grid charging (Custom UPS mode only) switches |
-| AC300 | `ac300` | Read on a real unit against its app ([evidence][ev-ac300]) | DC output switch |
+| AC300 | `ac300` | Read on a real unit against its app ([evidence][ev-ac300]) | AC/DC output switches |
 
 Notes:
 

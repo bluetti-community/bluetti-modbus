@@ -1,6 +1,6 @@
 import requests
 
-tag = "0.0.79"
+tag = "0.0.80"
 url = f"https://github.com/bluetti-community/bluetti-registers/releases/download/{tag}/modbus-tcp.json"
 
 output = "src/bluetti_modbus_lib/devices/"
@@ -350,9 +350,9 @@ for d in schema:
         # ac_power_lifting_switch written and read back on a real unit, and
         # g_i_switch too, though only in the "Custom UPS" charging mode
         # (bluetti-registers#65); the SOC thresholds carry no flag.
-        # AC300: dc_o_switch written and read back on a real unit, the app
-        # following (bluetti-registers#47); the schema carries no flag for
-        # ac_o_switch, g_i_switch or the SOC thresholds.
+        # AC300: ac_o_switch and dc_o_switch written and read back on a real
+        # unit, the outputs following (bluetti-registers#47); the schema
+        # carries no flag for the SOC thresholds.
         if name in (
             "Balco260",
             "AC500",
