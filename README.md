@@ -33,7 +33,7 @@ meaning.
 
 | Device | `get_device()` id | Status | Writable |
 |---|---|---|---|
-| Balco 260 | `balco260` | Confirmed by BLUETTI and on real hardware | AC output, grid in/out switches, SOC thresholds |
+| Balco 260 | `balco260` | Confirmed by BLUETTI and on real hardware | AC output, grid in/out switches, SOC thresholds, working mode |
 | Balco 500 | `balco500` | Read on two real units ([evidence][ev-balco500]) | System switch, grid feed-in switch, SOC thresholds, working mode |
 | EP2000 | `ep2000` | Read on five real units ([evidence][ev-ep2000]) | AC output, grid charging, grid feed-in switches, SOC thresholds |
 | S Meter | `smeter` | Confirmed by BLUETTI and on real hardware | - |
@@ -49,7 +49,9 @@ meaning.
 Notes:
 
 - **Balco 260** reports up to five BC260 expansion packs - see
-  [Multiple battery packs](#multiple-battery-packs-balco-260).
+  [Multiple battery packs](#multiple-battery-packs-balco-260). Its working
+  mode (57020: Custom, Self-Consumption or Backup) is writable; the register
+  is not in BLUETTI's list, so a unit that refuses it is read without it.
 - **Balco 500** comes from BLUETTI's official register spec and has been read
   on real units: its pack current is a plain 0.1 A magnitude, its pack
   temperature is °C plus 40, and its DSP version is at 50210, with no ARM

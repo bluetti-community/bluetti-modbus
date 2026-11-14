@@ -29,6 +29,7 @@ def test_writable_fields_are_the_ones_the_profile_declares():
         "g_o_switch",
         "b_soc_low",
         "b_soc_high",
+        "d_working_mode",
     ]
 
 

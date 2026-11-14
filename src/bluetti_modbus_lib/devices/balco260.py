@@ -8,6 +8,25 @@ from ..fields import FieldType, dotted_version, field, nibble, reference_offset_
 
 
 class Balco260(BluettiDevice):
+    register_ranges = (
+        (50001, 50019),
+        (50020, 50031),
+        (50200, 50214),
+        (50219, 50220),
+        (50234, 50253),
+        (50254, 50273),
+        (50274, 50283),
+        (51001, 51008),
+        (51200, 51219),
+        (51220, 51223),
+        (51234, 51247),
+        (53001, 53012),
+        (57001, 57001),
+        (57009, 57010),
+        (57016, 57017),
+        (57020, 57020),
+    )
+
     max_span = 20
 
     d_num_inverters = field(
@@ -552,4 +571,10 @@ class Balco260(BluettiDevice):
         address=57017,
         writable=Range(min=5, max=100),
         unit="%",
+    )
+    d_working_mode = field(
+        t=FieldType.ENUM,
+        address=57020,
+        writable=True,
+        enum_type=BalcoWorkingMode,
     )

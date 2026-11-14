@@ -1,6 +1,6 @@
 import requests
 
-tag = "0.0.80"
+tag = "0.0.81"
 url = f"https://github.com/bluetti-community/bluetti-registers/releases/download/{tag}/modbus-tcp.json"
 
 output = "src/bluetti_modbus_lib/devices/"
@@ -112,11 +112,10 @@ ISOLATED_RANGE_DEVICES = {
 # dc_o_switch at 57005 - within max_gap of both 57001 and 57009 - so the
 # default planner fused 57001-57010 into one read that timed out on a real
 # FridgePower and kept it out of Home Assistant (bluetti-community/
-# hassio-bluetti-modbus#127). Balco500 too, since 57020 sits within max_gap
-# of 57017 and a firmware need not serve 57018/57019. Balco260 only escapes
-# this because its settings registers sit more than max_gap apart.
+# hassio-bluetti-modbus#127). Balco260 and Balco500 too, since 57020 sits
+# within max_gap of 57017 and a firmware need not serve 57018/57019.
 SETTINGS_BLOCK_START = 57001
-ISOLATED_SETTINGS_DEVICES = {"FP", "Balco500"}
+ISOLATED_SETTINGS_DEVICES = {"FP", "Balco260", "Balco500"}
 
 
 # bluetti-registers documents each of these as spanning 2 registers
