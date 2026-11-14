@@ -7,6 +7,7 @@ from typing import Any, override
 
 from modbus_connection.exceptions import (
     AcknowledgeError,
+    IllegalDataAddressError,
     ModbusConnectionError,
     ModbusError,
     ModbusProtocolError,
@@ -92,6 +93,16 @@ _INTERNAL_WRITE_ADDRESS: dict[str, dict[int, int]] = {
         57001: 3007,  # ac_o_switch - captured on a real AC300
         57005: 3008,  # dc_o_switch - captured on a real AC300
     },
+}
+
+# Fields a firmware of the device may not serve, by device class name. Each
+# is read alone (its own register range), so a firmware without it refuses
+# that read with an illegal data address; the device then drops the field
+# and reads the rest - see BluettiDevice.async_update. Balco260: the working
+# mode (57020) is not in BLUETTI's register list and has been read on one
+# firmware only.
+_OPTIONAL_FIELDS: dict[str, tuple[str, ...]] = {
+    "Balco260": ("d_working_mode",),
 }
 
 # How many times a transient corrupted/truncated-reply error gets retried
@@ -335,11 +346,32 @@ class BluettiDevice(Component):
         (still also a ModbusError - see its own docstring), except for a
         transient busy response - see async_update_with_retry, which is what
         most callers want instead of calling this directly.
+
+        A device that refuses a read with an illegal data address while it
+        still reads optional fields (_OPTIONAL_FIELDS) drops them and is read
+        again: the fields then read as None, as after restrict_fields.
         """
         try:
             await super().async_update(notify=notify)
         except (AcknowledgeError, ServerDeviceBusyError):
             raise
+        except IllegalDataAddressError as err:
+            optional = [
+                name
+                for name in _OPTIONAL_FIELDS.get(type(self).__name__, ())
+                if name in self._register_fields
+            ]
+            if not optional:
+                raise BluettiModbusConnectionError(str(err)) from err
+            _LOGGER.info(
+                "The device refused a read (%s); no longer reading %s",
+                err,
+                ", ".join(optional),
+            )
+            self.restrict_fields(
+                [name for name in self.field_names() if name not in optional]
+            )
+            await self.async_update(notify=notify)
         except ModbusError as err:
             raise BluettiModbusConnectionError(str(err)) from err
 

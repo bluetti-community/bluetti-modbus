@@ -37,14 +37,14 @@ def _confirmation_at(address: int, value: int) -> ModbusProtocolError:
 
 
 def test_readable_ranges_join_field_spans_across_small_gaps():
-    device, _ = _device()
+    device, _ = _device(EP2000)
 
     ranges = device.readable_ranges()
 
-    assert (50001, 50031) in ranges
+    assert (50001, 50070) in ranges
     assert (57016, 57017) in ranges
-    # 57503 is not served by a Balco 260 and no field reads it.
-    assert not any(low <= 57503 <= high for low, high in ranges)
+    # No field of an EP2000 reads 57020.
+    assert not any(low <= 57020 <= high for low, high in ranges)
 
 
 def test_readable_ranges_keep_declared_ranges_apart():
