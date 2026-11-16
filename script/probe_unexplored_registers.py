@@ -1045,10 +1045,16 @@ def main(argv: list[str]) -> int:
             other_units |= {int(u) for u in args.pack_block.split(",") if u.strip()}
         other_units.discard(1)
         if other_units:
+            where = (
+                "On an AC500"
+                if args.device == "ac500"
+                else "On an AC500, whose register layout this device shares,"
+            )
             print(
-                f"refusing: on an {args.device.upper()} a request to a unit id other than 1 "
-                f"(here {sorted(other_units)}) froze the device's Modbus TCP stack until a "
-                "power cycle - see the module docstring (bluetti-registers#13). Unit 1 only."
+                f"refusing: --device {args.device} reads unit id 1 only (asked for "
+                f"{sorted(other_units)}). {where} a request to another unit id froze "
+                "Modbus TCP until a power cycle - see the module docstring "
+                "(bluetti-registers#13). Unit 1 only."
             )
             return 2
     if not args.yes:
