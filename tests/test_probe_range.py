@@ -82,6 +82,20 @@ def test_a_bad_span_prints_one_line_and_exits(probe, capsys):
     assert "below the start" in capsys.readouterr().out
 
 
+@pytest.mark.parametrize(
+    "option", [["--unit", "41"], ["--sweep-units", "1,41"], ["--pack-block", "41"]]
+)
+def test_an_apex_300_is_kept_at_unit_1(probe, capsys, option):
+    code = probe.main(["--host", "192.0.2.1", "--device", "pa030", "--yes", *option])
+
+    assert code == 2
+    assert "Unit 1 only" in capsys.readouterr().out
+
+
+def test_an_apex_300_checks_liveness_on_50002(probe):
+    assert probe.SANITY["pa030"] == (50002, None)
+
+
 def test_an_address_with_a_count_is_one_candidate_of_that_width(probe):
     # A 32-bit value or a string is one field, read one register per
     # request all the same - see _read_words().

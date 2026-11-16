@@ -56,11 +56,12 @@ Safety rules:
 - A timeout or a corrupted reply drops the link, waits --recover-delay,
   reconnects and re-reads the liveness register; after --max-timeouts of
   those in a row the run stops.
-- AC500 and EP500P (--device ac500 / ep500p): unit id 1 only, every option
-  that would address another unit id is refused. A real AC500 froze its
-  Modbus TCP stack until a power cycle on a single read at another unit id
-  (bluetti-registers#13); an EP500P went silent per connection. Their
-  liveness register is 50002 (50001 is not served there).
+- AC500, EP500P and Apex 300 (--device ac500 / ep500p / pa030): unit id 1
+  only, every option that would address another unit id is refused. A real
+  AC500 froze its Modbus TCP stack until a power cycle on a single read at
+  another unit id (bluetti-registers#13); an EP500P went silent per
+  connection; the Apex 300 shares their register layout and is not risked.
+  Their liveness register is 50002 (50001 is not served on the AC500).
 
 Nothing here writes to the device.
 
@@ -99,8 +100,9 @@ from modbus_connection.tmodbus import ModbusConnection
 # The liveness check, read before probing and after every link recovery: a
 # register in the device's documented range, with the range of values it
 # can plausibly hold (None: any answer will do). Balco family: 50001 "Number
-# of Inverters". AC500 / EP500P: 50002 "Total AC Output Power" - 50001 is
-# not served there (bluetti-registers#13). unknown: 50001, any value.
+# of Inverters". AC500 / EP500P / Apex 300: 50002 "Total AC Output Power" -
+# 50001 is not served on the AC500 (bluetti-registers#13). unknown: 50001,
+# any value.
 SANITY: dict[str, tuple[int, range | None]] = {
     "balco260": (50001, range(1, 11)),
     "balco500": (50001, range(1, 11)),
@@ -109,6 +111,7 @@ SANITY: dict[str, tuple[int, range | None]] = {
     "unknown": (50001, None),
     "ac500": (50002, None),
     "ep500p": (50002, None),
+    "pa030": (50002, None),
 }
 
 # Devices seen to answer an unserved address with silence rather than a
@@ -119,9 +122,10 @@ SILENT_ON_UNSERVED = frozenset({"balco500", "fp", "transfer-hub", "unknown"})
 
 # Devices on which a request to any unit id other than 1 froze the Modbus
 # TCP stack until a power cycle (AC500, bluetti-registers#13, 2026-09-19;
-# EP500P is the same register family and is not risked). Every option
-# that would address another unit id is refused for them in main().
-UNIT_1_ONLY_DEVICES = frozenset({"ac500", "ep500p"})
+# EP500P and the Apex 300 share that register layout and are not risked).
+# Every option that would address another unit id is refused for them in
+# main().
+UNIT_1_ONLY_DEVICES = frozenset({"ac500", "ep500p", "pa030"})
 
 # (name, address, register count, what declares it, unit, block)
 #
@@ -875,7 +879,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         choices=sorted(SANITY),
         required=True,
         help="which device this is: picks the liveness register and the safety rules "
-        "(unit id 1 only on ac500/ep500p; timeouts tolerated on transfer-hub/fp/"
+        "(unit id 1 only on ac500/ep500p/pa030; timeouts tolerated on transfer-hub/fp/"
         "balco500/unknown). unknown = a Balco-family device not listed here",
     )
     p.add_argument("--unit", type=int, default=1, help="Modbus unit id (default 1)")
