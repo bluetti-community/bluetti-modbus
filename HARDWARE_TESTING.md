@@ -181,15 +181,16 @@ So, in order:
    is that try; `--unit` picks the address.
 3. **Sweep unit ids slowly, or not at all.** One address per run, spaced
    by seconds, reading a single register. A device that answers nothing is
-   the normal outcome. Never sweep on an AC500 or EP500P - see below - and
+   the normal outcome. Never sweep on an AC500, EP500P or Apex 300 - see below - and
    never write anything while mapping.
 4. Wire with the device powered down: these terminal blocks also carry
    +12 V, a generator contact and external inputs, and a slip shorts the
    supply or closes the generator relay.
 
-**AC500 and EP500P: unit id 1 only.** On a real AC500 (bluetti-registers#13) a single-register
+**AC500, EP500P and Apex 300: unit id 1 only.** On a real AC500 (bluetti-registers#13) a single-register
 read at any other unit id got no reply and **froze the unit's Modbus TCP stack until a power
-cycle**; an EP500P went silent per connection. `--device ac500` / `ep500p` makes the probe use a
+cycle**; an EP500P went silent per connection; the Apex 300 shares their register layout and is
+not risked. `--device ac500` / `ep500p` / `pa030` makes the probe use a
 liveness register that family serves and refuse `--sweep-units`, `--pack-block`, `--unit` and
 every block that addresses another unit id. Unit-1 reads of unserved *addresses* are fine
 there. Write your own scan for one of these? Same rule: `unit_id=1`, nothing else.
