@@ -23,6 +23,7 @@ class FP(BluettiDevice):
         (57005, 57005),
         (57009, 57010),
         (57016, 57017),
+        (57023, 57023),
     )
 
     max_span = 20
@@ -643,4 +644,10 @@ class FP(BluettiDevice):
         t=FieldType.UINT16,
         address=57017,
         unit="%",
+    )
+    d_charging_mode = field(
+        t=FieldType.ENUM,
+        address=57023,
+        writable=True,
+        enum_type=ChargingMode,
     )
