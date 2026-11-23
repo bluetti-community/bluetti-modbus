@@ -799,14 +799,17 @@ async def test_ac200l_charging_mode_writes_its_integer_value():
 async def test_write_knows_the_fp_switch_echoes(caplog):
     # Captured on real FridgePowers (bluetti-registers#38): the DC output
     # switch confirms at 2012 and the grid charging switch at 2207 - the
-    # Balco 260's numbers, not the portable stations' 3008 - and the AC
-    # charging mode at 2020, as on the Apex 300. On file, so debug.
+    # Balco 260's numbers, not the portable stations' 3008 - the AC
+    # charging mode at 2020, as on the Apex 300, power lifting at 2021 and
+    # AC ECO at 2017. On file, so debug.
     from bluetti_modbus_lib.devices import FP
 
     for field_name, address, echo in (
         ("dc_o_switch", 57005, 2012),
         ("g_i_switch", 57009, 2207),
+        ("ac_power_lifting_switch", 57022, 2021),
         ("d_charging_mode", 57023, 2020),
+        ("ac_eco_switch", 57024, 2017),
     ):
         device = FP(MockModbusConnection().for_unit(1))
         device.modbus_unit.write_register = AsyncMock(  # type: ignore[method-assign]

@@ -83,13 +83,15 @@ def test_fp_is_the_full_balco_set_plus_dc_switch_read_only():
         assert fp.get_field(name).count == balco500.get_field(name).count, name
     assert fp.max_span == balco260.max_span == 20
     # Writes tested on real units (bluetti-registers#38): the DC output and
-    # grid charging switches and the AC charging mode take them, the SOC
-    # thresholds refuse them, the AC output and grid feed-in switches are
-    # untried.
+    # grid charging, power lifting and AC ECO switches and the AC charging
+    # mode take them, the SOC thresholds and the UPS mode refuse them, the
+    # AC output and grid feed-in switches are untried.
     assert {n for n in fp.field_names() if fp.get_field(n).writable} == {
         "dc_o_switch",
         "g_i_switch",
         "d_charging_mode",
+        "ac_power_lifting_switch",
+        "ac_eco_switch",
     }
     # The unit's pack voltage is 0.01 V, not the Balco 260's 0.1 (raw 2007
     # = 20.07 V for a 6-cell pack); its per-phase grid power is signed.

@@ -24,7 +24,14 @@ def test_settings_registers_are_read_in_runs_of_adjacent_declared_registers():
 
     settings = [block for block in _blocks(FP(None)) if block[0] >= 57001]
 
-    assert settings == [(57001, 1), (57005, 1), (57009, 2), (57016, 2), (57023, 1)]
+    assert settings == [
+        (57001, 1),
+        (57005, 1),
+        (57009, 2),
+        (57016, 2),
+        (57020, 1),
+        (57022, 3),
+    ]
 
 
 def test_no_settings_block_covers_an_undeclared_register():
