@@ -25,6 +25,9 @@ Only these setting registers are accepted, at unit id 1:
     57023  AC charging mode      - 0 Standard, 1 Silent, 2 Turbo, 4 Custom;
                                    not in BLUETTI's list, read on an AC200PL
                                    and an Apex 300
+    57027  max. grid input power (W) - 7000-9027 only; not in BLUETTI's
+                                   list, follows the app's setting on an
+                                   EP2000
     57011  max. grid charging current (A) - same-value write only
     57012  not identified                 - same-value write only
 
@@ -75,6 +78,8 @@ REGISTERS: dict[int, tuple[str, Collection[int]]] = {
     57017: ("b_soc_high", range(101)),
     57020: ("d_working_mode", (1, 2, 4, 5)),
     57023: ("d_charging_mode", (0, 1, 2, 4)),
+    # Only values the app itself has set on an EP2000.
+    57027: ("g_i_p_max", range(7000, 9028)),
 }
 DEVICES = (
     "balco260",
