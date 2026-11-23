@@ -21,10 +21,17 @@ Only these setting registers are accepted, at unit id 1:
     57017  battery SOC high threshold (%)
     57020  working mode          - 1 Custom, 2 Self-consumption, 4 Backup,
                                    5 Time of use; not in BLUETTI's list, read
-                                   on an Apex 300 and a Balco 500
+                                   on an Apex 300 and a Balco 500; the
+                                   FridgePower's UPS modes use the same
+                                   values (1 Custom, 2 PV Priority,
+                                   4 Standard, 5 Time Control)
+    57022  power lifting switch  - not in BLUETTI's list, follows the app
+                                   on an AC240 and a FridgePower
     57023  AC charging mode      - 0 Standard, 1 Silent, 2 Turbo, 4 Custom;
                                    not in BLUETTI's list, read on an AC200PL
                                    and an Apex 300
+    57024  AC ECO switch         - not in BLUETTI's list, follows the app
+                                   on an AC240 and a FridgePower
     57027  max. grid input power (W) - 7000-9027 only; not in BLUETTI's
                                    list, follows the app's setting on an
                                    EP2000
@@ -77,7 +84,9 @@ REGISTERS: dict[int, tuple[str, Collection[int]]] = {
     57016: ("b_soc_low", range(101)),
     57017: ("b_soc_high", range(101)),
     57020: ("d_working_mode", (1, 2, 4, 5)),
+    57022: ("ac_power_lifting_switch", range(2)),
     57023: ("d_charging_mode", (0, 1, 2, 4)),
+    57024: ("ac_eco_switch", range(2)),
     # Only values the app itself has set on an EP2000.
     57027: ("g_i_p_max", range(7000, 9028)),
 }
