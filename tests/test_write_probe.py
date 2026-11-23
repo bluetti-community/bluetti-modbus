@@ -69,6 +69,21 @@ def test_the_grid_input_power_refuses_a_value_outside_the_apps(write_probe, valu
         write_probe.parse_args([*BASE, "--register", "57027", "--value", str(value)])
 
 
+@pytest.mark.parametrize("register", [57022, 57024])
+@pytest.mark.parametrize("value", [0, 1])
+def test_power_lifting_and_ac_eco_take_off_and_on(write_probe, register, value):
+    args = write_probe.parse_args(
+        [*BASE, "--register", str(register), "--value", str(value)]
+    )
+    assert (args.register, args.value) == (register, value)
+
+
+@pytest.mark.parametrize("register", [57022, 57024])
+def test_power_lifting_and_ac_eco_refuse_anything_but_off_and_on(write_probe, register):
+    with pytest.raises(SystemExit):
+        write_probe.parse_args([*BASE, "--register", str(register), "--value", "2"])
+
+
 def test_a_same_value_write_needs_no_value(write_probe):
     args = write_probe.parse_args([*BASE, "--register", "57023"])
     assert args.value is None
@@ -85,7 +100,7 @@ def test_a_threshold_keeps_its_percent_range(write_probe):
 
 def test_an_unlisted_register_is_refused(write_probe):
     with pytest.raises(SystemExit):
-        write_probe.parse_args([*BASE, "--register", "57024"])
+        write_probe.parse_args([*BASE, "--register", "57026"])
 
 
 def test_the_ac_output_still_needs_its_flag(write_probe):
