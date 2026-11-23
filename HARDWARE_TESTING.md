@@ -141,17 +141,18 @@ pack block reads every field of the block at the ids the sweep found, decoded th
 library decodes them. Stop anything else polling the device first (the Home Assistant
 integration entry in particular - disable it, re-enable it afterwards).
 
-**Testing a write** (a device whose profile is still read-only, or a register nobody has
-written yet): [`script/write_probe.py`](script/write_probe.py) reads one setting register (the
-documented ones, plus the AC charging mode at 57023), writes back the value it already holds -
-which changes nothing on the device - and reports how the device confirmed it; the Balco family
-answers with the setting's address in its own internal register space, and that echo is what the
-library records per device. With `--value` it then writes the new value, reads it back and
-restores the original. 57011 and 57012 take the same-value write only, no `--value`. The AC
-output switch is refused unless you say so explicitly: on a FridgePower it powers the fridge.
-Before any of it: disable the Home Assistant integration entry itself (the switch at the top of
-its page - disabling the devices below it is not enough) and restart Home Assistant, so the unit
-drops that connection; it serves one client at a time.
+**Testing a write** (a device whose profile is still read-only, or a register nobody has written
+yet): [`script/write_probe.py`](script/write_probe.py) reads one setting register (the
+documented ones, plus 57020, 57023 and 57027, which BLUETTI's list does not have), writes back
+the value it already holds - which changes nothing on the device - and reports how the device
+confirmed it; the Balco family answers with the setting's address in its own internal register
+space, and that echo is what the library records per device. With `--value` it then writes the
+new value, reads it back and restores the original. 57011 and 57012 take the same-value write
+only, no `--value`. 57027, the maximum grid input power, only takes 7000-9027 W, the values the
+app has set on an EP2000. The AC output switch is refused unless you say so explicitly: on a
+FridgePower it powers the fridge. Before any of it: disable the Home Assistant integration entry
+itself (the switch at the top of its page - disabling the devices below it is not enough) and
+restart Home Assistant, so the unit drops that connection; it serves one client at a time.
 
 ```
 python3 write_probe.py --host <device-ip> --device fp --register 57017               # same-value write only

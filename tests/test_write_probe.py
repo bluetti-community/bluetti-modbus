@@ -57,6 +57,18 @@ def test_a_same_value_only_register_takes_no_value(write_probe, register, capsys
     assert "same-value write only" in capsys.readouterr().err
 
 
+@pytest.mark.parametrize("value", [7000, 9000, 9027])
+def test_the_grid_input_power_takes_a_value_the_app_has_set(write_probe, value):
+    args = write_probe.parse_args([*BASE, "--register", "57027", "--value", str(value)])
+    assert (args.register, args.value) == (57027, value)
+
+
+@pytest.mark.parametrize("value", [0, 6999, 9028, 60000])
+def test_the_grid_input_power_refuses_a_value_outside_the_apps(write_probe, value):
+    with pytest.raises(SystemExit):
+        write_probe.parse_args([*BASE, "--register", "57027", "--value", str(value)])
+
+
 def test_a_same_value_write_needs_no_value(write_probe):
     args = write_probe.parse_args([*BASE, "--register", "57023"])
     assert args.value is None
