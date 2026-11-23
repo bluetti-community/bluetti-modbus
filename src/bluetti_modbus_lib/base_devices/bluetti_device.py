@@ -75,7 +75,9 @@ _INTERNAL_WRITE_ADDRESS: dict[str, dict[int, int]] = {
     "FP": {
         57005: 2012,  # dc_o_switch - DC_SWITCH, captured on a real FridgePower
         57009: 2207,  # g_i_switch - CTRL_GRID, same as the Balco 260
+        57022: 2021,  # ac_power_lifting_switch - captured on a real FridgePower
         57023: 2020,  # d_charging_mode - CHARGING_MODE, captured on a real FridgePower
+        57024: 2017,  # ac_eco_switch - CTRL_AC_ECO_MODE, captured on a real FridgePower
     },
     "PA030": {
         57001: 2011,  # ac_o_switch - AC_SWITCH, captured on a real Apex 300

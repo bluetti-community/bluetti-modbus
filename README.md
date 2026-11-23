@@ -40,7 +40,7 @@ meaning.
 | AC500 | `ac500` | Confirmed on real hardware ([evidence][ev-ac500]) | AC/DC output switches |
 | AC200L | `ac200l` | Confirmed on real units ([evidence][ev-ac200l]) | AC/DC output, power lifting switches; AC charging mode |
 | EP500Pro | `ep500p` | Confirmed on two real units ([evidence][ev-ep500p]) | AC/DC output, grid charging switches |
-| FridgePower | `fp` | Confirmed on three real units ([evidence][ev-fp]) | DC output, grid charging switches, AC charging mode |
+| FridgePower | `fp` | Confirmed on three real units ([evidence][ev-fp]) | DC output, grid charging, power lifting, AC ECO switches; AC charging mode |
 | Balco Transfer Hub | `balcotrans` | Confirmed on two real units against the app ([evidence][ev-hub]) | - |
 | Apex 300 | `pa030` | Confirmed on a real unit against its app ([evidence][ev-pa030]) | AC/DC output, grid charging (Custom working mode only) switches; AC charging mode |
 | AC240 | `ac240` | Read on a real unit, register by register ([evidence][ev-ac240]) | AC/DC output, AC ECO, power lifting, grid charging (Custom UPS mode only) switches |

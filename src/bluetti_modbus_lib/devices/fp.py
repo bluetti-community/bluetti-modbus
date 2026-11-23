@@ -23,7 +23,8 @@ class FP(BluettiDevice):
         (57005, 57005),
         (57009, 57010),
         (57016, 57017),
-        (57023, 57023),
+        (57020, 57020),
+        (57022, 57024),
     )
 
     max_span = 20
@@ -645,9 +646,24 @@ class FP(BluettiDevice):
         address=57017,
         unit="%",
     )
+    d_working_mode = field(
+        t=FieldType.ENUM,
+        address=57020,
+        enum_type=UpsWorkingMode,
+    )
+    ac_power_lifting_switch = field(
+        t=FieldType.UINT16,
+        address=57022,
+        writable=True,
+    )
     d_charging_mode = field(
         t=FieldType.ENUM,
         address=57023,
         writable=True,
         enum_type=ChargingMode,
+    )
+    ac_eco_switch = field(
+        t=FieldType.UINT16,
+        address=57024,
+        writable=True,
     )

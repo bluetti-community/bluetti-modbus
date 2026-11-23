@@ -41,6 +41,7 @@ from .enums import (
     InverterWarning,
     PackChargingStatus,
     PvType,
+    UpsWorkingMode,
     WorkingMode,
 )
 from .exceptions import BluettiModbusConnectionError, BluettiModbusError
@@ -80,6 +81,7 @@ __all__ = [
     "PvType",
     "RegisterWrite",
     "SMeter",
+    "UpsWorkingMode",
     "WorkingMode",
     "aggregate_pack_summary",
     "aggregate_pack_summary_component",
