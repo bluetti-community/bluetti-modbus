@@ -101,8 +101,8 @@ from modbus_connection.tmodbus import ModbusConnection
 # register in the device's documented range, with the range of values it
 # can plausibly hold (None: any answer will do). Balco family: 50001 "Number
 # of Inverters". AC500 / EP500P / Apex 300: 50002 "Total AC Output Power" -
-# 50001 is not served on the AC500 (bluetti-registers#13). unknown: 50001,
-# any value.
+# 50001 is not served on the AC500 (bluetti-registers#13). S Meter: 55111
+# "Status" (its only block is 55101-55300). unknown: 50001, any value.
 SANITY: dict[str, tuple[int, range | None]] = {
     "balco260": (50001, range(1, 11)),
     "balco500": (50001, range(1, 11)),
@@ -112,13 +112,14 @@ SANITY: dict[str, tuple[int, range | None]] = {
     "ac500": (50002, None),
     "ep500p": (50002, None),
     "pa030": (50002, None),
+    "smeter": (55111, None),
 }
 
 # Devices seen to answer an unserved address with silence rather than a
 # rejection (a Transfer Hub, bluetti-registers#29), or not yet seen at all:
 # --max-timeouts defaults to 0 for them so a --blocks documented run gets
 # through the whole list.
-SILENT_ON_UNSERVED = frozenset({"balco500", "fp", "transfer-hub", "unknown"})
+SILENT_ON_UNSERVED = frozenset({"balco500", "fp", "smeter", "transfer-hub", "unknown"})
 
 # Devices on which a request to any unit id other than 1 froze the Modbus
 # TCP stack until a power cycle (AC500, bluetti-registers#13, 2026-09-19;
